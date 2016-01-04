@@ -18,8 +18,8 @@ class HttpClient final {
 
 public:
 
-    static const std::string API;
-    static const std::string HOST;
+    constexpr auto API = "/rest/";
+    constexpr auto HOST = "https://dev.gg";
 
     HttpClient();
 

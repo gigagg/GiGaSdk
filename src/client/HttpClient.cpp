@@ -2,10 +2,8 @@
 #include <cpprest/http_client.h>
 
 namespace giga {
-    const std::string HttpClient::API = "/rest/";
-    const std::string HttpClient::HOST = "https://dev.gg";
 
-    HttpClient::HttpClient() : client(HOST, getConfig()) {
+    HttpClient::HttpClient() : client(HttpClient::HOST, getConfig()) {
     }
 
     web::uri_builder HttpClient::uri(const std::string& resource) {
