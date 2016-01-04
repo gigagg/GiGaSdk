@@ -1,0 +1,94 @@
+#!/bin/bash
+
+
+SRC_PATH=$(dirname $0)
+CMAKE=cmake
+GENERATOR="Unix Makefiles"
+
+#
+# Help
+#
+if [[ "$1" == "--help" || "$1" == "-h" ]] ; then
+	cat << EOF
+
+Usage
+
+  $0 [options]
+
+Options
+  
+  * General options
+
+    --help     = show this help
+    clean = delete the CMakeCache entry
+	superClean = remove the files created by cmake (WARNING this is dangerous!)
+
+  * Generic cmake options
+    
+    -D <var>:<type>=<value>     = Create a cmake cache entry.
+
+  * Controls that you may want to use
+	
+    -D BUILD_SHARED_LIBS=1      = Build share libs instead of statics ones
+    -D CMAKE_BUILD_TYPE=Release = Compile in release mode
+    -D CMAKE_BUILD_TYPE=Debug   = Compile in Debug mode (default)
+
+  * Build the unit tests
+
+    -D BUILD_TEST=1
+
+
+Use "cmake --help" for more information.
+
+EOF
+
+elif [[ "$1" == "clean" ]] ; then
+	
+	rm CMakeCache.txt
+
+elif [[ "$1" == "superClean" ]] ; then
+
+	echo "WARNING you are about to make a superClean."
+	echo "this is what I will execute :"
+	echo "  find . -name \"Makefile\" -delete"
+	echo "  find . -name \"cmake_install.cmake\" -delete"
+	echo "  find . -name \"build.make\" -delete"
+	echo "  find . -name \"cmake_clean.cmake\" -delete"
+	echo "  find . -name \"cmake_clean_target.cmake\" -delete"
+	echo "  find . -name \"CXX.includecache\" -delete"
+	echo "  find . -name \"DependInfo.cmake\" -delete"
+	echo "  find . -name \"depend.internal\" -delete"
+	echo "  find . -name \"depend.make\" -delete"
+	echo "  find . -name \"flags.make\" -delete"
+	echo "  find . -name \"link.txt\" -delete"
+	echo "  find . -name \"progress.make\" -delete"
+	echo "  find . -name \"CMakeDirectoryInformation.cmake\" -delete"
+	echo "  find . -name \"CMakeFiles\" -exec rm -r {} \;"
+	echo "  rm CMakeCache.txt"
+	echo "type Y if you realy want to do it"
+	read ok
+	if [[ "$ok" == "Y" ]] ; then
+		find . -name "Makefile" -delete
+		find . -name "cmake_install.cmake" -delete
+		find . -name "build.make" -delete
+		find . -name "cmake_clean.cmake" -delete
+		find . -name "cmake_clean_target.cmake" -delete
+		find . -name "CXX.includecache" -delete
+		find . -name "DependInfo.cmake" -delete
+		find . -name "depend.internal" -delete
+		find . -name "depend.make" -delete
+		find . -name "flags.make" -delete
+		find . -name "link.txt" -delete
+		find . -name "progress.make" -delete
+		find . -name "CMakeDirectoryInformation.cmake" -delete
+		find . -name "CMakeFiles" -exec rm -r {} \;
+		rm CMakeCache.txt
+	fi
+
+else
+#
+# Do the job (just call cmake)
+#
+	$CMAKE -G "$GENERATOR" $@ $SRC_PATH
+
+fi

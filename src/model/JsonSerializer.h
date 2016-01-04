@@ -1,0 +1,88 @@
+/*
+ * JsonUnserializer.h
+ *
+ *  Created on: 30 sept. 2015
+ *      Author: thomas
+ */
+
+#ifndef JSONSERIALIZER_H_
+#define JSONSERIALIZER_H_
+
+#include <cpprest/json.h>
+#include <boost/optional.hpp>
+
+
+namespace giga {
+
+class JSonSerializer;
+
+namespace details {
+    inline web::json::value serialize(int& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(bool& value) {
+        return web::json::value::boolean(value);
+    }
+    inline web::json::value serialize(double& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(std::string& value) {
+        return  web::json::value::string(value);
+    }
+    inline web::json::value serialize(const char*& value) {
+        return web::json::value::string(value);
+    }
+
+    template <typename T> web::json::value serialize(T& value) {
+        auto subJson = web::json::value::object();
+        value.visit(JSonSerializer{subJson});
+        return subJson;
+    }
+    template <typename T> web::json::value serialize(std::unique_ptr<T>& value) {
+        if (value) {
+            return serialize(*value);
+        } else {
+            return web::json::value::null();
+        }
+    }
+    template <typename T> web::json::value serialize(std::vector<T>& values) {
+        auto subJson = web::json::value::array(values.size());
+        int i = 0;
+        for(auto& value : values) {
+            subJson[i++] = serialize(value);
+        }
+        return subJson;
+    }
+    template <typename T> web::json::value serialize(boost::optional<T>& value) {
+        if (value) {
+            return serialize(value.get());
+        } else {
+            return web::json::value::null();
+        }
+    }
+} // namespace details
+
+class JSonSerializer final
+{
+public:
+
+    JSonSerializer (web::json::value& val) :
+            val(val)
+    {
+    }
+
+    template <typename T> void manageOpt(T& current, const std::string& name, T) const {
+        manage(current, name);
+    }
+    template <typename T> void manage(T& current, std::string name) const {
+        val[name] = details::serialize(current);
+    }
+
+private:
+    web::json::value& val;
+
+};
+
+} // namespace giga
+
+#endif /* JSONSERIALIZER_H_ */

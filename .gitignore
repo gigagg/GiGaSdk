@@ -1,0 +1,11 @@
+bin
+gmon.out
+results.html
+
+CMakeModules/cmake_uninstall.cmake
+CMakeModules/CTestCustom.cmake
+doc/doxy.config
+
+.cproject
+.project
+.settings

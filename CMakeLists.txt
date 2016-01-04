@@ -1,0 +1,82 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+### Project configuration
+PROJECT(GiGaSdk)
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
+SET(DOC_PATH "${CMAKE_SOURCE_DIR}/doc")
+SET(FILE_PATH "${CMAKE_SOURCE_DIR}/files")
+
+### Set Configuration Type
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE "Debug")
+ENDIF(NOT CMAKE_BUILD_TYPE)
+IF(CMAKE_BUILD_TYPE MATCHES "Debug")
+    ADD_DEFINITIONS(-DDEBUG)
+ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
+
+### FLAGS
+IF(MSVC)
+    SET(CMAKE_CXX_WARNING_LEVEL 4)
+    IF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+        STRING(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290 /wd4127")
+ELSEIF(CMAKE_COMPILER_IS_GNUCC)
+    SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -fmessage-length=0" )
+    SET (CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -pg" ) # -pedantic deleted because not working on minGW (error in include files)
+    SET (CMAKE_CXX_FLAGS_RELEASE "-O2" )
+ELSE(MSVC)
+    SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra" )
+    SET (CMAKE_CXX_FLAGS_DEBUG "-O0 - -g -pg" )
+    SET (CMAKE_CXX_FLAGS_RELEASE "-O2" )
+ENDIF(MSVC)
+
+### Setting debug postfix
+SET(CMAKE_DEBUG_POSTFIX d)
+
+### Setting version
+SET(PROJECT_MAJOR_VERSION 0)
+SET(PROJECT_MINOR_VERSION 1)
+SET(PROJECT_PATCH_VERSION 0)
+SET(PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_VERSION})
+
+###
+INCLUDE_DIRECTORIES(include)
+INCLUDE_DIRECTORIES(src)
+ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(${FILE_PATH})
+
+### Install
+INSTALL(DIRECTORY "include/"
+    DESTINATION "include"
+    COMPONENT headers
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN ".git" EXCLUDE)
+
+### Uninstall
+CONFIGURE_FILE( "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in" "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake" IMMEDIATE @ONLY)
+ADD_CUSTOM_TARGET(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_MODULE_PATH}/cmake_uninstall.cmake")
+
+## Doc
+FIND_PACKAGE(Doxygen)
+IF (DOXYGEN_FOUND AND NOT NO_DOCUMENTATION)
+    IF    (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv)")
+        SET(DOXY_WARN_FORMAT "\"$file($line) : $text \"")
+    ELSE  (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv)")
+        SET(DOXY_WARN_FORMAT "\"$file:$line: $text \"")
+    ENDIF (CMAKE_BUILD_TOOL MATCHES "(msdev|devenv)")
+
+    IF(EXISTS ${CMAKE_MODULE_PATH}/doxy.config.in )
+        CONFIGURE_FILE(${CMAKE_MODULE_PATH}/doxy.config.in ${DOC_PATH}/doxy.config)
+        SET(DOXY_CONFIG "${DOC_PATH}/doxy.config")
+        ADD_CUSTOM_TARGET(doc ${DOXYGEN_EXECUTABLE} ${DOXY_CONFIG})
+        MESSAGE(STATUS "ADD target : doc")
+    ENDIF(EXISTS ${CMAKE_MODULE_PATH}/doxy.config.in )
+ENDIF (DOXYGEN_FOUND AND NOT NO_DOCUMENTATION)
+
+## Package
+INCLUDE("CPackInstalls/release/CPackConfig.cmake")
+END_PACKAGE()
+
