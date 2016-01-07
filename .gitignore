@@ -6,6 +6,7 @@ CMakeModules/cmake_uninstall.cmake
 CMakeModules/CTestCustom.cmake
 doc/doxy.config
 
+.buildpath
 .cproject
 .project
 .settings

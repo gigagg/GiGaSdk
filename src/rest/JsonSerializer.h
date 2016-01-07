@@ -10,6 +10,7 @@
 
 #include <cpprest/json.h>
 #include <boost/optional.hpp>
+#include <map>
 
 
 namespace giga {
@@ -18,6 +19,9 @@ class JSonSerializer;
 
 namespace details {
     inline web::json::value serialize(int& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(int64_t& value) {
         return web::json::value::number(value);
     }
     inline web::json::value serialize(bool& value) {
@@ -71,11 +75,26 @@ public:
     {
     }
 
+    template <typename T> void serialize(T visitable) const {
+        visitable.visit(*this);
+    }
     template <typename T> void manageOpt(T& current, const std::string& name, T) const {
         manage(current, name);
     }
     template <typename T> void manage(T& current, std::string name) const {
         val[name] = details::serialize(current);
+    }
+
+    template <typename T>
+    static std::string toString(T&& visitable) {
+        return toJson(visitable).serialize();
+    }
+
+    template <typename T>
+    static web::json::value toJson(T&& visitable) {
+        auto json = web::json::value::object();
+        visitable.visit(giga::JSonSerializer{json});
+        return json;
     }
 
 private:

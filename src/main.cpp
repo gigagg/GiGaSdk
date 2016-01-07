@@ -18,8 +18,10 @@
 #include <cpprest/rawptrstream.h>               // Async streams backed by raw pointer to memory
 #include <cpprest/producerconsumerstream.h>     // Async streams for producer consumer scenarios
 
-#include "client/GigaApi.h"
-#include "model/JsonSerializer.h"
+#include "api/GigaApi.h"
+#include "api/UsersApi.h"
+#include "api/data/User.h"
+#include "rest/JsonSerializer.h"
 
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.
@@ -30,19 +32,19 @@ using namespace concurrency::streams;       // Asynchronous streams
 
 int main ( int /*argc*/, char** /*argv*/ )
 {
-//    auto client = giga::HttpClient{};
-//    auto requestTask = client.request<Test>(methods::GET, client.uri("test"));
-    auto requestTask = giga::TestApi::getTest();
-
-    // Wait for all the outstanding I/O to complete and handle any exceptions
     try
     {
-        requestTask.wait();
-        auto result = requestTask.get();
+        giga::UsersApi::authenticate("t.guYard", "password");
 
-        auto json = web::json::value::object();
-        result->visit(giga::JSonSerializer{json});
-        std::cout << json.serialize() << std::endl;
+        auto user = giga::UsersApi::getCurrentUser();
+        std::cout << user.get()->login << std::endl;
+
+//        user = giga::UsersApi::getUserById(1704770).get();
+        std::cout << user.get()->login << std::endl;
+
+//        auto tags = giga::UsersApi::searchTag("plop").get();
+//        std::cout << giga::JSonSerializer::toString(*tags.get()) << std::endl;
+
     }
     catch (const std::exception &e)
     {
