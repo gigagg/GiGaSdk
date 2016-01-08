@@ -18,10 +18,10 @@
 #include <cpprest/rawptrstream.h>               // Async streams backed by raw pointer to memory
 #include <cpprest/producerconsumerstream.h>     // Async streams for producer consumer scenarios
 
-#include "api/GigaApi.h"
-#include "api/UsersApi.h"
-#include "api/data/User.h"
-#include "rest/JsonSerializer.h"
+#include <giga/api/GigaApi.h>
+#include <giga/api/UsersApi.h>
+#include <giga/api/data/User.h>
+#include <giga/rest/JsonSerializer.h>
 
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.

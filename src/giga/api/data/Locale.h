@@ -10,7 +10,7 @@
 
 #include <boost/optional.hpp>
 #include <string.h>
-#include "prepoc_manage.h"
+#include "../../rest/prepoc_manage.h"
 
 struct Locale {
     std::string contryCode  = "FR";
