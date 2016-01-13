@@ -263,19 +263,4 @@ Crypto::aesDecrypt (const std::string& password, const std::string& saltStr, con
     return decrypted;
 }
 
-std::pair<RSA::PublicKey, RSA::PrivateKey>
-Crypto::generateKeyPair() {
-    AutoSeededRandomPool rng{};
-    auto params = InvertibleRSAFunction{};
-    params.GenerateRandomWithKeySize(rng, 3072);
-
-//    const Integer& n = params.GetModulus();
-//    const Integer& p = params.GetPrime1();
-//    const Integer& q = params.GetPrime2();
-//    const Integer& d = params.GetPrivateExponent();
-//    const Integer& e = params.GetPublicExponent();
-
-    return std::make_pair(RSA::PublicKey{params}, RSA::PrivateKey{params});
-}
-
 } /* namespace giga */

@@ -14,19 +14,20 @@
 
 namespace giga {
 
-class HttpClient final {
+class HttpClient final
+{
+public:
+    static constexpr auto API = "/api/1.0/";
+    static constexpr auto HOST = "https://dev.gg";
+    static constexpr auto JSON_CONTENT_TYPE = "application/json;charset=utf-8";
 
 public:
-
-    static constexpr auto API = "/api/1.0/";
-//    static constexpr auto HOST = "http://localhost:8088";
-    static constexpr auto HOST = "https://dev.gg";
-
     HttpClient();
     ~HttpClient() = default;
     HttpClient(const HttpClient&) = default;
     HttpClient(HttpClient&&) = default;
 
+public:
     void authenticate(const std::string& login, const std::string& password);
 
     web::uri_builder uri(const std::string& resource);
@@ -59,7 +60,7 @@ public:
     pplx::task<std::shared_ptr<T>> request(const web::http::method &mtd, web::uri_builder uri, U&& bodyData) {
         auto json = web::json::value::object();
         bodyData.visit(JSonSerializer{json});
-        return client.request(mtd, uri.to_string(), json.serialize(), "application/json;charset=utf-8").then([=](web::http::http_response response) {
+        return client.request(mtd, uri.to_string(), json.serialize(), JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
             return onRequestPtr<T>(response);
         });
     }
@@ -102,9 +103,7 @@ public:
                     throw data;
             }
         }
-        HttpErrorGeneric data{response.status_code()};
-        data.errorStr = response.extract_string().get();
-        throw data;
+        throw HttpErrorGeneric{response.status_code(), response.extract_string().get()};
     }
 
 private:

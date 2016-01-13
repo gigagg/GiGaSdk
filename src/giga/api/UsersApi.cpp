@@ -13,18 +13,6 @@ namespace giga
 {
 using namespace data;
 
-void UsersApi::authenticate(const std::string& login, const std::string& password)
-{
-    auto exists = userExists(login).get();
-    if (exists->login.is_initialized()) {
-        client.authenticate(exists->login.get(), Crypto::calculateLoginPassword(exists->login.get(), password));
-    } else {
-        auto e = ErrorNotFound{};
-        e.errorStr = "Login not found";
-        throw e;
-    }
-}
-
 pplx::task<std::shared_ptr<User>>
 UsersApi::getCurrentUser ()
 {

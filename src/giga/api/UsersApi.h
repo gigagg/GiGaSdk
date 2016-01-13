@@ -19,8 +19,6 @@ struct UserExists;
 class UsersApi final : GigaApi
 {
 public:
-    static void authenticate(const std::string& login, const std::string& password);
-
     static pplx::task<std::shared_ptr<data::User>>
     getCurrentUser ();
 

@@ -15,8 +15,8 @@ namespace giga {
 
     class HttpErrorGeneric : public std::exception {
     public:
-        HttpErrorGeneric (unsigned short status) :
-                status (status)
+        explicit HttpErrorGeneric (unsigned short status, const std::string& errorStr = "", const std::string& scope = "") :
+                status (status), errorStr(errorStr), scope(scope)
         {
         }
         virtual ~HttpErrorGeneric () = default;
@@ -33,16 +33,16 @@ namespace giga {
           GIGA_MANAGE_OPT(us, scope, std::string{});
         }
 
+        const unsigned short status = 500;
         std::string errorStr = "";
         std::string scope = "";
-        const unsigned short status = 500;
     };
 
     template <unsigned short TStatus>
     class HttpError : public HttpErrorGeneric {
     public:
-        HttpError () :
-            HttpErrorGeneric (TStatus)
+        explicit HttpError (const std::string& errorStr = "", const std::string& scope = "") :
+            HttpErrorGeneric (TStatus, errorStr, scope)
         {
         }
         virtual ~HttpError () = default;

@@ -26,6 +26,9 @@ public:
     GigaApi(GigaApi&&) = default;
     virtual ~GigaApi() = default;
 
+public:
+    static std::string authenticate(const std::string& login, const std::string& password);
+
 protected:
     static HttpClient client;
 };

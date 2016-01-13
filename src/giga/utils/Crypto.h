@@ -43,17 +43,12 @@ public:
     static std::string calculateMasterPassword(const std::string& salt, const std::string& password);
 
     // AES
-
     enum struct aesTuple : int {
         data = 0, iv, salt
     };
     static std::tuple<std::string, std::string, std::string>
     aesEncrypt(const std::string& password, const std::string& data);
     static std::string aesDecrypt(const std::string& password, const std::string& saltStr, const std::string& ivStr, const std::string& data);
-
-    // RSA
-
-    static std::pair<CryptoPP::RSA::PublicKey, CryptoPP::RSA::PrivateKey> generateKeyPair();
 };
 
 template<Crypto::aesTuple n, class... Types >
