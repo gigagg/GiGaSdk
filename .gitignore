@@ -5,6 +5,7 @@ results.html
 CMakeModules/cmake_uninstall.cmake
 CMakeModules/CTestCustom.cmake
 doc/doxy.config
+doc/html/**
 
 .buildpath
 .cproject
