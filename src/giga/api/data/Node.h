@@ -21,6 +21,7 @@ struct Node {
     std::string name = {};
     boost::optional<std::string> parentId = boost::none;
     std::vector<std::string> ancestors = {};
+    std::vector<std::string> servers = {};
     int64_t ownerId = 0;
     int64_t size = 0;
     int64_t creationDate = 0;
@@ -50,6 +51,7 @@ struct Node {
         GIGA_MANAGE(m, name);
         GIGA_MANAGE(m, parentId);
         GIGA_MANAGE(m, ancestors);
+        GIGA_MANAGE(m, servers);
         GIGA_MANAGE(m, ownerId);
         GIGA_MANAGE(m, size);
         GIGA_MANAGE(m, creationDate);

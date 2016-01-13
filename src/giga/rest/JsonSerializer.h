@@ -87,14 +87,28 @@ public:
 
     template <typename T>
     static std::string toString(T&& visitable) {
-        return toJson(visitable).serialize();
+        return toJson(std::forward<T>(visitable)).serialize();
     }
 
     template <typename T>
     static web::json::value toJson(T&& visitable) {
         auto json = web::json::value::object();
-        visitable.visit(giga::JSonSerializer{json});
+        visit(visitable, json);
         return json;
+    }
+
+private:
+    template <typename T>
+    static void visit(std::shared_ptr<T> visitable, web::json::value& obj) {
+        visitable->visit(giga::JSonSerializer{obj});
+    }
+    template <typename T>
+    static void visit(T&& visitable, web::json::value& obj) {
+        visitable.visit(giga::JSonSerializer{obj});
+    }
+    template <typename T>
+    static void visit(T* visitable, web::json::value& obj) {
+        visitable->visit(giga::JSonSerializer{obj});
     }
 
 private:

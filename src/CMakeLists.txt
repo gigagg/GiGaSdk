@@ -1,3 +1,4 @@
 ADD_SUBDIRECTORY(app)
 ADD_SUBDIRECTORY(giga)
-#ADD_SUBDIRECTORY(tests)
+
+# Test must be done in the root directory

@@ -37,10 +37,10 @@ int main ( int /*argc*/, char** /*argv*/ )
         giga::UsersApi::authenticate("t.guYard", "password");
 
         auto user = giga::UsersApi::getCurrentUser();
-        std::cout << user.get()->login << std::endl;
+        std::cout << giga::JSonSerializer::toString(user.get()) << std::endl;
 
 //        user = giga::UsersApi::getUserById(1704770).get();
-        std::cout << user.get()->login << std::endl;
+//        std::cout << user.get()->login << std::endl;
 
 //        auto tags = giga::UsersApi::searchTag("plop").get();
 //        std::cout << giga::JSonSerializer::toString(*tags.get()) << std::endl;

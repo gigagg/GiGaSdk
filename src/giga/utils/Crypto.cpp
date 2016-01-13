@@ -18,6 +18,7 @@
 #include "cryptopp/pwdbased.h"
 #include "cryptopp/files.h"
 #include "cryptopp/base64.h"
+#include "cryptopp/rsa.h"
 #else
 #include "crypto++/integer.h"
 #include "crypto++/osrng.h"
@@ -26,6 +27,7 @@
 #include "crypto++/filters.h"
 #include "crypto++/files.h"
 #include "crypto++/aes.h"
+#include "crypto++/rsa.h"
 #include "crypto++/modes.h"
 #include "crypto++/pwdbased.h"
 #include "crypto++/base64.h"
@@ -38,15 +40,94 @@ using CryptoPP::StringSource;
 using CryptoPP::StreamTransformationFilter;
 using CryptoPP::FileSource;
 using CryptoPP::AES;
+using CryptoPP::RSA;
 using CryptoPP::AutoSeededRandomPool;
 using CryptoPP::CTR_Mode;
 using CryptoPP::FileSink;
 using CryptoPP::Base64Decoder;
 using CryptoPP::Base64Encoder;
+using CryptoPP::ByteQueue;
+using CryptoPP::CBC_Mode;
+using CryptoPP::Integer;
+using CryptoPP::InvertibleRSAFunction;
+using CryptoPP::PK_DecryptorFilter;
+using CryptoPP::PK_EncryptorFilter;
 using CryptoPP::PKCS5_PBKDF2_HMAC;
+using CryptoPP::Redirector;
+using CryptoPP::RSAES_OAEP_SHA_Decryptor;
+using CryptoPP::RSAES_OAEP_SHA_Encryptor;
+using CryptoPP::RSAES_PKCS1v15_Decryptor;
+using CryptoPP::RSAES_PKCS1v15_Encryptor;
+using CryptoPP::SecByteBlock;
 
 namespace giga
 {
+
+void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
+    Base64Decoder decoder;
+    decoder.Attach(new Redirector(queue));
+    decoder.Put(reinterpret_cast<const byte*>(b64encoded.data()), b64encoded.size());
+    decoder.MessageEnd();
+}
+
+Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
+{
+    try {
+        ByteQueue queue;
+        fillQueue(queue, pubStr);
+        pub.BERDecodePublicKey(queue, false, queue.MaxRetrievable());
+    } catch (const std::exception&) {
+        ByteQueue queue;
+        fillQueue(queue, pubStr);
+        pub.BERDecode(queue);
+    }
+
+    try {
+        ByteQueue queue;
+        fillQueue(queue, privStr);
+        priv.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
+    } catch (const std::exception&) {
+        ByteQueue queue;
+        fillQueue(queue, privStr);
+        priv.BERDecode(queue);
+    }
+
+    AutoSeededRandomPool rnd;
+    if(!priv.Validate(rnd, 3))
+        throw std::runtime_error("Rsa private key validation failed");
+
+    if(!priv.Validate(rnd, 3))
+        throw std::runtime_error("Dsa private key validation failed");
+}
+
+std::string
+Rsa::encrypt (const std::string& data) const
+{
+    AutoSeededRandomPool rng;
+    RSAES_PKCS1v15_Encryptor encryptor( pub );
+    std::string encrypted;
+    StringSource ss(data, true,
+        new PK_EncryptorFilter(rng, encryptor,
+            new StringSink(encrypted)
+        )
+    );
+    return encrypted;
+}
+
+std::string
+Rsa::decrypt (const std::string& data) const
+{
+    AutoSeededRandomPool rng;
+    RSAES_PKCS1v15_Decryptor decryptor( priv );
+    std::string decrypted;
+    StringSource ss(data, true,
+        new PK_DecryptorFilter(rng, decryptor,
+            new StringSink(decrypted)
+        )
+    );
+    return decrypted;
+}
+
 
 template<typename T>
 std::string
@@ -57,9 +138,9 @@ pbkdf2 (const std::string& password, const std::string& salt, std::size_t length
     passToKey.DeriveKey(reinterpret_cast<byte*>(key.data()),
                         key.size(),
                         '\0',
-                        reinterpret_cast<const byte*>(password.c_str()),
+                        reinterpret_cast<const byte*>(password.data()),
                         password.size(),
-                        reinterpret_cast<const byte*>(salt.c_str()),
+                        reinterpret_cast<const byte*>(salt.data()),
                         salt.size(),
                         iteration);
 
@@ -129,6 +210,72 @@ Crypto::calculateLoginPassword(const std::string& login, const std::string& pass
 std::string
 Crypto::calculateMasterPassword(const std::string& salt, const std::string& password) {
     return base64encode(pbkdf2_sha256(password, salt, 16));
+}
+
+std::tuple<std::string, std::string, std::string>
+Crypto::aesEncrypt (const std::string& password, const std::string& data)
+{
+
+    SecByteBlock iv(16);
+    SecByteBlock salt(8);
+
+    OS_GenerateRandomBlock(true, salt, salt.size());
+    OS_GenerateRandomBlock(false, iv, iv.size());
+
+    auto saltStr = std::string(salt.begin(), salt.end());
+    auto ivStr = std::string(iv.begin(), iv.end());
+    auto key = pbkdf2_sha256(password, saltStr, 16);
+
+    CBC_Mode<AES>::Encryption e;
+    e.SetKeyWithIV(reinterpret_cast<const byte*>(key.data()), key.size(), iv, ivStr.size());
+
+    std::string encrypted;
+    StringSource ss(reinterpret_cast<const byte*> (data.data()), data.size(), true,
+        new StreamTransformationFilter(e,
+            new StringSink(encrypted)
+        )
+    );
+
+    return std::make_tuple(
+            encrypted,
+            ivStr,
+            saltStr
+    );
+}
+std::string
+Crypto::aesDecrypt (const std::string& password, const std::string& saltStr, const std::string& ivStr, const std::string& data)
+{
+    auto key = pbkdf2_sha256(password, saltStr, 16);
+
+    CBC_Mode<AES>::Decryption e;
+    e.SetKeyWithIV(reinterpret_cast<const byte*>(key.data()),
+                   key.size(),
+                   reinterpret_cast<const byte*>(ivStr.data()),
+                   ivStr.size());
+
+    std::string decrypted;
+    StringSource ss(reinterpret_cast<const byte*> (data.data()), data.size(), true,
+        new StreamTransformationFilter(e,
+            new StringSink(decrypted)
+        )
+    );
+
+    return decrypted;
+}
+
+std::pair<RSA::PublicKey, RSA::PrivateKey>
+Crypto::generateKeyPair() {
+    AutoSeededRandomPool rng{};
+    auto params = InvertibleRSAFunction{};
+    params.GenerateRandomWithKeySize(rng, 3072);
+
+//    const Integer& n = params.GetModulus();
+//    const Integer& p = params.GetPrime1();
+//    const Integer& q = params.GetPrime2();
+//    const Integer& d = params.GetPrivateExponent();
+//    const Integer& e = params.GetPublicExponent();
+
+    return std::make_pair(RSA::PublicKey{params}, RSA::PrivateKey{params});
 }
 
 } /* namespace giga */

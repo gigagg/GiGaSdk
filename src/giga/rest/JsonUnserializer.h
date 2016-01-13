@@ -51,7 +51,7 @@ namespace details {
             return nullptr;
         } else {
             auto t = std::unique_ptr<T>(new T{});
-            details::getValue(value, *t);
+            *t = details::getValue(value, *t);
             return t;
         }
     }
@@ -88,6 +88,13 @@ public:
     JSonUnserializer (const web::json::value& val) :
             val (val)
     {
+    }
+
+    template <typename T>
+    static T fromString(const std::string& json) {
+        auto val = web::json::value::parse(json);
+        auto unserializer = JSonUnserializer{val};
+        return unserializer.unserialize<T>();
     }
 
     template <typename T> T unserialize() const {
@@ -140,6 +147,13 @@ public:
     template <typename T> void manage(std::unique_ptr<T>& current, const std::string& name) const {
         if (!val.has_field(name)) {
             current = nullptr;
+        } else {
+            current = details::getValue(val.at(name), current);
+        }
+    }
+    template <typename T> void manage(std::vector<T>& current, const std::string& name) const {
+        if (!val.has_field(name)) {
+            current = std::vector<T>{};
         } else {
             current = details::getValue(val.at(name), current);
         }
