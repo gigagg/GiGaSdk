@@ -2,8 +2,8 @@
  * @author Thomas Guyard <t.guyard@gigatribe.com>
  */
 
-#ifndef CLIENT_NodesApi_API_H_
-#define CLIENT_NodesApi_API_H_
+#ifndef CLIENT_NODESAPI_API_H_
+#define CLIENT_NODESAPI_API_H_
 
 #include <iosfwd>
 #include "GigaApi.h"

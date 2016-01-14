@@ -2,8 +2,8 @@
  * @author Thomas Guyard <t.guyard@gigatribe.com>
  */
 
-#ifndef CLIENT_GroupsApi_API_H_
-#define CLIENT_GroupsApi_API_H_
+#ifndef CLIENT_GROUPSAPI_API_H_
+#define CLIENT_GROUPSAPI_API_H_
 
 #include <iosfwd>
 #include "GigaApi.h"

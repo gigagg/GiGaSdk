@@ -2,8 +2,8 @@
  * @author Thomas Guyard <t.guyard@gigatribe.com>
  */
 
-#ifndef CLIENT_UsersApi_API_H_
-#define CLIENT_UsersApi_API_H_
+#ifndef CLIENT_USERSAPI_API_H_
+#define CLIENT_USERSAPI_API_H_
 
 #include <iosfwd>
 #include "GigaApi.h"
