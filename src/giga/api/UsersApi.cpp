@@ -3,11 +3,16 @@
  */
 
 #include "UsersApi.h"
+
+
 #include "data/User.h"
 #include "data/UserExists.h"
 #include "../utils/Crypto.h"
 
+#include <cpprest/http_client.h>
 #include <string>
+
+using web::http::methods;
 
 namespace giga
 {

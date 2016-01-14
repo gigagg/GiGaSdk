@@ -10,7 +10,10 @@
 #include "data/DataNode.h"
 #include "data/IdContainer.h"
 
+#include <cpprest/http_client.h>
 #include <string>
+
+using web::http::methods;
 
 namespace giga
 {

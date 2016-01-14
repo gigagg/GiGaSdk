@@ -10,19 +10,32 @@
 #include "../utils/Crypto.h"
 #include "UsersApi.h"
 #include "data/UserExists.h"
+#include "pplx/pplxtasks.h"
 
-namespace giga {
+using pplx::create_task;
+using pplx::task;
+
+namespace giga
+{
 
 HttpClient giga::GigaApi::client{};
 
-std::string GigaApi::authenticate(const std::string& login, const std::string& password)
+task<std::string>
+GigaApi::authenticate (const std::string& login, const std::string& password)
 {
-    auto exists = UsersApi::userExists(login).get();
-    if (exists->login.is_initialized()) {
-        client.authenticate(exists->login.get(), Crypto::calculateLoginPassword(exists->login.get(), password));
-        return exists->login.get();
-    } else {
-        throw ErrorNotFound{"Login not found"};
-    }
+    return create_task([=]
+    {
+        auto exists = UsersApi::userExists(login).get();
+        if (exists->login.is_initialized())
+        {
+            client.authenticate(exists->login.get(), Crypto::calculateLoginPassword(exists->login.get(), password));
+            return exists->login.get();
+        }
+        else
+        {
+            throw ErrorNotFound{"Login not found"};
+        }
+    });
 }
-}
+
+} // namespace giga

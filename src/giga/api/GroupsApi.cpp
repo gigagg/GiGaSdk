@@ -4,7 +4,11 @@
 
 #include "GroupsApi.h"
 #include "data/Group.h"
+
+#include <cpprest/http_client.h>
 #include <string>
+
+using web::http::methods;
 
 namespace giga
 {

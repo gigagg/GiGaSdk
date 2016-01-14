@@ -5,7 +5,11 @@
 #include "NetworkApi.h"
 #include "data/UsersRelation.h"
 #include "data/Success.h"
+
+#include <cpprest/http_client.h>
 #include <string>
+
+using web::http::methods;
 
 namespace giga
 {

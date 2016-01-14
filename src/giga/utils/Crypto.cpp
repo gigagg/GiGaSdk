@@ -7,6 +7,8 @@
 
 #include "Crypto.h"
 
+#include <algorithm>
+
 #ifdef CRYPTOPP
 #include "cryptopp/integer.h"
 #include "cryptopp/osrng.h"
@@ -210,6 +212,23 @@ Crypto::calculateLoginPassword(const std::string& login, const std::string& pass
 std::string
 Crypto::calculateMasterPassword(const std::string& salt, const std::string& password) {
     return base64encode(pbkdf2_sha256(password, salt, 16));
+}
+
+std::string
+Crypto::sha1File (const std::string& filename)
+{
+    CryptoPP::SHA1 sha1;
+    auto hash = std::string{};
+
+    CryptoPP::FileSource(filename.c_str(), true,
+        new CryptoPP::HashFilter(sha1,
+            new CryptoPP::HexEncoder(
+                new CryptoPP::StringSink(hash)
+            )
+        )
+    );
+    std::transform(hash.begin(), hash.end(), hash.begin(), ::tolower);
+    return hash;
 }
 
 std::tuple<std::string, std::string, std::string>

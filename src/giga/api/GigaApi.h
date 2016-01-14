@@ -13,8 +13,7 @@
 #include "data/Locale.h"
 
 #include <cpprest/http_client.h>
-
-using web::http::methods;
+#include <pplx/pplxtasks.h>
 
 namespace giga {
 
@@ -27,7 +26,7 @@ public:
     virtual ~GigaApi() = default;
 
 public:
-    static std::string authenticate(const std::string& login, const std::string& password);
+    static pplx::task<std::string> authenticate(const std::string& login, const std::string& password);
 
 protected:
     static HttpClient client;

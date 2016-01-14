@@ -42,6 +42,8 @@ public:
     static std::string calculateLoginPassword(const std::string& login, const std::string& password);
     static std::string calculateMasterPassword(const std::string& salt, const std::string& password);
 
+    static std::string sha1File(const std::string& filename);
+
     // AES
     enum struct aesTuple : int {
         data = 0, iv, salt

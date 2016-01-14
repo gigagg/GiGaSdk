@@ -30,27 +30,29 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 
+using namespace giga;
+
 
 int main ( int /*argc*/, char** /*argv*/ )
 {
     try
     {
-        giga::Config::init(
+        Config::init(
                 std::string("http://localhost:5001"),
                 std::string("86ebaa36c3f0"),
                 std::string("2ed5cb98abd9c1a0699679990576a97e"));
 
-        auto login = giga::GigaApi::authenticate("t.guYard", "password");
+        auto login = GigaApi::authenticate("t.guYard", "password").get();
         std::cout << login << std::endl;
 
-        auto user = giga::UsersApi::getCurrentUser();
-        std::cout << giga::JSonSerializer::toString(user.get()) << std::endl;
+        auto user = UsersApi::getCurrentUser();
+        std::cout << JSonSerializer::toString(user.get()) << std::endl;
 
-//        user = giga::UsersApi::getUserById(1704770).get();
+//        user = UsersApi::getUserById(1704770).get();
 //        std::cout << user.get()->login << std::endl;
 
-//        auto tags = giga::UsersApi::searchTag("plop").get();
-//        std::cout << giga::JSonSerializer::toString(*tags.get()) << std::endl;
+//        auto tags = UsersApi::searchTag("plop").get();
+//        std::cout << JSonSerializer::toString(*tags.get()) << std::endl;
 
     }
     catch (const std::exception &e)
