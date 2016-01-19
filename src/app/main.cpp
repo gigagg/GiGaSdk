@@ -20,6 +20,7 @@
 
 #include <giga/api/GigaApi.h>
 #include <giga/api/UsersApi.h>
+#include <giga/api/FileApi.h>
 #include <giga/api/data/User.h>
 #include <giga/rest/JsonSerializer.h>
 #include <giga/Config.h>
@@ -42,11 +43,11 @@ int main ( int /*argc*/, char** /*argv*/ )
                 std::string("86ebaa36c3f0"),
                 std::string("2ed5cb98abd9c1a0699679990576a97e"));
 
-        auto login = GigaApi::authenticate("t.guYard", "password").get();
-        std::cout << login << std::endl;
+        auto user = GigaApi::authenticate("t.guYard", "password").get();
+        std::cout << user->node->id << std::endl;
 
-        auto user = UsersApi::getCurrentUser();
-        std::cout << JSonSerializer::toString(user.get()) << std::endl;
+        auto node = FileApi::uploadFile("/home/thomas/tmp/randfile", "randfile", user->node->id);
+        std::cout << JSonSerializer::toString(node.get()) << std::endl;
 
 //        user = UsersApi::getUserById(1704770).get();
 //        std::cout << user.get()->login << std::endl;
@@ -55,9 +56,13 @@ int main ( int /*argc*/, char** /*argv*/ )
 //        std::cout << JSonSerializer::toString(*tags.get()) << std::endl;
 
     }
+    catch (const ErrorException &e)
+    {
+        e.print();
+    }
     catch (const std::exception &e)
     {
-        printf("Error exception:%s\n", e.what());
+        printf("Error exception: %s\n", e.what());
     }
 
 	return 0;

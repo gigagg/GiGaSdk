@@ -4,6 +4,7 @@
 
 #include "GroupsApi.h"
 #include "data/Group.h"
+#include "../rest/Empty.h"
 
 #include <cpprest/http_client.h>
 #include <string>
@@ -46,11 +47,11 @@ GroupsApi::updateGroupName (int64_t groupId, const std::string& name)
     return client.request<Group> (methods::PUT, uri, std::move(body));
 }
 
-pplx::task<std::shared_ptr<std::string>>
+pplx::task<std::shared_ptr<Empty>>
 GroupsApi::deleteGroup (int64_t groupId)
 {
     auto uri = client.uri ("groups", groupId);
-    return client.request<std::string> (methods::DEL, uri);
+    return client.request<Empty> (methods::DEL, uri);
 }
 
 pplx::task<std::shared_ptr<Group>>

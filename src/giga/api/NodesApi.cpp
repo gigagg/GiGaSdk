@@ -30,7 +30,7 @@ NodesApi::searchNode (const std::string& search, const std::string& mine, const 
     return client.request<NodeList> (methods::GET, uri);
 }
 
-pplx::task<std::shared_ptr<Node>>
+pplx::task<std::shared_ptr<DataNode>>
 NodesApi::addNode (const std::string& name, const std::string& type, const std::string& parentId, const std::string& fkey,
                    const std::string& fid)
 {
@@ -41,7 +41,7 @@ NodesApi::addNode (const std::string& name, const std::string& type, const std::
     body.add ("parentId", parentId);
     body.add ("fkey", fkey);
     body.add ("fid", fid);
-    return client.request<Node> (methods::POST, uri, std::move(body));
+    return client.request<DataNode> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<DataNode>>

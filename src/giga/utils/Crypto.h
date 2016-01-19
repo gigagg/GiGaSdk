@@ -50,7 +50,10 @@ public:
     };
     static std::tuple<std::string, std::string, std::string>
     aesEncrypt(const std::string& password, const std::string& data);
-    static std::string aesDecrypt(const std::string& password, const std::string& saltStr, const std::string& ivStr, const std::string& data);
+    static std::string
+    aesDecrypt(const std::string& password, const std::string& saltStr, const std::string& ivStr, const std::string& data);
+    static std::string
+    aesEncrypt (const std::string& key, const std::string& iv, const std::string& data);
 };
 
 template<Crypto::aesTuple n, class... Types >

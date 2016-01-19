@@ -27,6 +27,14 @@ public:
     HttpClient(const HttpClient&) = default;
     HttpClient(HttpClient&&) = default;
 
+private:
+    template <typename T>
+    T getError(const JSonUnserializer& s, web::json::value&& json) const {
+        auto e = s.unserialize<T>();
+        e.setJson(std::move(json));
+        return e;
+    }
+
 public:
     void authenticate(const std::string& login, const std::string& password);
 
@@ -60,7 +68,8 @@ public:
     pplx::task<std::shared_ptr<T>> request(const web::http::method &mtd, web::uri_builder uri, U&& bodyData) {
         auto json = web::json::value::object();
         bodyData.visit(JSonSerializer{json});
-        return client.request(mtd, uri.to_string(), json.serialize(), JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
+        auto data = json.serialize();
+        return client.request(mtd, uri.to_string(), data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
             return onRequestPtr<T>(response);
         });
     }
@@ -74,37 +83,48 @@ public:
     T onRequest(web::http::http_response response) {
         auto headers = response.headers();
         auto ctype = headers.find("Content-Type");
-        auto jsonType = std::string{"application/json"};
+        auto jsonType = std::string("application/json");
         if (ctype != headers.end() && ctype->second.compare(0, jsonType.size(), jsonType) == 0) {
-            auto json = response.extract_json().get();
+            auto json = response.extract_json(true).get();
             auto s = JSonUnserializer{json};
             switch (response.status_code()) {
                 case 200:
-                    return s.unserialize<T>();
+                    try
+                    {
+                        return s.unserialize<T>();
+                    }
+                    catch (const std::exception& e)
+                    {
+                        std::cout << json.serialize() << std::endl;
+                        throw e;
+                    }
+                    break;
                 case 401:
-                    throw s.unserialize<ErrorUnauthorized>();
+                    THROW((getError<ErrorUnauthorized>(s, std::move(json))));
                 case 403:
-                    throw s.unserialize<ErrorForbidden>();
+                    THROW((getError<ErrorForbidden>(s, std::move(json))));
                 case 400:
-                    throw s.unserialize<ErrorBadRequest>();
+                    THROW((getError<ErrorBadRequest>(s, std::move(json))));
                 case 422:
-                    throw s.unserialize<ErrorUnprocessableEntity>();
+                    THROW((getError<ErrorUnprocessableEntity>(s, std::move(json))));
                 case 423:
-                    throw s.unserialize<ErrorLocked>();
+                    THROW((getError<ErrorLocked>(s, std::move(json))));
                 case 404:
-                    throw s.unserialize<ErrorNotFound>();
+                    THROW((getError<ErrorNotFound>(s, std::move(json))));
                 case 500:
-                    throw s.unserialize<ErrorInternalServerError>();
+                    THROW((getError<ErrorInternalServerError>(s, std::move(json))));
                 case 501:
-                    throw s.unserialize<ErrorNotImplemented>();
+                    THROW((getError<ErrorNotImplemented>(s, std::move(json))));
                 default:
                     HttpErrorGeneric data{response.status_code()};
                     data.visit(s);
-                    throw data;
+                    THROW(data.setJson(std::move(json)));
             }
         }
-        throw HttpErrorGeneric{response.status_code(), response.extract_string().get()};
+        THROW((HttpErrorGeneric{response.status_code(), response.extract_string().get()}));
     }
+
+    inline web::http::client::http_client& getClient() { return client;};
 
 private:
     web::http::client::http_client_config getConfig() {

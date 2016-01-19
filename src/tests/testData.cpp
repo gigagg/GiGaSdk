@@ -2,12 +2,79 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <giga/api/data/Node.h>
+#include <giga/api/data/User.h>
 #include <giga/rest/JsonUnserializer.h>
 
 
 using namespace boost::unit_test;
 using namespace giga;
 using namespace giga::data;
+
+BOOST_AUTO_TEST_CASE(test_data_user) {
+    auto json = R"({
+  "achievements" : 476,
+  "activity" : "INACTIVE",
+  "adultStatus" : 0,
+  "avatarState" : "UNDEFINED",
+  "avatarUrl" : "https://www.gravatar.com/avatar/e9c0238fd06779c6486e41ac18d542b3?d=wavatar&s=81&r=pg",
+  "bigAvatarUrl" : "https://www.gravatar.com/avatar/e9c0238fd06779c6486e41ac18d542b3?d=wavatar&s=215&r=pg",
+  "contactCount" : 16,
+  "country" : "XX",
+  "creationDate" : 1426154892,
+  "dlAvailable" : 0,
+  "email" : "t.guyard@gigatribe.com",
+  "externalAccounts" : [ {
+    "avatarUrl" : "https://cloud03.dev.gg/preview/561e575533e5dffa008b4567/image?k=2cPc94ZWhbT_25N4ECoDT6HalOsBR7f-dVL5TzOLdfU%3D",
+    "creationDate" : 1446465304,
+    "displayName" : "t.guyard",
+    "email" : "t.guyard@gigatribe.com",
+    "externalId" : "t.guyard@gigatribe.com",
+    "login" : "t.guyard",
+    "providerName" : "EMAIL",
+    "updateDate" : 1442326082,
+    "userId" : 1
+  } ],
+  "hasBeenEnticed" : false,
+  "id" : 1,
+  "isHiddingFirstSteps" : true,
+  "isSeeder" : "YES",
+  "language" : "en",
+  "lastConnectionDate" : 1426154892,
+  "login" : "t.guyard",
+  "maxContact" : 200,
+  "maxStorage" : 10240,
+  "modules" : [],
+  "nextEmail" : "t.guyard@gigatribe.com",
+  "nodeKey" : "VkAEFGC4OzGoQh74QOThIGhGUN7kiaXcbEHK8EtTsdMcmktR1qb8l20d3rFF1IDROHfQwmpe/jM9fqIFfTdl2+6IYqmzZVCF8KhFcaGmathpNN3Ajs5ulwHqbdbXSBCHrz6avTnUNysaOodW5Ld/rMl7Uqdso2VSVeY+AJvmEZI=",
+  "offer" : {
+    "billing" : "NEVER",
+    "costEUR" : 0,
+    "costGBP" : 0,
+    "costStar" : 0,
+    "costUSD" : 0,
+    "download" : 0,
+    "duration" : "TWO_WEEKS",
+    "expire" : 1477128263,
+    "id" : "UNLIMITED_2WEEKS_FREE",
+    "isApple" : false,
+    "isSubscription" : false,
+    "resetDownload" : "NEVER",
+    "state" : "GIFT",
+    "storage" : 10240
+  },
+  "rsaKeys" : {
+    "aesIv" : "6pb4g/omiiiBZLs6IQgyMw==",
+    "aesSalt" : "oMAlsjc9ejk=",
+    "privateKey" : "mkhR345BrvSAo91wFQOvHYBtYET3cGf48L0l8XY6vbhXKSCq2Sl1OKMoMeFRadk70jo5gJh61OXO4gH8nOQAAUUmUVKg0GycvCH6WtbUljGwS9WfFWFcs/TJjn6MKlpgoBGyx3NJtx48Dd51xL36Xlu9zh6XOuAGH2tE7BrBdL+JBdUcFE2m6BI+mXG+pdxtnCGQRJn3xcycq8AjwJtdALfEdWm6p28rPsladSiH9oSYBqmb4otqjqBkS+61Gi7f8E50GoscMIxgHNfl6JckbW7b4/vY2Lz/QEUYQqXvein3tEUu5IjTCORbpBE1mUmj8/0h9QScQ0ek4kzgbJIrJccG4ocyXIglcmagLmZM6GLAmzh6jn2DPOw9sFVCwhgeLOLqwKzx+WMcBUAYToyBAMIfPfBJ5NjnWboFvVceYZRP902n2YlRpEG/6uXpmxk76Av8Jcl4Qr11Ay4+9JAMgvCq/vDOgGM+frzsXS2uPOQkVtlx6qzrrv1iLuHrVNg3hZ96Ir8f1uUsbe3nyZnKBrPJgi7rOp4FLjqNyQ9/kmk9KUP2HBuHMhbKSRLbwbpl7V+NZxaFS1gWdkg0eZR+NbX9sIhoLENOEotRjlNY3+asg3Eq8iKuzPHHQ79N9nUBSdE7T92EdYqznAMPOKMZDIcwls1YtLFAq0LKgvx1CypnC//e8n8cU3ARmqfZ2aTbrJIpgIN60sFrYSRJsfVlsLq1GWk4J89ECuxFXd05Kdy5MFrIOtCYuHJFcal7geeKdNt5GCnMrgSKAVkFKH0+EO9JQU/nk8fOtw/mP3iXcvGLOcmqqMFvcIGYsif3exQ0ZsRhnGUfSm10n6eClHyzx2XnPyQYrs6c4PzKiWUHGjoxXvN/0hxihhZcWn46wdEwXyeZ3ewH8+ePn+wVvLt7F2mqWwI+Wsfa3CkFZX8R580E29tJ4f/0OFnQ9k/JvYV6US6NoTQ12M7xf7/ptruySnvfLncMx2wx0sRVPzVuPvY3q1YT7oTGt9nSpq0Ue4bMj/iY1hWb22cmLYHwM/21Dlg/Yco/Qv2bxhZwwCcMLgizfqndiF4V5aIc8nTMVi91",
+    "publicKey" : "MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgHu9dAzcWviz6LqHtToLfhW45OqrJGcm9MUfQZ9rDqQdAyKCVZqkdJqjY713OVzDnPARemRLe9OZ6pB+Si4RQf7Nhm0FiwrP4lLfgZI3MCyqg3pBzfJI9G9BUp2l5H93kxjT0CFG2vpX8x8c5n81AWuLsCt+eOvqxH8THr1uWq1fAgMBAAE="
+  },
+  "salt" : "0JtCHg2s3LAyqm4SCUOCdAdAQj0iM/f9C0LbJCTub94=",
+  "standardMaxStorage" : 475,
+  "starCount" : 750,
+  "tags" : [ "test2", "plop", "adults", "plip", "plup" ]
+})";
+    auto user = JSonUnserializer::fromString<User>(json);
+}
 
 BOOST_AUTO_TEST_CASE(test_data_node)
 {

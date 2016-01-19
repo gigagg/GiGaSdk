@@ -70,6 +70,14 @@ struct Node {
         GIGA_MANAGE(m, original);
         GIGA_MANAGE(m, poster);
     }
+
+//    ~Node() {
+//            std::cout << "DELETE NODE "<< id << std::endl;
+//        };
+//    Node () = default;
+//    Node (const Node&) = default;
+//    Node (Node&&) = default;
+//    Node& operator= (Node&&) = default;
 };
 
 } /* namespace data */

@@ -16,67 +16,77 @@ namespace giga {
 class JSonUnserializer;
 
 namespace details {
-    inline int getValue(const web::json::value& value, int&) {
-        return value.as_integer();
+    inline void getValue(const web::json::value& value, int& ret) {
+        ret = value.as_integer();
     }
-    inline int64_t getValue(const web::json::value& value, int64_t&) {
-        return value.as_number().to_int64();
+    inline void getValue(const web::json::value& value, int64_t& ret) {
+        ret = value.as_number().to_int64();
     }
-    inline int64_t getValue(const web::json::value& value, uint64_t&) {
-        return value.as_number().to_uint64();
+    inline void getValue(const web::json::value& value, uint64_t& ret) {
+        ret = value.as_number().to_uint64();
     }
-    inline bool getValue(const web::json::value& value, bool&) {
-        return value.as_bool();
+    inline void getValue(const web::json::value& value, bool& ret) {
+        ret = value.as_bool();
     }
-    inline double getValue(const web::json::value& value, double&) {
-        return value.as_double();
+    inline void getValue(const web::json::value& value, double& ret) {
+        ret = value.as_double();
     }
-    inline std::string getValue(const web::json::value& value, std::string&) {
-        return value.as_string();
-    }
-    inline const char* getValue(const web::json::value& value, const char*&) {
-        return value.as_string().c_str();
+    inline void getValue(const web::json::value& value, std::string& ret) {
+        ret = value.as_string();
     }
 
     template <typename T>
-    T getValue(const web::json::value& value, T&) {
-        auto elm = T{};
-        elm.visit(JSonUnserializer{value});
-        return elm;
+    void getValue(const web::json::value& value, T& ret) {
+        ret.visit(JSonUnserializer{value});
     }
 
     template <typename T>
-    std::unique_ptr<T> getValue(const web::json::value& value, std::unique_ptr<T>&) {
+    void getValue(const web::json::value& value, std::unique_ptr<T>& ret) {
         if (value.is_null()) {
-            return nullptr;
+            ret = nullptr;
+        } else if (ret == nullptr) {
+            ret = std::unique_ptr<T>(new T{});
+            getValue(value, *ret);
         } else {
-            auto t = std::unique_ptr<T>(new T{});
-            *t = details::getValue(value, *t);
-            return t;
+            getValue(value, *ret);
         }
     }
 
     template <typename T>
-    std::vector<T> getValue(const web::json::value& value, std::vector<T>&) {
-        auto ret = std::vector<T>();
+    void getValue(const web::json::value& value, std::shared_ptr<T>& ret) {
+        if (value.is_null()) {
+            ret = nullptr;
+        } else if (ret == nullptr) {
+            ret = std::make_shared<T>();
+            getValue(value, *ret);
+        } else {
+            getValue(value, *ret);
+        }
+    }
+
+    template <typename T>
+    void getValue(const web::json::value& value, std::vector<T>& ret) {
+        ret.clear();
         if (!value.is_null()) {
             auto values = value.as_array();
             ret.reserve(values.size());
             for(auto value : values) {
                 auto t = T{};
-                ret.push_back(getValue(value, t));
+                getValue(value, t);
+                ret.push_back(std::move(t));
             }
         }
-        return ret;
     }
 
     template <typename T>
-    boost::optional<T> getValue(const web::json::value& value, boost::optional<T>&) {
+    void getValue(const web::json::value& value, boost::optional<T>& ret) {
         if (value.is_null()) {
-            return boost::none;
+            ret = boost::none;
+        } else if (!ret.is_initialized()) {
+            ret = boost::make_optional(T{});
+            getValue(value, ret.get());
         } else {
-            auto t = T{};
-            return boost::make_optional(details::getValue(value, t));
+            getValue(value, ret.get());
         }
     }
 } // namespace details
@@ -102,60 +112,89 @@ public:
         doUnserialize(t);
         return t;
     }
-    inline void doUnserialize(std::string& data) const {
-        data = val.as_string();
-    }
+
+private:
+    //
+    // doUnserialize
+    //
+
+//    inline void doUnserialize(std::string& data) const {
+//        data = val.as_string();
+//    }
     template <typename T> void doUnserialize(T& data) const {
         data.visit(*this);
     }
-    template <typename T> void doUnserialize(std::vector<T>& data) const {
-        auto values = val.as_array();
-        data.reserve(values.size());
-        for(auto value : values) {
-            auto t = T{};
-            data.push_back(details::getValue(value, t));
+    template <typename T> void doUnserialize(std::unique_ptr<T>& data) const {
+        if (!val.is_null()) {
+            data = std::unique_ptr<T>(new T{});
+            doUnserialize(*data);
         }
     }
-    template <typename T> void doUnserialize(std::unique_ptr<T>& data) const {
-        data = std::unique_ptr<T>(new T{});
-        doUnserialize(*data);
+    template <typename T> void doUnserialize(std::shared_ptr<T>& data) const {
+        if (!val.is_null()) {
+            data = std::make_shared<T>();
+            doUnserialize(*data);
+        }
+    }
+    template <typename T> void doUnserialize(boost::optional<T>& data) const {
+        if (!val.is_null()) {
+            data = boost::make_optional(T{});
+            doUnserialize(data.get());
+        }
+    }
+    template <typename T> void doUnserialize(std::vector<T>& data) const {
+        if (val.is_array()) {
+            auto& values = val.as_array();
+            data.reserve(values.size());
+            for(auto value : values) {
+                auto t = T{};
+                details::getValue(value, t),
+                data.push_back(std::move(t));
+            }
+        }
     }
 
-    template <typename T> void doUnserialize(std::shared_ptr<T>& data) const {
-        data = std::make_shared<T>();
-        doUnserialize(*data);
-    }
+public:
+    //
+    // MANAGE
+    //
 
     template <typename T> void manageOpt(T& current, const std::string& name, T defaultValue) const {
         if (val.has_field(name)) {
-            current = details::getValue(val.at(name), current);
+            manage(current, name);
         } else {
             current = defaultValue;
         }
     }
     template <typename T> void manage(T& current, std::string name) const {
-        current = details::getValue(val.at(name), current);
+        details::getValue(val.at(name), current);
     }
-
-    template <typename T> void manage(boost::optional<T>& current, const std::string& name) const {
+    template <typename T> void manage(T* current, const std::string& name) const {
         if (!val.has_field(name)) {
-            current = boost::none;
+            current = nullptr;
         } else {
-            current = details::getValue(val.at(name), current);
+            details::getValue(val.at(name), current);
         }
     }
     template <typename T> void manage(std::unique_ptr<T>& current, const std::string& name) const {
         if (!val.has_field(name)) {
             current = nullptr;
         } else {
-            current = details::getValue(val.at(name), current);
+            details::getValue(val.at(name), current);
+        }
+    }
+    template <typename T> void manage(boost::optional<T>& current, const std::string& name) const {
+        if (!val.has_field(name)) {
+            current = boost::none;
+        } else {
+            details::getValue(val.at(name), current);
         }
     }
     template <typename T> void manage(std::vector<T>& current, const std::string& name) const {
         if (!val.has_field(name)) {
             current = std::vector<T>{};
         } else {
-            current = details::getValue(val.at(name), current);
+            details::getValue(val.at(name), current);
         }
     }
 

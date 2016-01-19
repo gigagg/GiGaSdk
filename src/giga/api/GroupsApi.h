@@ -10,6 +10,7 @@
 
 namespace giga
 {
+struct Empty;
 
 namespace data {
 struct Group;
@@ -30,7 +31,7 @@ public:
     static pplx::task<std::shared_ptr<data::Group>>
     updateGroupName (int64_t groupId, const std::string& name);
 
-    static pplx::task<std::shared_ptr<std::string>>
+    static pplx::task<std::shared_ptr<Empty>>
     deleteGroup (int64_t groupId);
 
     static pplx::task<std::shared_ptr<data::Group>>

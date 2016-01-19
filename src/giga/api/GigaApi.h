@@ -14,8 +14,13 @@
 
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
+#include <memory>
 
 namespace giga {
+
+namespace data {
+class User;
+}
 
 class GigaApi
 {
@@ -26,10 +31,13 @@ public:
     virtual ~GigaApi() = default;
 
 public:
-    static pplx::task<std::string> authenticate(const std::string& login, const std::string& password);
+    static pplx::task<std::shared_ptr<data::User>> authenticate(const std::string& login, const std::string& password);
+
+    static data::User& getCurrentUser();
 
 protected:
     static HttpClient client;
+    static std::shared_ptr<data::User> currentUser;
 };
 
 } // namespace giga

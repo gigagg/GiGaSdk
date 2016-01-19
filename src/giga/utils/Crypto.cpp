@@ -6,6 +6,7 @@
  */
 
 #include "Crypto.h"
+#include "../rest/HttpErrors.h"
 
 #include <algorithm>
 
@@ -65,12 +66,20 @@ using CryptoPP::SecByteBlock;
 namespace giga
 {
 
+const byte* toByteCst(const std::string& str) {
+    return reinterpret_cast<const byte*>(str.data());
+}
+byte* toByte(std::vector<char>& str) {
+    return reinterpret_cast<byte*>(str.data());
+}
+
 void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
     Base64Decoder decoder;
     decoder.Attach(new Redirector(queue));
-    decoder.Put(reinterpret_cast<const byte*>(b64encoded.data()), b64encoded.size());
+    decoder.Put(toByteCst(b64encoded), b64encoded.size());
     decoder.MessageEnd();
 }
+
 
 Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
 {
@@ -96,10 +105,10 @@ Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
 
     AutoSeededRandomPool rnd;
     if(!priv.Validate(rnd, 3))
-        throw std::runtime_error("Rsa private key validation failed");
+        THROW(ErrorException("Rsa private key validation failed"));
 
     if(!priv.Validate(rnd, 3))
-        throw std::runtime_error("Dsa private key validation failed");
+        THROW(ErrorException("Dsa private key validation failed"));
 }
 
 std::string
@@ -137,12 +146,12 @@ pbkdf2 (const std::string& password, const std::string& salt, std::size_t length
 {
     auto key = std::vector<char>(length);
     PKCS5_PBKDF2_HMAC<T> passToKey;
-    passToKey.DeriveKey(reinterpret_cast<byte*>(key.data()),
+    passToKey.DeriveKey(toByte(key),
                         key.size(),
                         '\0',
-                        reinterpret_cast<const byte*>(password.data()),
+                        toByteCst(password),
                         password.size(),
-                        reinterpret_cast<const byte*>(salt.data()),
+                        toByteCst(salt),
                         salt.size(),
                         iteration);
 
@@ -164,7 +173,7 @@ std::string
 Crypto::base64encode (const std::string& data)
 {
     std::string encoded;
-    StringSource ss(reinterpret_cast<const byte*> (data.data()), data.size(), true,
+    StringSource ss(toByteCst(data), data.size(), true,
         new Base64Encoder(
             new StringSink(encoded)
         ) // Base64Encoder
@@ -182,7 +191,7 @@ std::string
 Crypto::base64decode (const std::string& data)
 {
     std::string decoded;
-    StringSource ss(reinterpret_cast<const byte*> (data.data()), data.size(), true,
+    StringSource ss(toByteCst(data), data.size(), true,
         new Base64Decoder(
             new StringSink(decoded)
         ) // Base64Encoder
@@ -244,16 +253,7 @@ Crypto::aesEncrypt (const std::string& password, const std::string& data)
     auto saltStr = std::string(salt.begin(), salt.end());
     auto ivStr = std::string(iv.begin(), iv.end());
     auto key = pbkdf2_sha256(password, saltStr, 16);
-
-    CBC_Mode<AES>::Encryption e;
-    e.SetKeyWithIV(reinterpret_cast<const byte*>(key.data()), key.size(), iv, ivStr.size());
-
-    std::string encrypted;
-    StringSource ss(reinterpret_cast<const byte*> (data.data()), data.size(), true,
-        new StreamTransformationFilter(e,
-            new StringSink(encrypted)
-        )
-    );
+    auto encrypted = aesEncrypt(key, ivStr, data);
 
     return std::make_tuple(
             encrypted,
@@ -261,19 +261,35 @@ Crypto::aesEncrypt (const std::string& password, const std::string& data)
             saltStr
     );
 }
+
+std::string
+Crypto::aesEncrypt (const std::string& key, const std::string& iv, const std::string& data)
+{
+    CBC_Mode<AES>::Encryption e;
+    e.SetKeyWithIV(toByteCst(key), key.size(), toByteCst(iv), iv.size());
+
+    std::string encrypted;
+    StringSource ss(toByteCst (data), data.size(), true,
+        new StreamTransformationFilter(e,
+            new StringSink(encrypted)
+        )
+    );
+
+    return encrypted;
+}
 std::string
 Crypto::aesDecrypt (const std::string& password, const std::string& saltStr, const std::string& ivStr, const std::string& data)
 {
     auto key = pbkdf2_sha256(password, saltStr, 16);
 
     CBC_Mode<AES>::Decryption e;
-    e.SetKeyWithIV(reinterpret_cast<const byte*>(key.data()),
+    e.SetKeyWithIV(toByteCst(key),
                    key.size(),
-                   reinterpret_cast<const byte*>(ivStr.data()),
+                   toByteCst(ivStr),
                    ivStr.size());
 
     std::string decrypted;
-    StringSource ss(reinterpret_cast<const byte*> (data.data()), data.size(), true,
+    StringSource ss(toByteCst (data), data.size(), true,
         new StreamTransformationFilter(e,
             new StringSink(decrypted)
         )

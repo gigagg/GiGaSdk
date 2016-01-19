@@ -26,7 +26,7 @@ public:
     static pplx::task<std::shared_ptr<data::NodeList>>
     searchNode (const std::string& search, const std::string& mine, const std::string& inFolder, int64_t ownerId);
 
-    static pplx::task<std::shared_ptr<data::Node>>
+    static pplx::task<std::shared_ptr<data::DataNode>>
     addNode (const std::string& name, const std::string& type, const std::string& parentId, const std::string& fkey,
              const std::string& fid);
 

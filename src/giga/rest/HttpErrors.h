@@ -8,15 +8,63 @@
 #ifndef HTTPERRORS_H_
 #define HTTPERRORS_H_
 
+#include <cpprest/json.h>
+#include <iostream>
 #include <string>
 #include "prepoc_manage.h"
 
+#ifdef DEBUG
+#define THROW(ex)               \
+{                               \
+    auto _m_exGG_ = (ex);       \
+    _m_exGG_.file = __FILE__;   \
+    _m_exGG_.line = std::to_string(__LINE__);   \
+    _m_exGG_.name = #ex;        \
+    throw (_m_exGG_);           \
+} do {} while(0)
+#else
+#define THROW(ex) throw (ex)
+#endif
+
 namespace giga {
 
-    class HttpErrorGeneric : public std::exception {
+    class ErrorException : public std::exception {
+    public:
+        explicit ErrorException () : std::exception(){}
+        explicit ErrorException (const std::string& what) : std::exception(), whatStr(what)
+        {}
+        virtual ~ErrorException () = default;
+        ErrorException (const ErrorException&) = default;
+        ErrorException (ErrorException&&) = default;
+
+        virtual const char* what() const noexcept {
+            return whatStr.c_str();
+        }
+
+#ifdef DEBUG
+        std::string file;
+        std::string line;
+        std::string name;
+
+        void print(std::ostream &stream = std::cerr) const {
+            stream << "### ErrorException: " << name << " ###"
+                   << "\nFile : " << file
+                   << "\nLine : " << line
+                   << "\n" << what() << std::endl;
+        }
+#else
+        void print(std::ostream &stream = std::cerr) const {
+            stream << what() << std::endl;
+        }
+#endif
+    protected:
+        std::string whatStr  = "";
+    };
+
+    class HttpErrorGeneric : public ErrorException {
     public:
         explicit HttpErrorGeneric (unsigned short status, const std::string& errorStr = "", const std::string& scope = "") :
-                status (status), errorStr(errorStr), scope(scope)
+            ErrorException(errorStr), status (status), scope(scope)
         {
         }
         virtual ~HttpErrorGeneric () = default;
@@ -24,18 +72,36 @@ namespace giga {
         HttpErrorGeneric (HttpErrorGeneric&&) = default;
 
         virtual const char* what() const noexcept {
-            return errorStr.c_str();
+            whatData = "status: " + std::to_string(status) + " err: " + whatStr;
+            return whatData.c_str();
         }
 
         template <class Manager>
         void visit(const Manager& us){
-          GIGA_MANAGE_OPT(us, errorStr, std::string{});
-          GIGA_MANAGE_OPT(us, scope, std::string{});
+            us.manageOpt(whatStr, "errorStr", std::string{});
+            GIGA_MANAGE_OPT(us, scope, std::string{});
         }
 
+        HttpErrorGeneric& setJson(const web::json::value& json) {
+            this->json = json;
+            return *this;
+        }
+        HttpErrorGeneric& setJson(web::json::value&& json) {
+            this->json = json;
+            return *this;
+        }
+
+        const web::json::value& getJson() const {
+            return this->json;
+        }
+
+    public:
         const unsigned short status = 500;
-        std::string errorStr = "";
-        std::string scope = "";
+        std::string scope     = "";
+
+    private:
+        web::json::value json = {};
+        mutable std::string whatData;
     };
 
     template <unsigned short TStatus>
