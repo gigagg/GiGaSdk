@@ -83,32 +83,46 @@ void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
 
 Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
 {
-    try {
+    try
+    {
         ByteQueue queue;
         fillQueue(queue, pubStr);
         pub.BERDecodePublicKey(queue, false, queue.MaxRetrievable());
-    } catch (const std::exception&) {
+    }
+    catch (const std::exception&)
+    {
         ByteQueue queue;
         fillQueue(queue, pubStr);
         pub.BERDecode(queue);
     }
+    hasPrivateKey = false;
+    if (privStr != "")
+    {
+        try
+        {
+            ByteQueue queue;
+            fillQueue(queue, privStr);
+            priv.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
+            hasPrivateKey = true;
+        }
+        catch (const std::exception&)
+        {
+            ByteQueue queue;
+            fillQueue(queue, privStr);
+            priv.BERDecode(queue);
+        }
 
-    try {
-        ByteQueue queue;
-        fillQueue(queue, privStr);
-        priv.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
-    } catch (const std::exception&) {
-        ByteQueue queue;
-        fillQueue(queue, privStr);
-        priv.BERDecode(queue);
+        AutoSeededRandomPool rnd;
+        if (!priv.Validate(rnd, 3))
+        {
+            THROW(ErrorException("Rsa private key validation failed"));
+        }
+
+        if (!priv.Validate(rnd, 3))
+        {
+            THROW(ErrorException("Dsa private key validation failed"));
+        }
     }
-
-    AutoSeededRandomPool rnd;
-    if(!priv.Validate(rnd, 3))
-        THROW(ErrorException("Rsa private key validation failed"));
-
-    if(!priv.Validate(rnd, 3))
-        THROW(ErrorException("Dsa private key validation failed"));
 }
 
 std::string
@@ -128,8 +142,11 @@ Rsa::encrypt (const std::string& data) const
 std::string
 Rsa::decrypt (const std::string& data) const
 {
+    if (!hasPrivateKey) {
+        THROW(ErrorException("PrivateKey has not been set"));
+    }
     AutoSeededRandomPool rng;
-    RSAES_PKCS1v15_Decryptor decryptor( priv );
+    RSAES_PKCS1v15_Decryptor decryptor(priv);
     std::string decrypted;
     StringSource ss(data, true,
         new PK_DecryptorFilter(rng, decryptor,

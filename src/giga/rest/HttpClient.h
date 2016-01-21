@@ -54,7 +54,7 @@ public:
     web::uri_builder uri(const std::string& resource, const T& id, const std::string& subResource, const U& subId) {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
-        ss << API << resource << "/" << id << "/" << subResource << subId;
+        ss << API << resource << "/" << id << "/" << subResource << "/" << subId;
         return web::uri_builder{ss.str()};
     }
 

@@ -18,6 +18,7 @@
 #include <cpprest/rawptrstream.h>               // Async streams backed by raw pointer to memory
 #include <cpprest/producerconsumerstream.h>     // Async streams for producer consumer scenarios
 
+#include <giga/core/Application.h>
 #include <giga/api/GigaApi.h>
 #include <giga/api/UsersApi.h>
 #include <giga/api/FileApi.h>
@@ -43,11 +44,30 @@ int main ( int /*argc*/, char** /*argv*/ )
                 std::string("86ebaa36c3f0"),
                 std::string("2ed5cb98abd9c1a0699679990576a97e"));
 
-        auto user = GigaApi::authenticate("t.guYard", "password").get();
-        std::cout << user->node->id << std::endl;
+        auto& app = core::Application::instance();
 
-        auto node = FileApi::uploadFile("/home/thomas/tmp/randfile", "randfile", user->node->id);
-        std::cout << JSonSerializer::toString(node.get()) << std::endl;
+        auto user = app.authenticate("t.guYard", "password").get();
+        std::cout << user.login() << std::endl;
+
+        std::cout << "Contacts:" << std::endl;
+        app.loadRelations().get();
+        for(auto contact : app.contacts())
+        {
+            std::cout << contact.login() << " " << contact.id() << std::endl;
+        }
+        std::cout << "EndContact" << std::endl;
+
+        auto test21 = app.getUserByLogin("test21").get();
+        std::cout << test21.login() << " " << test21.id() << " " << test21.hasRelation() << std::endl;
+
+        auto test02 = app.getUserByLogin("test02").get();
+        std::cout << test02.login() << " " << test02.id() << " " << test02.hasRelation() << std::endl;
+
+        test02.invite().get();
+        std::cout << test02.login() << " " << test02.id() << " " << test02.hasRelation() << std::endl;
+
+//        auto node = FileApi::uploadFile("/home/thomas/tmp/randfile", "randfile", user->node->id);
+//        std::cout << JSonSerializer::toString(node.get()) << std::endl;
 
 //        user = UsersApi::getUserById(1704770).get();
 //        std::cout << user.get()->login << std::endl;

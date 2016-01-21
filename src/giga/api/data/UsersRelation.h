@@ -19,7 +19,7 @@ namespace data {
  * An edge in the User graph
  */
 struct UsersRelation {
-    std::unique_ptr<User> user = nullptr;
+    std::shared_ptr<User> user = nullptr;
     std::string type = {};
     int64_t creationDate = 0;
     /** type=CONTACT */

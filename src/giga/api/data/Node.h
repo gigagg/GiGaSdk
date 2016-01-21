@@ -5,6 +5,7 @@
 #ifndef GIGA_DATA_NODE_MODEL_H_
 #define GIGA_DATA_NODE_MODEL_H_
 
+#include <boost/optional.hpp>
 #include <string>
 #include <vector>
 #include <map>

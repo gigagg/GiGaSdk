@@ -29,6 +29,7 @@ struct User {
     /** unix timestamp in seconds */
     boost::optional<int64_t> lastConnectionDate = boost::none;
     std::string activity = {};
+    bool isUnlimited = {};
     boost::optional<std::string> gender = boost::none;
     /** Y-m-d ex: 1960-01-26 */
     boost::optional<std::string> birthDate = boost::none;
@@ -87,6 +88,7 @@ struct User {
         GIGA_MANAGE(m, creationDate);
         GIGA_MANAGE(m, lastConnectionDate);
         GIGA_MANAGE(m, activity);
+        GIGA_MANAGE(m, isUnlimited);
         GIGA_MANAGE(m, gender);
         GIGA_MANAGE(m, birthDate);
         GIGA_MANAGE(m, description);

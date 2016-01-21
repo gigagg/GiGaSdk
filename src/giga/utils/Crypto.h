@@ -17,7 +17,7 @@ namespace giga
 
 class Rsa final {
 public:
-    explicit Rsa(const std::string& pubStr, const std::string& privStr);
+    explicit Rsa(const std::string& pubStr, const std::string& privStr = "");
 
     std::string encrypt(const std::string& data) const;
     std::string decrypt(const std::string& data) const;
@@ -25,6 +25,7 @@ public:
 private:
     CryptoPP::RSA::PublicKey pub;
     CryptoPP::RSA::PrivateKey priv;
+    bool hasPrivateKey;
 };
 
 class Crypto final

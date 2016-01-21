@@ -27,7 +27,7 @@ NetworkApi::updateUserRelationData (int64_t fromUserId, int64_t toUserId, const 
 }
 
 pplx::task<std::shared_ptr<UsersRelation>>
-NetworkApi::createUserRelationData (int64_t fromUserId, int64_t toUserId, const std::string& type, const std::string& medium,
+NetworkApi::createUserRelation (int64_t fromUserId, int64_t toUserId, const std::string& type, const std::string& medium,
                                     const std::string& key)
 {
     auto uri = client.uri ("users", fromUserId, "users", toUserId);
@@ -46,12 +46,12 @@ NetworkApi::deleteUserRelationData (int64_t fromUserId, int64_t toUserId, const 
     return client.request<Success> (methods::DEL, uri);
 }
 
-pplx::task<std::shared_ptr<UsersRelation>>
-NetworkApi::getUserRelationData (int64_t userId, const std::string& type, const std::string& way)
+pplx::task<std::shared_ptr<std::vector<std::shared_ptr<UsersRelation>>>>
+NetworkApi::getUserRelation (int64_t userId, const std::string& type, const std::string& way)
 {
-    auto uri = client.uri ("users", userId, "users", userId);
+    auto uri = client.uri ("users", userId, "users");
     uri.append_query ("type", type);
     uri.append_query ("way", way);
-    return client.request<UsersRelation> (methods::GET, uri);
+    return client.request<std::vector<std::shared_ptr<UsersRelation>>> (methods::GET, uri);
 }
 } // namespace giga

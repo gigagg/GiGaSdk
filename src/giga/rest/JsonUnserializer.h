@@ -166,6 +166,13 @@ public:
             current = defaultValue;
         }
     }
+    void manage(bool& current, std::string name) const {
+        if (!val.has_field(name)) {
+            current = false;
+        } else {
+            details::getValue(val.at(name), current);
+        }
+    }
     template <typename T> void manage(T& current, std::string name) const {
         details::getValue(val.at(name), current);
     }

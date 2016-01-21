@@ -23,14 +23,14 @@ public:
     updateUserRelationData (int64_t fromUserId, int64_t toUserId, const std::string& type, bool favorite, bool isNew);
 
     static pplx::task<std::shared_ptr<data::UsersRelation>>
-    createUserRelationData (int64_t fromUserId, int64_t toUserId, const std::string& type, const std::string& medium,
+    createUserRelation (int64_t fromUserId, int64_t toUserId, const std::string& type, const std::string& medium,
                             const std::string& key);
 
     static pplx::task<std::shared_ptr<data::Success>>
     deleteUserRelationData (int64_t fromUserId, int64_t toUserId, const std::string& type);
 
-    static pplx::task<std::shared_ptr<data::UsersRelation>>
-    getUserRelationData (int64_t userId, const std::string& type, const std::string& way);
+    static pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::UsersRelation>>>>
+    getUserRelation (int64_t userId, const std::string& type, const std::string& way);
 };
 } // namespace giga
 
