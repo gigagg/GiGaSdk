@@ -12,56 +12,37 @@
 
 namespace giga
 {
+class Application;
 
 class Config final
 {
 public:
-    static Config&
-    getInstance ()
-    {
-        static Config instance;
-        return instance;
-    }
-
-    static Config& init(std::string&& appRedirectUri, std::string&& appId, std::string&& appKey, std::string&& appScope = "basic network groups files basic:write network:write groups:write files:write")
-    {
-        auto& instance = getInstance();
-        instance.doInit(std::move(appRedirectUri), std::move(appId), std::move(appKey), std::move(appScope));
-        return instance;
-    }
-
-    explicit Config() {}
     Config(Config const&)         = delete;
     void operator=(Config const&) = delete;
 
 private:
-    inline void doInit(std::string&& appRedirectUri, std::string&& appId, std::string&& appKey, std::string&& appScope)
-    {
-        this->appRedirectUri = appRedirectUri;
-        this->appId = appId;
-        this->appKey = appKey;
-        this->appScope = appScope;
-    }
+    friend class Application;
+
+    explicit
+    Config() = default;
 
 public:
-    inline const std::string& getAppRedirectUri() const {return appRedirectUri;}
-    inline const std::string& getAppId() const {return appId;}
-    inline const std::string& getAppKey() const {return appKey;}
-    inline const std::string& getAppScope() const {return appScope;}
+    inline const std::string& appRedirectUri() const {return _appRedirectUri;}
+    inline const std::string& appId() const {return _appId;}
+    inline const std::string& appKey() const {return _appKey;}
+    inline const std::string& appScope() const {return _appScope;}
 
-    inline const std::string& getAppOauthAuthorizationEndpoint() const {return oauthAuthorizationEndpoint;}
-    inline const std::string& getAppOauthTokenEndpoint() const {return oauthTokenEndpoint;}
+    inline const std::string& appOauthAuthorizationEndpoint() const {return _oauthAuthorizationEndpoint;}
+    inline const std::string& appOauthTokenEndpoint() const {return _oauthTokenEndpoint;}
 
 private:
-    std::string appRedirectUri;
-    std::string appId;
-    std::string appKey;
-    std::string appScope;
+    std::string _appRedirectUri;
+    std::string _appId;
+    std::string _appKey;
+    std::string _appScope;
 
-    const std::string oauthAuthorizationEndpoint = "https://dev.gg/oauth/authorize";
-    const std::string oauthTokenEndpoint         = "https://dev.gg/oauth/token";
-
-
+    const std::string _oauthAuthorizationEndpoint = "https://dev.gg/oauth/authorize";
+    const std::string _oauthTokenEndpoint         = "https://dev.gg/oauth/token";
 };
 
 } /* namespace giga */

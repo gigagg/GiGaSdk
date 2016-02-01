@@ -73,12 +73,12 @@ public:
 public:
     User()                       = default; // TODO: private + friend to correct class (pplx).
     ~User()                      = default;
+    User(User&&)                  = default;
+    User(const User&)             = default;
+    User& operator=(const User&)  = default;
+    User& operator=(User&&)       = default;
 
     explicit User(std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r = nullptr);
-    User(User&&);
-    User(const User&);
-    User& operator=(const User&);
-    User& operator=(User&&);
 
 public:
     int64_t
@@ -227,16 +227,12 @@ public:
     // Setters
     //
 
-    pplx::task<void> invite();
-    pplx::task<void> block();
-    pplx::task<void> suggest();
-    pplx::task<void> acceptInvitation();
+    User invite();
+    User block();
+    User suggest();
+    User acceptInvitation();
 
 private:
-    void setRelation(std::shared_ptr<data::UsersRelation> r);
-
-private:
-    std::mutex mut;
     std::shared_ptr<data::User> u;
     std::shared_ptr<data::UsersRelation> r;
     boost::optional<PrivateData> _private;

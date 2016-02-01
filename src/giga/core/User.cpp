@@ -6,7 +6,7 @@
  */
 
 #include "User.h"
-#include "Application.h"
+#include "../Application.h"
 #include "../api/data/User.h"
 #include "../api/NetworkApi.h"
 #include "../api/data/UsersRelation.h"
@@ -45,44 +45,6 @@ User::User (std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> 
         publicKey = boost::make_optional(Rsa(u->publicKey.get()));
     }
 }
-
-User::User (User&& other)
-{
-    u = std::move(other.u);
-    r = std::move(other.r);
-    _private = std::move(other._private);
-    _protected = std::move(other._protected);
-    publicKey = std::move(other.publicKey);
-}
-User::User (const User& other)
-{
-    u = other.u;
-    r = other.r;
-    _private = other._private;
-    _protected = other._protected;
-    publicKey = other.publicKey;
-}
-User&
-User::operator= (User&& other)
-{
-    u = std::move(other.u);
-    r = std::move(other.r);
-    _private = std::move(other._private);
-    _protected = std::move(other._protected);
-    publicKey = std::move(other.publicKey);
-    return *this;
-}
-User&
-User::operator= (const User& other)
-{
-    u = other.u;
-    r = other.r;
-    _private = other._private;
-    _protected = other._protected;
-    publicKey = other.publicKey;
-    return *this;
-}
-
 
 int64_t
 User::id () const
@@ -343,75 +305,45 @@ User::relation () const
 }
 
 
-pplx::task<void>
+User
 User::invite ()
 {
     // TODO: test states + make sure optionals are here
     // TODO: groupIds ...
-    auto& app = Application::instance();
+    auto& app = Application::get();
     auto& nodeKeyClear = app.currentUser().privateData().nodeKeyClear;
     auto key = Crypto::base64encode(publicKey.get().encrypt(nodeKeyClear));
-    return NetworkApi::createUserRelation(app.currentUser().id(), id(), "INVITE", "UNKNOWN", key).then(
-            [&app, this](std::shared_ptr<data::UsersRelation> r) -> void
-            {
-                app.addInvitationsSent(r);
-                std::lock_guard<std::mutex> lock(mut);
-                this->setRelation(r);
-            });
+    auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "INVITE", "UNKNOWN", key).get();
+    return User{r->user, r};
 }
 
-pplx::task<void>
+User
 User::block ()
 {
     // TODO: test states + make sure optionals are here
-    auto& app = Application::instance();
-    return NetworkApi::createUserRelation(app.currentUser().id(), id(), "BLOCK", "", "").then(
-            [&app, this](std::shared_ptr<data::UsersRelation> r) -> void
-            {
-                app.addBlocked(r);
-                std::lock_guard<std::mutex> lock(mut);
-                this->setRelation(r);
-            });
+    auto& app = Application::get();
+    auto r =  NetworkApi::createUserRelation(app.currentUser().id(), id(), "BLOCK", "", "").get();
+    return User{r->user, r};
 }
 
-pplx::task<void>
+User
 User::suggest ()
 {
     // TODO: test states + make sure optionals are here
-    auto& app = Application::instance();
-    return NetworkApi::createUserRelation(app.currentUser().id(), id(), "SHOULD_INVITE", "", "").then(
-            [&app, this](std::shared_ptr<data::UsersRelation> r) -> void
-            {
-                app.addSuggestions(r);
-                std::lock_guard<std::mutex> lock(mut);
-                this->setRelation(r);
-            });
+    auto& app = Application::get();
+    auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "SHOULD_INVITE", "", "").get();
+    return User{r->user, r};
 }
 
-pplx::task<void>
+User
 User::acceptInvitation ()
 {
     // TODO: test states + make sure optionals are here
-    auto& app = Application::instance();
+    auto& app = Application::get();
     auto& nodeKeyClear = app.currentUser()._private.get().nodeKeyClear;
     auto key = Crypto::base64encode(publicKey.get().encrypt(nodeKeyClear));
-    return NetworkApi::createUserRelation(app.currentUser().id(), id(), "CONTACT", "", key).then(
-            [&app, this](std::shared_ptr<data::UsersRelation> r) -> void
-            {
-                app.addContact(r);
-                std::lock_guard<std::mutex> lock(mut);
-                this->setRelation(r);
-            });
-}
-
-void
-User::setRelation (std::shared_ptr<data::UsersRelation> r)
-{
-    this->u = r->user;
-    this->r = r;
-    this->_private = boost::none;
-    this->_protected = boost::none;
-    this->publicKey = boost::none;
+    auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "CONTACT", "", key).get();
+    return User{r->user, r};
 }
 
 } /* namespace core */

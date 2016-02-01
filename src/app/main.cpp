@@ -4,66 +4,42 @@
  * @author Thomas Guyard
  */
 
-
 #include <iostream>
-#include <cpprest/http_client.h>
-#include <cpprest/filestream.h>
 
-#include <cpprest/http_listener.h>              // HTTP server
-#include <cpprest/json.h>                       // JSON library
-#include <cpprest/uri.h>                        // URI library
-#include <cpprest/ws_client.h>                  // WebSocket client
-#include <cpprest/containerstream.h>            // Async streams backed by STL containers
-#include <cpprest/interopstream.h>              // Bridges for integrating Async streams with STL and WinRT streams
-#include <cpprest/rawptrstream.h>               // Async streams backed by raw pointer to memory
-#include <cpprest/producerconsumerstream.h>     // Async streams for producer consumer scenarios
-
-#include <giga/core/Application.h>
-#include <giga/api/GigaApi.h>
-#include <giga/api/UsersApi.h>
+#include <giga/Application.h>
 #include <giga/api/FileApi.h>
-#include <giga/api/data/User.h>
 #include <giga/rest/JsonSerializer.h>
 #include <giga/Config.h>
 
-using namespace utility;                    // Common utilities like string conversions
-using namespace web;                        // Common features like URIs.
-using namespace web::http;                  // Common HTTP functionality
-using namespace web::http::client;          // HTTP client features
-using namespace concurrency::streams;       // Asynchronous streams
-
 using namespace giga;
-
 
 int main ( int /*argc*/, char** /*argv*/ )
 {
     try
     {
-        Config::init(
+        auto& app = Application::init(
                 std::string("http://localhost:5001"),
                 std::string("86ebaa36c3f0"),
                 std::string("2ed5cb98abd9c1a0699679990576a97e"));
 
-        auto& app = core::Application::instance();
-
-        auto user = app.authenticate("t.guYard", "password").get();
+        auto user = app.authenticate("t.guYard", "password");
         std::cout << user.login() << std::endl;
 
         std::cout << "Contacts:" << std::endl;
-        app.loadRelations().get();
-        for(auto contact : app.contacts())
+        auto contacts = app.getContacts();
+        for(auto contact : contacts)
         {
             std::cout << contact.login() << " " << contact.id() << std::endl;
         }
         std::cout << "EndContact" << std::endl;
 
-        auto test21 = app.getUserByLogin("test21").get();
+        auto test21 = app.getUserByLogin("test21");
         std::cout << test21.login() << " " << test21.id() << " " << test21.hasRelation() << std::endl;
 
-        auto test02 = app.getUserByLogin("test02").get();
+        auto test02 = app.getUserByLogin("test02");
         std::cout << test02.login() << " " << test02.id() << " " << test02.hasRelation() << std::endl;
 
-        test02.invite().get();
+        test02 = test02.invite();
         std::cout << test02.login() << " " << test02.id() << " " << test02.hasRelation() << std::endl;
 
 //        auto node = FileApi::uploadFile("/home/thomas/tmp/randfile", "randfile", user->node->id);

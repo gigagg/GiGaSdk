@@ -5,6 +5,7 @@
 #include "Empty.h"
 #include "JsonObj.h"
 #include "../Config.h"
+#include "../Application.h"
 
 using namespace web::http;
 using namespace web::http::client;
@@ -36,11 +37,11 @@ struct Redirect {
 void
 HttpClient::authenticate (const std::string& login, const std::string& password)
 {
-    const auto& conf = Config::getInstance();
-    oauth2_config m_oauth2_config(conf.getAppId(), conf.getAppKey(), conf.getAppOauthAuthorizationEndpoint(),
-                                  conf.getAppOauthTokenEndpoint(), conf.getAppRedirectUri());
+    const auto& conf = Application::get().config();
+    oauth2_config m_oauth2_config(conf.appId(), conf.appKey(), conf.appOauthAuthorizationEndpoint(),
+                                  conf.appOauthTokenEndpoint(), conf.appRedirectUri());
 
-    m_oauth2_config.set_scope(conf.getAppScope());
+    m_oauth2_config.set_scope(conf.appScope());
     auto auth_uri = m_oauth2_config.build_authorization_uri(true);  /* Get the authorization uri */
     auto state  = std::string{};
     auto regex  = boost::regex{".*state=([a-zA-Z0-9]+).*"};
@@ -60,14 +61,14 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
         onRequest<Empty>(response);
         auto headers = response.headers();
 
-        const auto& conf = Config::getInstance();
+        const auto& conf = Application::get().config();
         auto body = JsonObj{};
         body.add("oauth", std::string("true"));
         body.add("response_type", std::string("code"));
-        body.add("client_id", conf.getAppId());
-        body.add("redirect_uri", conf.getAppRedirectUri());
+        body.add("client_id", conf.appId());
+        body.add("redirect_uri", conf.appRedirectUri());
         body.add("state", state);
-        body.add("scope", conf.getAppScope());
+        body.add("scope", conf.appScope());
         body.add("authorized", true);
 
         auto r = http_request{methods::POST};
