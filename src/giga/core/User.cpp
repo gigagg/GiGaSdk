@@ -177,17 +177,27 @@ User::ProtectedData::maxContact () const
     return u->maxContact.get_value_or(200);
 }
 
-User::PrivateData::PrivateData (std::shared_ptr<data::User> u) : u{u}
+User::PrivateData::PrivateData (std::shared_ptr<data::User> u, const std::string& password) : u{u}
 {
-    auto masterKey = Crypto::calculateMasterPassword(u->salt.get(), "gigatribe");
+    if (!u->salt.is_initialized() || !u->nodeKey.is_initialized())
+    {
+        THROW(ErrorException{"Salt and NodeKey are required to build PrivateData"});
+    }
+    auto masterKey = Crypto::calculateMasterPassword(u->salt.get(), password);
     auto privateKey = Crypto::aesDecrypt(masterKey,
                                          Crypto::base64decode(u->rsaKeys->aesSalt),
                                          Crypto::base64decode(u->rsaKeys->aesIv),
                                          Crypto::base64decode(u->rsaKeys->privateKey));
     auto rsa = Rsa{u->rsaKeys->publicKey, privateKey};
     auto tmp = rsa.decrypt(Crypto::base64decode(u->nodeKey.get()));
-    // TODO make sure the base64decode is necessary
-    nodeKeyClear = Crypto::base64decode(tmp);
+    if (tmp.size() > 44)
+    {
+        nodeKeyClear = Crypto::base64decode(tmp);
+    }
+    else
+    {
+        nodeKeyClear = tmp;
+    }
 }
 
 User::ReportedState
@@ -278,11 +288,23 @@ User::hasPrivateData () const
 }
 
 User::PrivateData&
+User::initializePrivateData (const std::string& password)
+{
+    if(hasPrivateData()) {
+        if (!_private.is_initialized()) {
+            _private = boost::make_optional(PrivateData{u, password});
+        }
+        return _private.get();
+    }
+    THROW(ErrorException{"No private data"});
+}
+
+User::PrivateData&
 User::privateData ()
 {
     if(hasPrivateData()) {
         if (!_private.is_initialized()) {
-            _private = boost::make_optional(PrivateData{u});
+            THROW(ErrorException{"You must initialize private data first"});
         }
         return _private.get();
     }
@@ -308,19 +330,20 @@ User::relation () const
 User
 User::invite ()
 {
-    // TODO: test states + make sure optionals are here
+    if (!publicKey.is_initialized())
+    {
+        THROW(ErrorException{"PublicKey is needed"});
+    }
     // TODO: groupIds ...
-    auto& app = Application::get();
-    auto& nodeKeyClear = app.currentUser().privateData().nodeKeyClear;
-    auto key = Crypto::base64encode(publicKey.get().encrypt(nodeKeyClear));
-    auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "INVITE", "UNKNOWN", key).get();
+    auto& user = Application::get().currentUser();
+    auto key = Crypto::base64encode(publicKey.get().encrypt(user.privateData().nodeKeyClear));
+    auto r = NetworkApi::createUserRelation(user.id(), id(), "INVITE", "UNKNOWN", key).get();
     return User{r->user, r};
 }
 
 User
 User::block ()
 {
-    // TODO: test states + make sure optionals are here
     auto& app = Application::get();
     auto r =  NetworkApi::createUserRelation(app.currentUser().id(), id(), "BLOCK", "", "").get();
     return User{r->user, r};
@@ -329,7 +352,6 @@ User::block ()
 User
 User::suggest ()
 {
-    // TODO: test states + make sure optionals are here
     auto& app = Application::get();
     auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "SHOULD_INVITE", "", "").get();
     return User{r->user, r};
@@ -338,11 +360,13 @@ User::suggest ()
 User
 User::acceptInvitation ()
 {
-    // TODO: test states + make sure optionals are here
-    auto& app = Application::get();
-    auto& nodeKeyClear = app.currentUser()._private.get().nodeKeyClear;
-    auto key = Crypto::base64encode(publicKey.get().encrypt(nodeKeyClear));
-    auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "CONTACT", "", key).get();
+    if (!publicKey.is_initialized())
+    {
+        THROW(ErrorException{"PublicKey is needed"});
+    }
+    auto& user = Application::get().currentUser();
+    auto key = Crypto::base64encode(publicKey.get().encrypt(user._private.get().nodeKeyClear));
+    auto r = NetworkApi::createUserRelation(user.id(), id(), "CONTACT", "", key).get();
     return User{r->user, r};
 }
 

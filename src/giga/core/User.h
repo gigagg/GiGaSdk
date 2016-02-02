@@ -71,8 +71,8 @@ public:
     };
 
 public:
-    User()                       = default; // TODO: private + friend to correct class (pplx).
-    ~User()                      = default;
+    User()                        = default; // TODO: private + friend to correct class (pplx).
+    ~User()                       = default;
     User(User&&)                  = default;
     User(const User&)             = default;
     User& operator=(const User&)  = default;
@@ -168,7 +168,7 @@ public:
         PrivateData& operator=(PrivateData&&)      = default;
 
     private:
-        explicit PrivateData(std::shared_ptr<data::User> u);
+        explicit PrivateData(std::shared_ptr<data::User> u, const std::string& password);
 
     public:
         ReportedState
@@ -213,6 +213,9 @@ public:
 
     bool
     hasPrivateData() const;
+
+    PrivateData&
+    initializePrivateData (const std::string& password);
 
     PrivateData&
     privateData();

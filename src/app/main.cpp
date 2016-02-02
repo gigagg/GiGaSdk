@@ -50,7 +50,6 @@ int main ( int /*argc*/, char** /*argv*/ )
 
 //        auto tags = UsersApi::searchTag("plop").get();
 //        std::cout << JSonSerializer::toString(*tags.get()) << std::endl;
-
     }
     catch (const ErrorException &e)
     {

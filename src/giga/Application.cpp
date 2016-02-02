@@ -61,6 +61,7 @@ Application::authenticate (const std::string& login, const std::string& password
 {
     auto duser = GigaApi::authenticate(login, password).get();
     _currentUser = User{duser};
+    _currentUser.initializePrivateData(password);
     return _currentUser;
 }
 
