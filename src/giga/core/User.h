@@ -202,6 +202,7 @@ public:
 
     private:
         std::shared_ptr<data::User> u;
+    public:
         std::string nodeKeyClear;
     };
 
