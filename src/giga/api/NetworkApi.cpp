@@ -39,7 +39,7 @@ NetworkApi::createUserRelation (int64_t fromUserId, int64_t toUserId, const std:
 }
 
 pplx::task<std::shared_ptr<Success>>
-NetworkApi::deleteUserRelationData (int64_t fromUserId, int64_t toUserId, const std::string& type)
+NetworkApi::deleteUserRelation (int64_t fromUserId, int64_t toUserId, const std::string& type)
 {
     auto uri = client.uri ("users", fromUserId, "users", toUserId);
     uri.append_query ("type", type);

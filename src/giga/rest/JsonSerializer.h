@@ -49,6 +49,13 @@ namespace details {
             return web::json::value::null();
         }
     }
+    template <typename T> web::json::value serialize(std::shared_ptr<T>& value) {
+        if (value) {
+            return serialize(*value);
+        } else {
+            return web::json::value::null();
+        }
+    }
     template <typename T> web::json::value serialize(std::vector<T>& values) {
         auto subJson = web::json::value::array(values.size());
         int i = 0;

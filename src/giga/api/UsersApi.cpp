@@ -46,14 +46,20 @@ UsersApi::userExists (const std::string& login, const std::string& email /* = ""
     return client.request<UserExists> (methods::GET, uri);
 }
 
-pplx::task<std::shared_ptr<User>>
+pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::User>>>>
 UsersApi::searchUsers (const std::string& search, const std::string& activity, const std::string& isSeeder)
 {
     auto uri = client.uri ("users");
     uri.append_query ("search", search);
-    uri.append_query ("activity", activity);
-    uri.append_query ("isSeeder", isSeeder);
-    return client.request<User> (methods::GET, uri);
+    if (activity != "")
+    {
+        uri.append_query ("activity", activity);
+    }
+    if (isSeeder != "")
+    {
+        uri.append_query ("isSeeder", isSeeder);
+    }
+    return client.request<std::vector<std::shared_ptr<data::User>>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>

@@ -116,6 +116,7 @@ namespace giga {
         HttpError (HttpError&&) = default;
     };
 
+
     typedef HttpError<401> ErrorUnauthorized;
     typedef HttpError<403> ErrorForbidden;
     typedef HttpError<400> ErrorBadRequest;
@@ -125,6 +126,30 @@ namespace giga {
     typedef HttpError<500> ErrorInternalServerError;
     typedef HttpError<501> ErrorNotImplemented;
 
+    inline HttpErrorGeneric
+    BuildHttpError(unsigned short status, const std::string& errorStr = "", const std::string& scope = "")
+    {
+        switch (status) {
+            case 401:
+                return ErrorUnauthorized{errorStr, scope};
+            case 403:
+                return ErrorForbidden{errorStr, scope};
+            case 400:
+                return ErrorBadRequest{errorStr, scope};
+            case 422:
+                return ErrorUnprocessableEntity{errorStr, scope};
+            case 423:
+                return ErrorLocked{errorStr, scope};
+            case 404:
+                return ErrorNotFound{errorStr, scope};
+            case 500:
+                return ErrorInternalServerError{errorStr, scope};
+            case 501:
+                return ErrorNotImplemented{errorStr, scope};
+            default:
+                return HttpErrorGeneric{status, errorStr, scope};
+        }
+    }
 }  // namespace giga
 
 #endif /* HTTPERRORS_H_ */

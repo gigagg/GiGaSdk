@@ -52,4 +52,10 @@ GigaApi::getCurrentUser()
     THROW(ErrorException("You must authenticate before using getCurrentUser"));
 }
 
+std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
+GigaApi::getOAuthConfig()
+{
+    return client.getClient().client_config().oauth2();
+}
+
 } // namespace giga

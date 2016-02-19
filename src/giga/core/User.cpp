@@ -177,6 +177,13 @@ User::ProtectedData::maxContact () const
     return u->maxContact.get_value_or(200);
 }
 
+FolderNode
+User::ProtectedData::node () const
+{
+    _THROW_IF_NO_USER_;
+    return FolderNode{u->node};
+}
+
 User::PrivateData::PrivateData (std::shared_ptr<data::User> u, const std::string& password) : u{u}
 {
     if (!u->salt.is_initialized() || !u->nodeKey.is_initialized())
@@ -349,12 +356,10 @@ User::block ()
     return User{r->user, r};
 }
 
-User
-User::suggest ()
+void
+User::suggest (const User& contact)
 {
-    auto& app = Application::get();
-    auto r = NetworkApi::createUserRelation(app.currentUser().id(), id(), "SHOULD_INVITE", "", "").get();
-    return User{r->user, r};
+    auto r = NetworkApi::createUserRelation(id(), contact.id(), "SHOULD_INVITE", "", "").get();
 }
 
 User
@@ -368,6 +373,22 @@ User::acceptInvitation ()
     auto key = Crypto::base64encode(publicKey.get().encrypt(user._private.get().nodeKeyClear));
     auto r = NetworkApi::createUserRelation(user.id(), id(), "CONTACT", "", key).get();
     return User{r->user, r};
+}
+
+void
+User::removeRelation ()
+{
+    if (!hasRelation())
+    {
+        THROW(ErrorException{"No relation to remove"});
+    }
+    auto& user = Application::get().currentUser();
+    NetworkApi::deleteUserRelation(user.id(), id(), r->type).get();
+
+    // remove relation and cache.
+    this->r          = nullptr;
+    this->_protected = boost::none;
+    this->_private   = boost::none;
 }
 
 } /* namespace core */

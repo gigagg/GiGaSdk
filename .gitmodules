@@ -1,0 +1,3 @@
+[submodule "vendors/curlcpp"]
+	path = vendors/curlcpp
+	url = https://github.com/Giga-gg/curlcpp.git

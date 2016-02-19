@@ -9,6 +9,7 @@
 #define GIGA_CORE_APPLICATION_H_
 
 #include "core/User.h"
+#include "core/Node.h"
 #include "Config.h"
 
 #include <cpprest/http_client.h>
@@ -59,6 +60,10 @@ public:
     core::User&
     currentUser();
 
+    //
+    // Users
+    //
+
     core::User
     getUserById (int64_t id) const;
 
@@ -79,6 +84,19 @@ public:
 
     std::vector<core::User>
     getBlockedUsers () const;
+
+    std::vector<core::User>
+    searchUser (const std::string& search) const;
+
+    //
+    // Nodes
+    //
+
+    std::unique_ptr<core::Node>
+    getNodeById (const std::string& id) const;
+
+    std::vector<std::unique_ptr<core::Node>>
+    searchNode (const std::string& search, core::Node::MediaType type) const;
 
 private:
     core::User _currentUser;

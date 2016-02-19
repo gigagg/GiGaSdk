@@ -9,14 +9,14 @@
 #include "core/User.h"
 #include "api/UsersApi.h"
 #include "api/NetworkApi.h"
+#include "api/NodesApi.h"
 #include "api/data/User.h"
 #include "api/data/UsersRelation.h"
 
 #include <cpprest/http_client.h>
+#include <algorithm>
 
-using giga::data::UsersRelation;
 using pplx::create_task;
-using giga::core::User;
 
 namespace giga
 {
@@ -56,33 +56,44 @@ Application::isInitialized() const
 }
 
 
-User&
+core::User&
 Application::authenticate (const std::string& login, const std::string& password)
 {
     auto duser = GigaApi::authenticate(login, password).get();
-    _currentUser = User{duser};
+    _currentUser = core::User{duser};
     _currentUser.initializePrivateData(password);
     return _currentUser;
 }
 
-User
+core::User&
+Application::currentUser()
+{
+    return _currentUser;
+}
+
+
+//
+// users
+//
+
+core::User
 Application::getUserById (int64_t id) const
 {
     auto duser =  UsersApi::getUserById(id).get();
-    return User{duser};
+    return core::User{duser};
 }
 
-User
+core::User
 Application::getUserByLogin (const std::string& login) const
 {
     auto duser =  UsersApi::getUserByLogin(login).get();
-    return User{duser};
+    return core::User{duser};
 }
 
-std::vector<User>
-toUserVect(std::shared_ptr<std::vector<std::shared_ptr<UsersRelation>>> rels)
+std::vector<core::User>
+toUserVect(std::shared_ptr<std::vector<std::shared_ptr<data::UsersRelation>>> rels)
 {
-    auto container = std::vector<User>{};
+    auto container = std::vector<core::User>{};
     container.reserve(rels->size());
     for(auto relation : *rels)
     {
@@ -91,45 +102,77 @@ toUserVect(std::shared_ptr<std::vector<std::shared_ptr<UsersRelation>>> rels)
     return std::move(container);
 }
 
-std::vector<User>
+std::vector<core::User>
 Application::getContacts () const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), "CONTACT", "OUT").get();
     return toUserVect(rels);
 }
 
-std::vector<User>
+std::vector<core::User>
 Application::getInvitedUsers() const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), "INVITE", "OUT").get();
     return toUserVect(rels);
 }
 
-std::vector<User>
+std::vector<core::User>
 Application::getInvitingUsers() const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), "INVITE", "IN").get();
     return toUserVect(rels);
 }
 
-std::vector<User>
+std::vector<core::User>
 Application::getSuggestedUsers() const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), "SHOULD_INVITE", "OUT").get();
     return toUserVect(rels);
 }
 
-std::vector<User>
+std::vector<core::User>
 Application::getBlockedUsers() const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), "BLOCK", "OUT").get();
     return toUserVect(rels);
 }
 
-User&
-Application::currentUser()
+std::vector<core::User>
+Application::searchUser (const std::string& search) const
 {
-    return _currentUser;
+    auto results = UsersApi::searchUsers(search, "" , "").get();
+
+    std::vector<core::User> users{};
+    users.resize(results->size());
+    std::transform (results->begin(), results->end(), users.begin(), [](const std::shared_ptr<data::User>& data) {
+        return core::User{data};
+    });
+
+    return users;
+}
+
+//
+// Nodes
+//
+
+std::unique_ptr<core::Node>
+Application::getNodeById (const std::string& id) const
+{
+    auto result = NodesApi::getNodeById(id).get();
+    return core::Node::create(result);
+}
+
+std::vector<std::unique_ptr<core::Node>>
+Application::searchNode (const std::string& search, core::Node::MediaType type) const
+{
+    auto results = NodesApi::searchNodeByType(search, core::Node::mediaTypeCvrt.toStr(type)).get();
+    std::vector<std::unique_ptr<core::Node>> nodes{};
+    nodes.resize(results->size());
+    std::transform (results->begin(), results->end(), nodes.begin(), [](const data::Node& data) {
+        return core::Node::create(std::make_shared<data::Node>(data));
+    });
+
+    return nodes;
 }
 
 

@@ -51,7 +51,7 @@ struct User {
     /** Protected. The user full name */
     boost::optional<std::string> name = boost::none;
     /** Private. The user root folder */
-    std::unique_ptr<Node> node = nullptr;
+    std::shared_ptr<Node> node = nullptr;
     /** Private. */
     boost::optional<std::string> reportedState = boost::none;
     /** Private. */

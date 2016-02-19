@@ -30,6 +30,15 @@ NodesApi::searchNode (const std::string& search, const std::string& mine, const 
     return client.request<NodeList> (methods::GET, uri);
 }
 
+pplx::task<std::shared_ptr<std::vector<data::Node>>>
+NodesApi::searchNodeByType (const std::string& search, const std::string& type, uint16_t max, uint32_t offset)
+{
+    auto uri = client.uri ("search", type);
+    uri.append_query ("q", search);
+    uri.append_query ("max", max);
+    uri.append_query ("offset", offset);
+    return client.request<std::vector<data::Node>> (methods::GET, uri);}
+
 pplx::task<std::shared_ptr<DataNode>>
 NodesApi::addNode (const std::string& name, const std::string& type, const std::string& parentId, const std::string& fkey,
                    const std::string& fid)
@@ -41,6 +50,17 @@ NodesApi::addNode (const std::string& name, const std::string& type, const std::
     body.add ("parentId", parentId);
     body.add ("fkey", fkey);
     body.add ("fid", fid);
+    return client.request<DataNode> (methods::POST, uri, std::move(body));
+}
+
+pplx::task<std::shared_ptr<DataNode>>
+NodesApi::addFolderNode (const std::string& name, const std::string& parentId)
+{
+    auto uri = client.uri ("nodes");
+    auto body = JsonObj{};
+    body.add ("name", name);
+    body.add ("type", std::string("folder"));
+    body.add ("parentId", parentId);
     return client.request<DataNode> (methods::POST, uri, std::move(body));
 }
 
@@ -80,12 +100,11 @@ NodesApi::deleteNode (const std::string& nodeId)
     return client.request<IdContainer> (methods::DEL, uri);
 }
 
-pplx::task<std::shared_ptr<Node>>
-NodesApi::getChildrenNode (const std::string& nodeId, const std::string& search)
+pplx::task<std::shared_ptr<std::vector<Node>>>
+NodesApi::getChildrenNode (const std::string& nodeId)
 {
     auto uri = client.uri ("nodes", nodeId, "nodes");
-    uri.append_query ("search", search);
-    return client.request<Node> (methods::GET, uri);
+    return client.request<std::vector<Node>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<Preview>>

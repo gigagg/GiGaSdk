@@ -26,9 +26,15 @@ public:
     static pplx::task<std::shared_ptr<data::NodeList>>
     searchNode (const std::string& search, const std::string& mine, const std::string& inFolder, int64_t ownerId);
 
+    static pplx::task<std::shared_ptr<std::vector<data::Node>>>
+    searchNodeByType (const std::string& search, const std::string& type, uint16_t max = 50, uint32_t offset = 0);
+
     static pplx::task<std::shared_ptr<data::DataNode>>
     addNode (const std::string& name, const std::string& type, const std::string& parentId, const std::string& fkey,
              const std::string& fid);
+
+    static pplx::task<std::shared_ptr<data::DataNode>>
+    addFolderNode (const std::string& name, const std::string& parentId);
 
     static pplx::task<std::shared_ptr<data::DataNode>>
     copyNode (const std::string& fromNodeId, const std::string& toNodeId, const std::string& copy, const std::string& cut,
@@ -43,8 +49,8 @@ public:
     static pplx::task<std::shared_ptr<data::IdContainer>>
     deleteNode (const std::string& nodeId);
 
-    static pplx::task<std::shared_ptr<data::Node>>
-    getChildrenNode (const std::string& nodeId, const std::string& search);
+    static pplx::task<std::shared_ptr<std::vector<data::Node>>>
+    getChildrenNode (const std::string& nodeId);
 
     static pplx::task<std::shared_ptr<data::Preview>>
     getPreviewsData (const std::string& nodeId);

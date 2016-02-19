@@ -29,7 +29,7 @@ struct Node {
     int64_t lastUpdateDate = 0;
     int64_t nbChildren = 0;
     int64_t nbFiles = 0;
-    std::vector<std::unique_ptr<Node>> nodes = {};
+    std::vector<std::shared_ptr<Node>> nodes = {};
     std::string type = {};
     boost::optional<std::string> mimeType = boost::none;
     boost::optional<std::string> fid = boost::none;

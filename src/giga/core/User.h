@@ -9,6 +9,7 @@
 #define GIGA_CORE_USER_H_
 
 #include "UserRelation.h"
+#include "FolderNode.h"
 #include "../utils/Crypto.h"
 
 #include <boost/optional.hpp>
@@ -27,6 +28,7 @@ class UsersRelation;
 
 namespace core
 {
+
 
 class Country final {
 public:
@@ -149,9 +151,8 @@ public:
         int64_t
         maxContact() const;
 
-// TODO class Node.
-//        Node&
-//        node() const;
+        FolderNode
+        node() const;
 
 
     private:
@@ -233,8 +234,11 @@ public:
 
     User invite();
     User block();
-    User suggest();
     User acceptInvitation();
+
+    void suggest(const User& contact);
+
+    void removeRelation();
 
 private:
     std::shared_ptr<data::User> u;

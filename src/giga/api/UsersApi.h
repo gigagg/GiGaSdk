@@ -28,7 +28,7 @@ public:
     static pplx::task<std::shared_ptr<data::UserExists>>
     userExists (const std::string& login, const std::string& email = "");
 
-    static pplx::task<std::shared_ptr<data::User>>
+    static pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::User>>>>
     searchUsers (const std::string& search, const std::string& activity, const std::string& isSeeder);
 
     static pplx::task<std::shared_ptr<data::User>>

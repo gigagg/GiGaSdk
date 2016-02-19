@@ -190,6 +190,13 @@ public:
             details::getValue(val.at(name), current);
         }
     }
+    template <typename T> void manage(std::shared_ptr<T>& current, const std::string& name) const {
+        if (!val.has_field(name)) {
+            current = nullptr;
+        } else {
+            details::getValue(val.at(name), current);
+        }
+    }
     template <typename T> void manage(boost::optional<T>& current, const std::string& name) const {
         if (!val.has_field(name)) {
             current = boost::none;
