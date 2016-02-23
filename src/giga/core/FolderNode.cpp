@@ -85,13 +85,14 @@ namespace fs = boost::filesystem;
 pplx::task<std::shared_ptr<FileUploader>>
 FolderNode::uploadFile(const std::string& filepath)
 {
-    if (!fs::exists(filepath) || !fs::is_regular_file(filepath))
+    auto path = fs::path{filepath};
+    if (!fs::exists(path) || !fs::is_regular_file(path))
     {
         THROW(ErrorException{"This is not a regular file"});
     }
 
     auto parentId = this->id();
-    auto nodeName = fs::basename(filepath);
+    auto nodeName = path.filename().string();
     auto nodeKeyClear = Application::get().currentUser().privateData().nodeKeyClear;
 
     return create_task([=]() {

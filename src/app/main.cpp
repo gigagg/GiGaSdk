@@ -20,6 +20,8 @@
 #include <thread>
 
 #include <boost/program_options.hpp>
+#include <algorithm>
+#include "../giga/core/Uploader.h"
 
 using CryptoPP::EncodedObjectFilter;
 
@@ -117,8 +119,8 @@ int main(int argc, const char* argv[]) {
 
         auto& app = Application::init(
                         std::string("http://localhost:5001"),
-                        std::string("86ebaa36c3f0"),
-                        std::string("2ed5cb98abd9c1a0699679990576a97e"));
+                        std::string("c0bbf6aba502"),
+                        std::string("de90cbf08214f445962eb5f2b68f2a86"));
 
 
         auto login = vm["login"].as<std::string>();
@@ -199,19 +201,49 @@ int main(int argc, const char* argv[]) {
             }
             if (vm.count("upload"))
             {
-                auto up = node->uploadFile(vm["upload"].as<std::string>()).get();
-                auto t = pplx::create_task([&up] (){
-                    while( up->progress() <= 0.99)
+                if (node->type() == core::Node::Type::file)
+                {
+                    THROW(ErrorException{"Node must be a folder"});
+                }
+                core::Uploader uploader{*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<std::string>()};
+                auto t = pplx::create_task([&uploader] () {
+                    while(true)
                     {
-                        auto p = up->progress();
-                        std::cout << "p: " << std::setprecision(3) << p * 100 << "%" << std::endl;
-                        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                        std::cout << "prep: " << uploader.isPreparationFinished();
+                        auto count = uploader.uploadingFilesCount();
+                        if (count > 0)
+                        {
+                            std::cout << " count: " << count << " p: " << std::setprecision(3);
+                            uint64_t totalP = 0;
+                            for(auto& up: uploader.uploadingFiles())
+                            {
+                                totalP += up->progress();
+                                std::cout << up->progress() << " ";
+                            }
+                            if ((count - totalP) < 0.01 &&  uploader.isPreparationFinished())
+                            {
+                                std::cout << " FINISH " << std::endl;
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            std::cout << " count: " << count;
+                        }
+                        std::cout << std::endl;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     }
                 });
-                up->start();
-                t.wait();
-                auto node = up->task().get();
-                auto arr = std::array<std::shared_ptr<core::Node>, 1>{std::move(node)};
+                auto task = uploader.start();
+
+                std::array<pplx::task<void>, 2> tasks{t, task};
+                pplx::when_all(tasks.begin(), tasks.end()).wait();
+                auto uploads = uploader.uploadingFiles();
+                std::vector<std::shared_ptr<core::Node>> arr(uploads.size());
+                std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u){
+                    std::cout << "transform" << std::endl;
+                    return u->task().get();
+                });
                 printNodes("uploaded", arr);
             }
             if (vm.count("download"))

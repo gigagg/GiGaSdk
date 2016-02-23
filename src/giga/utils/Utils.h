@@ -18,6 +18,9 @@ namespace utils
 std::string
 httpsPrefix(const std::string& url);
 
+std::string
+cleanUpFilename(std::string name);
+
 } /* namespace utils */
 } /* namespace giga */
 

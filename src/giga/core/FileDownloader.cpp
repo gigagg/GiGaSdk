@@ -11,6 +11,7 @@
 #include "details/CurlWriter.h"
 #include "../api/GigaApi.h"
 #include "../rest/HttpErrors.h"
+#include "../utils/Utils.h"
 
 #include <boost/filesystem.hpp>
 #include <cpprest/filestream.h>
@@ -34,10 +35,6 @@ using web::uri_builder;
 
 namespace
 {
-const char invalidChars[] =
-            "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F"
-            "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F"
-            "<>:\"/\\|";
 int
 curlProgressCallback (void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
@@ -70,15 +67,9 @@ FileDownloader::FileDownloader (const std::string& folderDest, const Node& node,
     {
         THROW(ErrorException{"Invalid node name"});
     }
-    auto name = node.name();
-    auto pos = name.find_first_of(invalidChars);
-    while (pos != std::string::npos)
-    {
-        name.replace(pos, 1, "_");
-        pos = name.find_first_of(invalidChars, pos);
-    }
 
-    pos = name.find_last_of(".");
+    auto name = utils::cleanUpFilename(node.name());
+    auto pos = name.find_last_of(".");
     auto firstPart = name;
     auto lastPart = std::string{};
     if (pos != std::string::npos)

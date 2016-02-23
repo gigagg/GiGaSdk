@@ -22,7 +22,7 @@ class FileTransferer
 {
 public:
     enum class State {
-        pending, started, paused, canceled, finished
+        pending, started, paused, canceled
     };
 
 public:

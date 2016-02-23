@@ -66,8 +66,15 @@ namespace core
 
 FileUploader::FileUploader (const std::string& filename, const std::string& nodeName, const std::string& parentId, const std::string& sha1,
                             const std::string& fid, const std::string& fkey) :
-        FileTransferer{}, _task{}, _filename{filename}, _nodeName{nodeName},
-        _parentId{parentId}, _sha1{sha1}, _fid{fid}, _fkey{fkey}, _fileSize{boost::filesystem::file_size(filename)}
+        FileTransferer{},
+        _task{},
+        _filename{filename},
+        _nodeName{nodeName},
+        _parentId{parentId},
+        _sha1{sha1},
+        _fid{fid},
+        _fkey{fkey},
+        _fileSize{boost::filesystem::file_size(filename)}
 {
 }
 
@@ -133,6 +140,10 @@ double
 FileUploader::progress () const
 {
     auto p = _progress.data();
+    if (_state != State::pending && _task.is_done())
+    {
+        return 1.;
+    }
     if (p.ulnow <= 0)
     {
         return 0.;
