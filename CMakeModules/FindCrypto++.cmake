@@ -1,35 +1,44 @@
-# - Find Crypto++
+# FindCrypto++ package
+#
+# Tries to find the Crypto++ library
+#
 
-if(CRYPTO++_INCLUDE_DIR AND CRYPTO++_LIBRARIES)
-   set(CRYPTO++_FOUND TRUE)
+find_package(PkgConfig)
 
-else(CRYPTO++_INCLUDE_DIR AND CRYPTO++_LIBRARIES)
-  find_path(CRYPTO++_INCLUDE_DIR cryptlib.h
-      /usr/include/crypto++
-      /usr/include/cryptopp
-      /usr/local/include/crypto++
-      /usr/local/include/cryptopp
-      /opt/local/include/crypto++
-      /opt/local/include/cryptopp
-      $ENV{SystemDrive}/Crypto++/include
-      )
+include(LibFindMacros)
 
-  find_library(CRYPTO++_LIBRARIES NAMES cryptopp
-      PATHS
-      /usr/lib
-      /usr/local/lib
-      /opt/local/lib
-      $ENV{SystemDrive}/Crypto++/lib
-      )
+# Include dir
+find_path(CRYPTO++_INCLUDE_DIR
+  NAMES
+    crypto++/cryptlib.h
+  PATHS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp
+    ${CRYPTO++_PKGCONF_INCLUDE_DIRS}
+    ${CRYPTO++_DIR}
+    $ENV{CRYPTO++_DIR}
+    /usr/local/include
+    /usr/include
+  PATH_SUFFIXES 
+    include
+    Release/include
+)
 
-  if(CRYPTO++_INCLUDE_DIR AND CRYPTO++_LIBRARIES)
-    set(CRYPTO++_FOUND TRUE)
-    message(STATUS "Found Crypto++: ${CRYPTO++_INCLUDE_DIR}, ${CRYPTO++_LIBRARIES}")
-  else(CRYPTO++_INCLUDE_DIR AND CRYPTO++_LIBRARIES)
-    set(CRYPTO++_FOUND FALSE)
-    message(STATUS "Crypto++ not found.")
-  endif(CRYPTO++_INCLUDE_DIR AND CRYPTO++_LIBRARIES)
+# Library
+find_library(CRYPTO++_UTILS_LIBRARY
+  NAMES 
+    cryptopp
+  PATHS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++
+    ${CRYPTO++_PKGCONF_LIBRARY_DIRS}
+    ${CRYPTO++_DIR}
+    $ENV{CRYPTO++_DIR}
+    /usr/local
+    /usr
+  PATH_SUFFIXES
+    build
+    lib
+)
 
-  mark_as_advanced(CRYPTO++_INCLUDE_DIR CRYPTO++_LIBRARIES)
-
-endif(CRYPTO++_INCLUDE_DIR AND CRYPTO++_LIBRARIES)
+set(CRYPTO++_PROCESS_LIBS CRYPTO++_LIBRARY CRYPTO++_UTILS_LIBRARY)
+set(CRYPTO++_PROCESS_INCLUDES CRYPTO++_INCLUDE_DIR)
+libfind_process(CRYPTO++)

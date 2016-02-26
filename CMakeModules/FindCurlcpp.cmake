@@ -1,31 +1,44 @@
-# - Find CURLCPP
+# FindCurlcpp package
+#
+# Tries to find the Curlcpp library
+#
 
-if(CURLCPP_INCLUDE_DIR AND CURLCPP_LIBRARIES)
-   set(CURLCPP_FOUND TRUE)
+find_package(PkgConfig)
 
-else(CURLCPP_INCLUDE_DIR AND CURLCPP_LIBRARIES)
-  find_path(CURLCPP_INCLUDE_DIR curl_config.h
-      /usr/include
-      /usr/local/include
-      $ENV{SystemDrive}/curlcpp/include
-      )
+include(LibFindMacros)
 
-  find_library(CURLCPP_LIBRARIES NAMES curlcpp
-      PATHS
-      /usr/lib
-      /usr/local/lib
-      /opt/local/lib
-      $ENV{SystemDrive}/CURLCPP/lib
-      )
+# Include dir
+find_path(CURLCPP_INCLUDE_DIR
+  NAMES
+    curl_config.h
+  PATHS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendors/curlcpp
+    ${CURLCPP_PKGCONF_INCLUDE_DIRS}
+    ${CURLCPP_DIR}
+    $ENV{CURLCPP_DIR}
+    /usr/local/include
+    /usr/include
+  PATH_SUFFIXES 
+    include
+    Release/include
+)
 
-  if(CURLCPP_INCLUDE_DIR AND CURLCPP_LIBRARIES)
-    set(CURLCPP_FOUND TRUE)
-    message(STATUS "Found CURLCPP: ${CURLCPP_INCLUDE_DIR}, ${CURLCPP_LIBRARIES}")
-  else(CURLCPP_INCLUDE_DIR AND CURLCPP_LIBRARIES)
-    set(CURLCPP_FOUND FALSE)
-    message(STATUS "CURLCPP not found.")
-  endif(CURLCPP_INCLUDE_DIR AND CURLCPP_LIBRARIES)
+# Library
+find_library(CURLCPP_UTILS_LIBRARY
+  NAMES 
+    curlcpp
+  PATHS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendors/curlcpp
+    ${CURLCPP_PKGCONF_LIBRARY_DIRS}
+    ${CURLCPP_DIR}
+    $ENV{CURLCPP_DIR}
+    /usr/local
+    /usr
+  PATH_SUFFIXES
+    build/src
+    lib
+)
 
-  mark_as_advanced(CURLCPP_INCLUDE_DIR CURLCPP_LIBRARIES)
-
-endif(CURLCPP_INCLUDE_DIR AND CURLCPP_LIBRARIES)
+set(CURLCPP_PROCESS_LIBS CURLCPP_LIBRARY CURLCPP_UTILS_LIBRARY)
+set(CURLCPP_PROCESS_INCLUDES CURLCPP_INCLUDE_DIR)
+libfind_process(CURLCPP)
