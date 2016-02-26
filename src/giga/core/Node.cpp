@@ -19,7 +19,7 @@
 
 using std::chrono::_V2::system_clock;
 
-#define _THROW_IF_NO_NODE_ if (n == nullptr) { THROW(ErrorException{"Node is not set"}); } do {} while(0)
+#define _THROW_IF_NO_NODE_ if (_data == nullptr) { THROW(ErrorException{"Node is not set"}); } do {} while(0)
 
 namespace giga
 {
@@ -28,7 +28,7 @@ const utils::EnumConvertor<core::Node::Type, 3> core::Node::typeCvrt =
     {"root", "folder", "file"};
 
 const utils::EnumConvertor<core::Node::MediaType, 6> core::Node::mediaTypeCvrt =
-        {"audio", "document", "video", "image", "unknown", "folder"};
+    {"audio", "document", "video", "image", "unknown", "folder"};
 
 namespace core
 {
@@ -47,26 +47,26 @@ Node::create (std::shared_ptr<data::Node> n)
 }
 
 Node::Node (std::shared_ptr<data::Node> n)  :
-n(n)
+_data(n)
 {
     _THROW_IF_NO_NODE_;
 }
 
 Node::Node(const Node& rhs) :
-        n(nullptr)
+        _data(nullptr)
 {
-    if (rhs.n != nullptr)
+    if (rhs._data != nullptr)
     {
-        n = std::make_shared<data::Node>(*rhs.n);
+        _data = std::make_shared<data::Node>(*rhs._data);
     }
 }
 
 Node&
 Node::operator=(const Node& rhs)
 {
-    if (rhs.n != nullptr)
+    if (rhs._data != nullptr)
     {
-        n = std::make_shared<data::Node>(*rhs.n);
+        _data = std::make_shared<data::Node>(*rhs._data);
     }
     return *this;
 }
@@ -75,76 +75,76 @@ const std::string&
 Node::id () const
 {
     _THROW_IF_NO_NODE_;
-    return n->id;
+    return _data->id;
 }
 
 Node::Type
 Node::type () const
 {
     _THROW_IF_NO_NODE_;
-    return typeCvrt.fromStr(n->type);
+    return typeCvrt.fromStr(_data->type);
 }
 
 const std::string&
 Node::name () const
 {
     _THROW_IF_NO_NODE_;
-    return n->name;
+    return _data->name;
 }
 
 const std::string&
 Node::parentId () const
 {
     _THROW_IF_NO_NODE_;
-    return n->parentId.get_value_or("");
+    return _data->parentId.get_value_or("");
 }
 
 const std::vector<std::string>&
 Node::ancestors () const
 {
     _THROW_IF_NO_NODE_;
-    return n->ancestors;
+    return _data->ancestors;
 }
 
 int64_t
 Node::ownerId () const
 {
     _THROW_IF_NO_NODE_;
-    return n->ownerId;
+    return _data->ownerId;
 }
 
 std::chrono::system_clock::time_point
 Node::creationDate () const
 {
     _THROW_IF_NO_NODE_;
-    return system_clock::time_point(std::chrono::seconds(n->creationDate));
+    return system_clock::time_point(std::chrono::seconds(_data->creationDate));
 }
 
 std::chrono::system_clock::time_point
 Node::lastUpdateDate () const
 {
-    return system_clock::time_point(std::chrono::seconds(n->lastUpdateDate));
+    return system_clock::time_point(std::chrono::seconds(_data->lastUpdateDate));
 }
 
 uint64_t
 Node::nbChildren () const
 {
     _THROW_IF_NO_NODE_;
-    return n->nbChildren;
+    return _data->nbChildren;
 }
 
 uint64_t
 Node::nbFiles () const
 {
     _THROW_IF_NO_NODE_;
-    return n->nbFiles;
+    return _data->nbFiles;
 }
 
 uint64_t
 Node::size () const
 {
     _THROW_IF_NO_NODE_;
-    return n->size;
+    return _data->size;
 }
 
 bool
@@ -157,7 +157,7 @@ void
 Node::remove()
 {
     NodesApi::deleteNode(id()).get();
-    n->id = "";
+    _data->id = "";
 }
 
 void
@@ -168,7 +168,7 @@ Node::rename(const std::string& name)
         THROW(ErrorException{"Name is not valid"});
     }
     NodesApi::renameNode(id(), name).get();
-    n->name = name;
+    _data->name = name;
 }
 
 } /* namespace core */

@@ -46,7 +46,7 @@ Application::get()
 Config&
 Application::config ()
 {
-    return _config;
+    return get()._config;
 }
 
 bool
@@ -61,7 +61,7 @@ Application::authenticate (const std::string& login, const std::string& password
 {
     auto duser = GigaApi::authenticate(login, password).get();
     _currentUser = core::User{duser};
-    _currentUser.initializePrivateData(password);
+    _currentUser.initializePersonalData(password);
     return _currentUser;
 }
 

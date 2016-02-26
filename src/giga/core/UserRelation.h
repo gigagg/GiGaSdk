@@ -61,7 +61,7 @@ public:
     initiator() const;
 
 private:
-    std::shared_ptr<data::UsersRelation> r;
+    std::shared_ptr<data::UsersRelation> _data;
 };
 
 } /* namespace core */

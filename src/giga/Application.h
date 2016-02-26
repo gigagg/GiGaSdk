@@ -35,6 +35,9 @@ public:
     static Application&
     get();
 
+    static Config&
+    config ();
+
 private:
     explicit Application()                  = default;
     Application(Application const&)         = delete;
@@ -48,8 +51,6 @@ private:
     }
 
 public:
-    Config&
-    config ();
 
     bool
     isInitialized() const;

@@ -11,11 +11,23 @@ using namespace web::http;
 using namespace web::http::client;
 using namespace web::http::oauth2::experimental;
 
+namespace {
+
+web::http::client::http_client_config getConfig() {
+    auto config = web::http::client::http_client_config{};
+#ifdef DEBUG
+    config.set_validate_certificates(false);
+#endif
+    return config;
+}
+
+}
+
 namespace giga
 {
 
 HttpClient::HttpClient () :
-        client (HttpClient::HOST, getConfig ())
+        client (Application::config().apiHost(), getConfig())
 {
 }
 
@@ -85,14 +97,15 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
         request.wait();
         return request.get();
     });
-        request.wait();
+    request.wait();
 
-        auto uri = uri_builder{request.get()}.to_uri();
-        m_oauth2_config.token_from_redirected_uri(uri).wait();
+    auto uri = uri_builder{request.get()}.to_uri();
+    m_oauth2_config.token_from_redirected_uri(uri).wait();
 
-        auto config = getConfig();
-        config.set_oauth2(m_oauth2_config);
-        client = {HttpClient::HOST, config};
+    // regenerate client, with the oauth2 config.
+    auto config = getConfig();
+    config.set_oauth2(m_oauth2_config);
+    client = {Application::config().apiHost(), config};
 }
 
 

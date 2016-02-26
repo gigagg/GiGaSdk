@@ -29,26 +29,29 @@ class UsersRelation;
 namespace core
 {
 
-
 class Country final {
 public:
-    explicit Country(const std::string& code) : code(code) {}
-    Country(Country&&) = default;
-    Country(const Country&) = default;
-    ~Country() = default;
+    explicit
+    Country(const std::string& code) : code(code) {}
+
+    Country(Country&&)                 = default;
+    Country(const Country&)            = default;
+    ~Country()                         = default;
     Country& operator=(const Country&) = default;
-    Country& operator=(Country&&) = default;
+    Country& operator=(Country&&)      = default;
 
     const std::string code;
 };
 
 struct Language final {
-    explicit Language(const std::string& code) : code(code) {}
-    Language(Language&&) = default;
-    Language(const Language&) = default;
-    ~Language() = default;
-    Language& operator=(const Language&) = default;
-    Language& operator=(Language&&) = default;
+    explicit
+    Language(const std::string& code) : code(code) {}
+
+    Language(Language&&)                = default;
+    Language(const Language&)           = default;
+    ~Language()                         = default;
+    Language& operator=(const Language&)= default;
+    Language& operator=(Language&&)     = default;
 
     const std::string code;
 };
@@ -73,7 +76,7 @@ public:
     };
 
 public:
-    User()                        = default; // TODO: private + friend to correct class (pplx).
+    User()                        = default;
     ~User()                       = default;
     User(User&&)                  = default;
     User(const User&)             = default;
@@ -126,17 +129,17 @@ public:
     description () const;
 
 public:
-    class ProtectedData final {
+    class ContactData final {
         friend User;
     public:
-        ~ProtectedData()                               = default;
-        ProtectedData(ProtectedData&&)                 = default;
-        ProtectedData(const ProtectedData&)            = default;
-        ProtectedData& operator=(const ProtectedData&) = default;
-        ProtectedData& operator=(ProtectedData&&)      = default;
+        ~ContactData()                             = default;
+        ContactData(ContactData&&)                 = default;
+        ContactData(const ContactData&)            = default;
+        ContactData& operator=(const ContactData&) = default;
+        ContactData& operator=(ContactData&&)      = default;
 
     private:
-        explicit ProtectedData(std::shared_ptr<data::User> u);
+        explicit ContactData(std::shared_ptr<data::User> u);
 
     public:
         UserGender
@@ -156,20 +159,20 @@ public:
 
 
     private:
-        std::shared_ptr<data::User> u;
+        std::shared_ptr<data::User> _data;
     };
 
-    class PrivateData {
+    class PersonalData {
         friend User;
     public:
-        ~PrivateData()                             = default;
-        PrivateData(PrivateData&&)                 = default;
-        PrivateData(const PrivateData&)            = default;
-        PrivateData& operator=(const PrivateData&) = default;
-        PrivateData& operator=(PrivateData&&)      = default;
+        ~PersonalData()                              = default;
+        PersonalData(PersonalData&&)                 = default;
+        PersonalData(const PersonalData&)            = default;
+        PersonalData& operator=(const PersonalData&) = default;
+        PersonalData& operator=(PersonalData&&)      = default;
 
     private:
-        explicit PrivateData(std::shared_ptr<data::User> u, const std::string& password);
+        explicit PersonalData(std::shared_ptr<data::User> u, const std::string& password);
 
     public:
         ReportedState
@@ -184,6 +187,9 @@ public:
         const std::string&
         nextEmail() const;
 
+        const std::string&
+        nodeKeyClear() const;
+
         int64_t
         maxStorage() const;
 
@@ -196,31 +202,31 @@ public:
         int64_t
         dlAvailable() const;
 
+
 //        ExternalAccount
 //        externalAccount() const;
 //        Offer
 //        offer() const;
 
     private:
-        std::shared_ptr<data::User> u;
-    public:
-        std::string nodeKeyClear;
+        std::shared_ptr<data::User> _data;
+        std::string                 _nodeKeyClear;
     };
 
     bool
-    hasProtectedData() const;
+    hasContactData() const;
 
-    ProtectedData&
-    protectedData();
+    ContactData&
+    contactData();
 
     bool
-    hasPrivateData() const;
+    hasPersonalData() const;
 
-    PrivateData&
-    initializePrivateData (const std::string& password);
+    PersonalData&
+    initializePersonalData (const std::string& password);
 
-    PrivateData&
-    privateData();
+    PersonalData&
+    personalData();
 
     bool
     hasRelation() const;
@@ -241,11 +247,11 @@ public:
     void removeRelation();
 
 private:
-    std::shared_ptr<data::User> u;
-    std::shared_ptr<data::UsersRelation> r;
-    boost::optional<PrivateData> _private;
-    boost::optional<ProtectedData> _protected;
-    boost::optional<giga::Rsa> publicKey;
+    std::shared_ptr<data::User>          _data;
+    std::shared_ptr<data::UsersRelation> _relation;
+    boost::optional<PersonalData>        _private;
+    boost::optional<ContactData>         _protected;
+    boost::optional<giga::Rsa>           _publicKey;
 };
 
 } /* namespace core */

@@ -87,7 +87,7 @@ FileUploader::doStart ()
     auto sha1       = _sha1;
     auto fid        = _fid;
     auto fkey       = _fkey;
-    auto nodeKeyCl  = Application::get().currentUser().privateData().nodeKeyClear;
+    auto nodeKeyCl  = Application::get().currentUser().personalData().nodeKeyClear();
     auto cts        = _cts;
     auto progress   = _progress.get();
 

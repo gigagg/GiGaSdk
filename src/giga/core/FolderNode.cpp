@@ -44,14 +44,14 @@ FolderNode::FolderNode (std::shared_ptr<data::Node> n) :
 FolderNode::FolderNode(const FolderNode& rhs) :
         Node(rhs), _children{}
 {
-    regenerateChildren(_children, rhs.n);
+    regenerateChildren(_children, rhs._data);
 }
 
 FolderNode&
 FolderNode::operator=(const FolderNode& rhs)
 {
     Node::operator=(rhs);
-    regenerateChildren(_children, rhs.n);
+    regenerateChildren(_children, rhs._data);
     return *this;
 }
 
@@ -81,7 +81,7 @@ FolderNode::addChildFolder(const std::string& name)
 {
     auto result = NodesApi::addFolderNode(name, id()).get();
     _children.push_back(Node::create(std::make_shared<data::Node>(*result->data.release())));
-    n->nbChildren += 1;
+    _data->nbChildren += 1;
     return static_cast<FolderNode&>(*_children.back());
 }
 
@@ -98,7 +98,7 @@ FolderNode::uploadFile(const std::string& filepath)
 
     auto parentId = this->id();
     auto nodeName = path.filename().string();
-    auto nodeKeyClear = Application::get().currentUser().privateData().nodeKeyClear;
+    auto nodeKeyClear = Application::get().currentUser().personalData().nodeKeyClear();
 
     return create_task([=]() {
         auto sha1 = Crypto::sha1File(filepath);

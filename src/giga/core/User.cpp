@@ -35,14 +35,14 @@ static const utils::EnumConvertor<core::User::UserGender, 3> userGenderCvrt =
 namespace core
 {
 
-#define _THROW_IF_NO_USER_ if (u == nullptr) { THROW(ErrorException{"User is not set"}); } do {} while(0)
+#define _THROW_IF_NO_USER_ if (_data == nullptr) { THROW(ErrorException{"User is not set"}); } do {} while(0)
 
 User::User (std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r) :
-        u{u}, r{r},_private{}, _protected{}, publicKey{}
+        _data{u}, _relation{r},_private{}, _protected{}, _publicKey{}
 {
     _THROW_IF_NO_USER_;
     if (u != nullptr && u->publicKey.is_initialized()) {
-        publicKey = boost::make_optional(Rsa(u->publicKey.get()));
+        _publicKey = boost::make_optional(Rsa(u->publicKey.get()));
     }
 }
 
@@ -50,141 +50,141 @@ int64_t
 User::id () const
 {
     _THROW_IF_NO_USER_;
-    return u->id;
+    return _data->id;
 }
 
 const std::string&
 User::login () const
 {
     _THROW_IF_NO_USER_;
-    return u->login;
+    return _data->login;
 }
 
 web::uri
 User::avatarUri () const
 {
     _THROW_IF_NO_USER_;
-    return web::uri(u->avatarUrl);
+    return web::uri(_data->avatarUrl);
 }
 
 web::uri
 User::bigAvatarUri () const
 {
     _THROW_IF_NO_USER_;
-    return web::uri(u->bigAvatarUrl);
+    return web::uri(_data->bigAvatarUrl);
 }
 
 system_clock::time_point
 User::creationDate () const
 {
     _THROW_IF_NO_USER_;
-    return system_clock::time_point(std::chrono::seconds(u->creationDate));
+    return system_clock::time_point(std::chrono::seconds(_data->creationDate));
 }
 
 system_clock::time_point
 User::lastConnectionDate () const
 {
     _THROW_IF_NO_USER_;
-    return system_clock::time_point(std::chrono::seconds(u->lastConnectionDate.get_value_or(u->creationDate)));
+    return system_clock::time_point(std::chrono::seconds(_data->lastConnectionDate.get_value_or(_data->creationDate)));
 }
 
 User::Activity
 User::activity () const
 {
     _THROW_IF_NO_USER_;
-    return activityCvrt.fromStr(u->activity);
+    return activityCvrt.fromStr(_data->activity);
 }
 
 bool
 User::isUnlimited () const
 {
     _THROW_IF_NO_USER_;
-    return u->isUnlimited;
+    return _data->isUnlimited;
 }
 
 User::SeederStatus
 User::isSeeder () const
 {
     _THROW_IF_NO_USER_;
-    return seederStatusCvrt.fromStr(u->isSeeder);
+    return seederStatusCvrt.fromStr(_data->isSeeder);
 }
 
 int64_t
 User::contactCount () const
 {
     _THROW_IF_NO_USER_;
-    return u->contactCount;
+    return _data->contactCount;
 }
 
 const std::vector<std::string>&
 User::tags () const
 {
     _THROW_IF_NO_USER_;
-    return u->tags;
+    return _data->tags;
 }
 
 Country
 User::country () const
 {
     _THROW_IF_NO_USER_;
-    return Country{u->country.get_value_or("XX")};
+    return Country{_data->country.get_value_or("XX")};
 }
 
 Language
 User::language () const
 {
     _THROW_IF_NO_USER_;
-    return Language{u->language.get_value_or("en")};
+    return Language{_data->language.get_value_or("en")};
 }
 
-User::ProtectedData::ProtectedData (std::shared_ptr<data::User> u) : u{u}
+User::ContactData::ContactData (std::shared_ptr<data::User> u) : _data{u}
 {
 }
 
 User::UserGender
-User::ProtectedData::gender () const
+User::ContactData::gender () const
 {
     _THROW_IF_NO_USER_;
-    if (u->gender.is_initialized()) {
-        return userGenderCvrt.fromStr(u->gender.get());
+    if (_data->gender.is_initialized()) {
+        return userGenderCvrt.fromStr(_data->gender.get());
     }
     return User::UserGender::unknown;
 }
 
 const boost::optional<std::string>&
-User::ProtectedData::name () const
+User::ContactData::name () const
 {
     _THROW_IF_NO_USER_;
-    return u->name;
+    return _data->name;
 }
 
 const boost::optional<system_clock::time_point>
-User::ProtectedData::birthDate () const
+User::ContactData::birthDate () const
 {
     _THROW_IF_NO_USER_;
-    if (u->birthDate.is_initialized()) {
+    if (_data->birthDate.is_initialized()) {
         std::tm tm = {0,0,0,0,0,0,0,0,0,0,0};
-        strptime(u->birthDate.get().c_str(), "%Y-%m-%d", &tm);
+        strptime(_data->birthDate.get().c_str(), "%Y-%m-%d", &tm);
         return boost::make_optional(std::chrono::system_clock::from_time_t(std::mktime(&tm)));
     }
     return boost::optional<system_clock::time_point>{};
 }
 
 int64_t
-User::ProtectedData::maxContact () const
+User::ContactData::maxContact () const
 {
     _THROW_IF_NO_USER_;
-    return u->maxContact.get_value_or(200);
+    return _data->maxContact.get_value_or(200);
 }
 
 FolderNode
-User::ProtectedData::node () const
+User::ContactData::node () const
 {
     _THROW_IF_NO_USER_;
-    return FolderNode{u->node};
+    return FolderNode{_data->node};
 }
 
-User::PrivateData::PrivateData (std::shared_ptr<data::User> u, const std::string& password) : u{u}
+User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const std::string& password) : _data{u}
 {
     if (!u->salt.is_initialized() || !u->nodeKey.is_initialized())
     {
@@ -199,93 +199,99 @@ User::PrivateData::PrivateData (std::shared_ptr<data::User> u, const std::string
     auto tmp = rsa.decrypt(Crypto::base64decode(u->nodeKey.get()));
     if (tmp.size() == 32)
     {
-        nodeKeyClear = Crypto::base64encode(tmp);
+        _nodeKeyClear = Crypto::base64encode(tmp);
     }
     else if (tmp.size() > 44)
     {
-        nodeKeyClear = Crypto::base64decode(tmp);
+        _nodeKeyClear = Crypto::base64decode(tmp);
     }
     else
     {
-        nodeKeyClear = tmp;
+        _nodeKeyClear = tmp;
     }
 }
 
 User::ReportedState
-User::PrivateData::reportedState () const
+User::PersonalData::reportedState () const
 {
-    if (u->reportedState.is_initialized()) {
-        return reportedStateCvrt.fromStr(u->reportedState.get());
+    if (_data->reportedState.is_initialized()) {
+        return reportedStateCvrt.fromStr(_data->reportedState.get());
     }
     return User::ReportedState::no_report;
 }
 
 const std::string&
-User::PrivateData::email () const
+User::PersonalData::email () const
 {
-    if(u->email.is_initialized()) {
-        return u->email.get();
+    if(_data->email.is_initialized()) {
+        return _data->email.get();
     }
-    if(u->nextEmail.is_initialized()) {
-        return u->nextEmail.get();
+    if(_data->nextEmail.is_initialized()) {
+        return _data->nextEmail.get();
     }
     THROW(ErrorException{"Email/nextEmail are not correctly initialized"});
 }
 
 const std::string&
-User::PrivateData::nextEmail () const
+User::PersonalData::nextEmail () const
 {
-    if(u->nextEmail.is_initialized()) {
-        return u->nextEmail.get();
+    if(_data->nextEmail.is_initialized()) {
+        return _data->nextEmail.get();
     }
-    if(u->email.is_initialized()) {
-        return u->email.get();
+    if(_data->email.is_initialized()) {
+        return _data->email.get();
     }
     THROW(ErrorException{"Email/nextEmail are not correctly initialized"});
 }
 
-bool
-User::PrivateData::isEmailValidated() const
+const std::string&
+User::PersonalData::nodeKeyClear () const
 {
-    return u->email.is_initialized();
-}
-
-int64_t
-User::PrivateData::maxStorage () const
-{
-    return u->maxStorage.get_value_or(100);
-}
-
-int64_t
-User::PrivateData::standatdMaxStorage () const
-{
-    return u->standatdMaxStorage.get_value_or(100);
-}
-
-int64_t
-User::PrivateData::downloaded () const
-{
-    return u->downloaded.get_value_or(0);
-}
-
-int64_t
-User::PrivateData::dlAvailable () const
-{
-    return u->dlAvailable.get_value_or(0);
+    return _nodeKeyClear;
 }
 
 bool
-User::hasProtectedData () const
+User::PersonalData::isEmailValidated() const
 {
-    return u != nullptr && u->node != nullptr;
+    return _data->email.is_initialized();
 }
 
-User::ProtectedData&
-User::protectedData ()
+int64_t
+User::PersonalData::maxStorage () const
 {
-    if(hasProtectedData()) {
+    return _data->maxStorage.get_value_or(100);
+}
+
+int64_t
+User::PersonalData::standatdMaxStorage () const
+{
+    return _data->standatdMaxStorage.get_value_or(100);
+}
+
+int64_t
+User::PersonalData::downloaded () const
+{
+    return _data->downloaded.get_value_or(0);
+}
+
+int64_t
+User::PersonalData::dlAvailable () const
+{
+    return _data->dlAvailable.get_value_or(0);
+}
+
+bool
+User::hasContactData () const
+{
+    return _data != nullptr && _data->node != nullptr;
+}
+
+User::ContactData&
+User::contactData ()
+{
+    if(hasContactData()) {
         if (!_protected.is_initialized()) {
-            _protected = boost::make_optional(ProtectedData{u});
+            _protected = boost::make_optional(ContactData{_data});
         }
         return _protected.get();
     }
@@ -293,27 +299,27 @@ User::protectedData ()
 }
 
 bool
-User::hasPrivateData () const
+User::hasPersonalData () const
 {
-    return u != nullptr && u->salt.is_initialized();
+    return _data != nullptr && _data->salt.is_initialized();
 }
 
-User::PrivateData&
-User::initializePrivateData (const std::string& password)
+User::PersonalData&
+User::initializePersonalData (const std::string& password)
 {
-    if(hasPrivateData()) {
+    if(hasPersonalData()) {
         if (!_private.is_initialized()) {
-            _private = boost::make_optional(PrivateData{u, password});
+            _private = boost::make_optional(PersonalData{_data, password});
         }
         return _private.get();
     }
     THROW(ErrorException{"No private data"});
 }
 
-User::PrivateData&
-User::privateData ()
+User::PersonalData&
+User::personalData ()
 {
-    if(hasPrivateData()) {
+    if(hasPersonalData()) {
         if (!_private.is_initialized()) {
             THROW(ErrorException{"You must initialize private data first"});
         }
@@ -325,14 +331,14 @@ User::privateData ()
 bool
 User::hasRelation () const
 {
-    return r != nullptr;
+    return _relation != nullptr;
 }
 
 UserRelation
 User::relation () const
 {
     if (hasRelation()) {
-        return UserRelation{r};
+        return UserRelation{_relation};
     }
     THROW(ErrorException{"No relation"});
 }
@@ -341,13 +347,13 @@ User::relation () const
 User
 User::invite ()
 {
-    if (!publicKey.is_initialized())
+    if (!_publicKey.is_initialized())
     {
         THROW(ErrorException{"PublicKey is needed"});
     }
     // TODO: groupIds ...
     auto& user = Application::get().currentUser();
-    auto key = Crypto::base64encode(publicKey.get().encrypt(user.privateData().nodeKeyClear));
+    auto key = Crypto::base64encode(_publicKey.get().encrypt(user.personalData().nodeKeyClear()));
     auto r = NetworkApi::createUserRelation(user.id(), id(), "INVITE", "UNKNOWN", key).get();
     return User{r->user, r};
 }
@@ -369,12 +375,12 @@ User::suggest (const User& contact)
 User
 User::acceptInvitation ()
 {
-    if (!publicKey.is_initialized())
+    if (!_publicKey.is_initialized())
     {
         THROW(ErrorException{"PublicKey is needed"});
     }
     auto& user = Application::get().currentUser();
-    auto key = Crypto::base64encode(publicKey.get().encrypt(user._private.get().nodeKeyClear));
+    auto key = Crypto::base64encode(_publicKey.get().encrypt(user._private.get().nodeKeyClear()));
     auto r = NetworkApi::createUserRelation(user.id(), id(), "CONTACT", "", key).get();
     return User{r->user, r};
 }
@@ -387,10 +393,10 @@ User::removeRelation ()
         THROW(ErrorException{"No relation to remove"});
     }
     auto& user = Application::get().currentUser();
-    NetworkApi::deleteUserRelation(user.id(), id(), r->type).get();
+    NetworkApi::deleteUserRelation(user.id(), id(), _relation->type).get();
 
     // remove relation and cache.
-    this->r          = nullptr;
+    this->_relation          = nullptr;
     this->_protected = boost::none;
     this->_private   = boost::none;
 }

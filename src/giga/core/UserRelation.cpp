@@ -25,30 +25,30 @@ static const utils::EnumConvertor<core::UserRelation::Initiator, 3> initiatorCvr
 
 static const std::vector<int64_t> emptyVector = {};
 
-UserRelation::UserRelation (std::shared_ptr<data::UsersRelation> r) : r(r)
+UserRelation::UserRelation (std::shared_ptr<data::UsersRelation> r) : _data(r)
 {
 }
 
 UserRelation::Type
 UserRelation::type () const
 {
-    return typeCvrt.fromStr(r->type);
+    return typeCvrt.fromStr(_data->type);
 }
 
 std::chrono::system_clock::time_point
 UserRelation::creationDate () const
 {
-    return system_clock::time_point(std::chrono::seconds(r->creationDate));
+    return system_clock::time_point(std::chrono::seconds(_data->creationDate));
 }
 
 const std::vector<int64_t>&
 UserRelation::userList () const
 {
-    if (r->suggestedBy.is_initialized()) {
-        return r->suggestedBy.get();
+    if (_data->suggestedBy.is_initialized()) {
+        return _data->suggestedBy.get();
     }
-    if (r->byUserId.is_initialized()) {
-        return r->byUserId.get();
+    if (_data->byUserId.is_initialized()) {
+        return _data->byUserId.get();
     }
     return emptyVector;
 }
@@ -56,8 +56,8 @@ UserRelation::userList () const
 UserRelation::Initiator
 UserRelation::initiator () const
 {
-    if (r->initiator.is_initialized()) {
-        return initiatorCvrt.fromStr(r->initiator.get());
+    if (_data->initiator.is_initialized()) {
+        return initiatorCvrt.fromStr(_data->initiator.get());
     }
     return Initiator::na;
 }

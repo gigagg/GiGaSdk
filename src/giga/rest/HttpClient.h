@@ -18,14 +18,13 @@ class HttpClient final
 {
 public:
     static constexpr auto API = "/api/1.0/";
-    static constexpr auto HOST = "https://dev.gg";
     static constexpr auto JSON_CONTENT_TYPE = "application/json;charset=utf-8";
 
 public:
     HttpClient();
-    ~HttpClient() = default;
+    ~HttpClient()                 = default;
     HttpClient(const HttpClient&) = default;
-    HttpClient(HttpClient&&) = default;
+    HttpClient(HttpClient&&)      = default;
 
 private:
     template <typename T>
@@ -128,15 +127,6 @@ public:
     }
 
     inline web::http::client::http_client& getClient() { return client;};
-
-private:
-    web::http::client::http_client_config getConfig() {
-        auto config = web::http::client::http_client_config{};
-#ifdef DEBUG
-        config.set_validate_certificates(false);
-#endif
-        return config;
-    }
 
 private:
     web::http::client::http_client client;

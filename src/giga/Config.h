@@ -35,6 +35,8 @@ public:
     inline const std::string& appOauthAuthorizationEndpoint() const {return _oauthAuthorizationEndpoint;}
     inline const std::string& appOauthTokenEndpoint() const {return _oauthTokenEndpoint;}
 
+    inline const std::string& apiHost() const {return _apiHost;}
+
 private:
     std::string _appRedirectUri;
     std::string _appId;
@@ -43,6 +45,7 @@ private:
 
     const std::string _oauthAuthorizationEndpoint = "https://dev.gg/oauth/authorize";
     const std::string _oauthTokenEndpoint         = "https://dev.gg/oauth/token";
+    const std::string _apiHost                    = "https://dev.gg";
 };
 
 } /* namespace giga */

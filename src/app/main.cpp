@@ -134,7 +134,7 @@ int main(int argc, const char* argv[]) {
 
         auto user = app.authenticate(login, password);
         std::cout << "Logged as: " << user.login()
-                << ", root: " << user.protectedData().node().id()
+                << ", root: " << user.contactData().node().id()
                 << std::endl;
 
         //

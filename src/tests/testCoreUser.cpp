@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(test_core_user_simple) {
     BOOST_CHECK(lastConnectionDate == user.lastConnectionDate());
 
     BOOST_CHECK_EQUAL("t.guyard", user.login());
-    BOOST_CHECK(!user.hasPrivateData());
-    BOOST_CHECK(!user.hasProtectedData());
+    BOOST_CHECK(!user.hasPersonalData());
+    BOOST_CHECK(!user.hasContactData());
 }
 
 BOOST_AUTO_TEST_CASE(test_core_user_protected) {
@@ -101,9 +101,9 @@ BOOST_AUTO_TEST_CASE(test_core_user_protected) {
     BOOST_CHECK(User::Activity::very_active == user.activity());
     BOOST_CHECK_EQUAL(2420, user.contactCount());
     BOOST_CHECK_EQUAL("bot-GiGa", user.login());
-    BOOST_CHECK(!user.hasPrivateData());
-    BOOST_CHECK(user.hasProtectedData());
+    BOOST_CHECK(!user.hasPersonalData());
+    BOOST_CHECK(user.hasContactData());
 
-    BOOST_CHECK(user.protectedData().gender() == User::UserGender::unknown);
-    BOOST_CHECK_EQUAL(user.protectedData().maxContact(), 200);
+    BOOST_CHECK(user.contactData().gender() == User::UserGender::unknown);
+    BOOST_CHECK_EQUAL(user.contactData().maxContact(), 200);
 }

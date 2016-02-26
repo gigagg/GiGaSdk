@@ -89,7 +89,7 @@ FileNodeData::posterUrl () const
 uri
 FileNodeData::fileUrl () const
 {
-    return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(Application::get().currentUser().privateData().nodeKeyClear)};
+    return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(Application::get().currentUser().personalData().nodeKeyClear())};
 }
 
 //
@@ -98,12 +98,12 @@ FileNodeData::fileUrl () const
 
 
 FileNode::FileNode (std::shared_ptr<data::Node> n) :
-        Node(n), _data(n)
+        Node(n), _fileData(n)
 {
 }
 
 FileNode::FileNode(const FileNode& rhs) :
-        Node(rhs), _data{rhs.n}
+        Node(rhs), _fileData{rhs._data}
 {
 }
 
@@ -111,7 +111,7 @@ FileNode&
 FileNode::operator=(const FileNode& rhs)
 {
     Node::operator =(rhs);
-    _data = FileNodeData{rhs.n};
+    _fileData = FileNodeData{rhs._data};
     return *this;
 }
 
@@ -145,7 +145,7 @@ FileNode::download(const std::string& destinationPath, FileDownloader::Policy po
 const FileNodeData&
 FileNode::fileData() const
 {
-    return _data;
+    return _fileData;
 }
 
 } /* namespace core */

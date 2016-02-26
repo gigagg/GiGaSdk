@@ -51,8 +51,8 @@ public:
     Node(Node&&)                  = default;
     Node& operator=(Node&&)       = default;
 
-    Node(const Node&);
-    Node& operator=(const Node&);
+    Node(const Node& rhs);
+    Node& operator=(const Node& rhs);
 
     static std::unique_ptr<Node>
     create(std::shared_ptr<data::Node> n);
@@ -123,7 +123,7 @@ public:
 
 
 protected:
-    std::shared_ptr<data::Node> n;
+    std::shared_ptr<data::Node> _data;
 };
 
 } /* namespace core */

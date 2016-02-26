@@ -96,7 +96,7 @@ public:
     fileData() const override;
 
 private:
-    FileNodeData _data;
+    FileNodeData _fileData;
 };
 
 } /* namespace core */
