@@ -37,7 +37,7 @@ FileTransferer::start ()
     std::lock_guard<std::mutex> l{_mut};
 
     if (_state != State::pending) {
-        THROW(ErrorException{"Start is valid only in 'pending' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Start is valid only in 'pending' state"});
     }
 
     doStart();
@@ -49,7 +49,7 @@ FileTransferer::pause ()
 {
     std::lock_guard<std::mutex> l{_mut};
     if (_state != State::started) {
-        THROW(ErrorException{"Pause is valid only in 'started' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Pause is valid only in 'started' state"});
     }
     _progress->setPause(true);
     _state = State::paused;
@@ -60,7 +60,7 @@ FileTransferer::resume ()
 {
     std::lock_guard<std::mutex> l{_mut};
     if (_state != State::paused) {
-        THROW(ErrorException{"Resume is valid only in 'paused' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Resume is valid only in 'paused' state"});
     }
     _progress->setPause(false);
     _state = State::started;
@@ -71,7 +71,7 @@ FileTransferer::cancel ()
 {
     std::lock_guard<std::mutex> l{_mut};
     if (_state != State::paused && _state != State::started) {
-        THROW(ErrorException{"Resume is valid only in 'paused' and 'started' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Resume is valid only in 'paused' and 'started' state"});
     }
     _state = State::canceled;
     _progress->cancel();

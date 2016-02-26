@@ -93,7 +93,7 @@ FolderNode::uploadFile(const std::string& filepath)
     auto path = fs::path{filepath};
     if (!fs::exists(path) || !fs::is_regular_file(path))
     {
-        THROW(ErrorException{"This is not a regular file"});
+        BOOST_THROW_EXCEPTION(ErrorException{"This is not a regular file"});
     }
 
     auto parentId = this->id();
@@ -113,13 +113,13 @@ FolderNode::uploadFile(const std::string& filepath)
 FileDownloader
 FolderNode::download(const std::string&, FileDownloader::Policy)
 {
-    THROW(ErrorException{"Not implemented"});
+    BOOST_THROW_EXCEPTION(ErrorException{"Not implemented"});
 }
 
 const FileNodeData&
 FolderNode::fileData() const
 {
-    THROW(ErrorException{"No file data in a folder"});
+    BOOST_THROW_EXCEPTION(ErrorException{"No file data in a folder"});
 }
 
 }/* namespace core */

@@ -153,13 +153,13 @@ ChunkUploader::upload ()
             auto nodes = JSonUnserializer::fromString<std::vector<std::shared_ptr<Node>>>(response);
             if (nodes.size() != 1)
             {
-                THROW(ErrorException{"Wrong number of nodes"});
+                BOOST_THROW_EXCEPTION(ErrorException{"Wrong number of nodes"});
             }
             return nodes[0];
         }
     } while (position < _fileSize);
 
-    THROW(ErrorException{"Upload error"});
+    BOOST_THROW_EXCEPTION(ErrorException{"Upload error"});
 }
 
 std::string
@@ -167,7 +167,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 {
     if (position >= _fileSize)
     {
-        THROW(ErrorException{"Invalid position/fileSize"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Invalid position/fileSize"});
     }
     _progress->setUploadPosition(position);
 
@@ -205,7 +205,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
     if (httpCode >= 300)
     {
-        THROW(BuildHttpError(httpCode, str.str()));
+        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, str.str()));
     }
     return str.str();
 }

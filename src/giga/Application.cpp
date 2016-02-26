@@ -38,7 +38,7 @@ Application::get()
 {
     if (!instance().isInitialized())
     {
-        THROW(ErrorException{"App must be initialized first"});
+        BOOST_THROW_EXCEPTION(ErrorException{"App must be initialized first"});
     }
     return instance();
 }

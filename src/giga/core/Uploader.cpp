@@ -104,7 +104,7 @@ Uploader::scanFilesAddUploads (FolderNode parent, boost::filesystem::path path)
     using namespace boost::filesystem;
     if (!exists (path))
     {
-        THROW(ErrorException{"File or directory not found"});
+        BOOST_THROW_EXCEPTION(ErrorException{"File or directory not found"});
     }
     parent.loadChildren();
 

@@ -38,7 +38,7 @@ GigaApi::authenticate (const std::string& login, const std::string& password)
         }
         else
         {
-            THROW(ErrorNotFound{"Login not found"});
+            BOOST_THROW_EXCEPTION(ErrorNotFound{"Login not found"});
         }
     });
 }
@@ -49,13 +49,13 @@ GigaApi::getCurrentUser()
     if (currentUser) {
         return *currentUser;
     }
-    THROW(ErrorException("You must authenticate before using getCurrentUser"));
+    BOOST_THROW_EXCEPTION(ErrorException("You must authenticate before using getCurrentUser"));
 }
 
 std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
 GigaApi::getOAuthConfig()
 {
-    return client.getClient().client_config().oauth2();
+    return client.http().client_config().oauth2();
 }
 
 } // namespace giga

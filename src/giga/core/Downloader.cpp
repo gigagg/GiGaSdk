@@ -75,7 +75,7 @@ Downloader::downloadFile (Node& node, boost::filesystem::path path)
 {
     if (!is_directory(path))
     {
-        THROW(ErrorException{"path should be a directory"});
+        BOOST_THROW_EXCEPTION(ErrorException{"path should be a directory"});
     }
 
     auto name = utils::cleanUpFilename(node.name());
@@ -88,12 +88,12 @@ Downloader::downloadFile (Node& node, boost::filesystem::path path)
         {
             if (isDir)
             {
-                THROW(ErrorException{"Cannot download file: a directory with the same name already exists."});
+                BOOST_THROW_EXCEPTION(ErrorException{"Cannot download file: a directory with the same name already exists."});
             }
         }
         if (node.type() != Node::Type::file && !isDir)
         {
-            THROW(ErrorException{"Cannot create directory: a file with the same name already exists."});
+            BOOST_THROW_EXCEPTION(ErrorException{"Cannot create directory: a file with the same name already exists."});
         }
     }
 

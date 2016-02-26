@@ -27,7 +27,7 @@ namespace giga
 {
 
 HttpClient::HttpClient () :
-        client (Application::config().apiHost(), getConfig())
+        _http (Application::config().apiHost(), getConfig())
 {
 }
 
@@ -69,7 +69,7 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
     body.add("login", login);
     body.add("password", password);
     auto url = "/rest/login";
-    auto request = client.request(methods::POST, url, JSonSerializer::toString(body), JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
+    auto request = _http.request(methods::POST, url, JSonSerializer::toString(body), JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
         onRequest<Empty>(response);
         auto headers = response.headers();
 
@@ -90,7 +90,7 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
         if (it != headers.end()) {
             r.headers().add("Cookie", it->second);
         }
-        auto request = client.request(r).then([=](web::http::http_response response) -> std::string {
+        auto request = _http.request(r).then([=](web::http::http_response response) -> std::string {
             auto redirect = onRequest<Redirect>(response);
             return redirect.redirect;
         });
@@ -105,7 +105,52 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
     // regenerate client, with the oauth2 config.
     auto config = getConfig();
     config.set_oauth2(m_oauth2_config);
-    client = {Application::config().apiHost(), config};
+    _http = {Application::config().apiHost(), config};
+}
+
+void
+HttpClient::throwHttpError(unsigned short status, web::json::value&& json) const
+{
+    auto s = JSonUnserializer{json};
+    switch (status)
+    {
+        case 401:
+            BOOST_THROW_EXCEPTION((getError<401>(s, std::move(json))));
+            break;
+        case 403:
+            BOOST_THROW_EXCEPTION((getError<403>(s, std::move(json))));
+            break;
+        case 400:
+            BOOST_THROW_EXCEPTION((getError<400>(s, std::move(json))));
+            break;
+        case 422:
+            BOOST_THROW_EXCEPTION((getError<422>(s, std::move(json))));
+            break;
+        case 423:
+            BOOST_THROW_EXCEPTION((getError<423>(s, std::move(json))));
+            break;
+        case 404:
+            BOOST_THROW_EXCEPTION((getError<404>(s, std::move(json))));
+            break;
+        case 500:
+            BOOST_THROW_EXCEPTION((getError<500>(s, std::move(json))));
+            break;
+        case 501:
+            BOOST_THROW_EXCEPTION((getError<501>(s, std::move(json))));
+            break;
+        default:
+            HttpErrorGeneric data{status};
+            data.visit(s);
+            data.setJson(std::move(json));
+            BOOST_THROW_EXCEPTION(data);
+            break;
+    }
+}
+
+const web::http::client::http_client&
+HttpClient::http () const
+{
+    return _http;
 }
 
 

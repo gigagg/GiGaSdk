@@ -19,7 +19,7 @@
 
 using std::chrono::_V2::system_clock;
 
-#define _THROW_IF_NO_NODE_ if (_data == nullptr) { THROW(ErrorException{"Node is not set"}); } do {} while(0)
+#define _THROW_IF_NO_NODE_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{"Node is not set"}); } do {} while(0)
 
 namespace giga
 {
@@ -43,7 +43,7 @@ Node::create (std::shared_ptr<data::Node> n)
         case Type::root:
             return std::unique_ptr<Node>{new FolderNode{n}};
     }
-    THROW(ErrorException{"unreachable"});
+    BOOST_THROW_EXCEPTION(ErrorException{"unreachable"});
 }
 
 Node::Node (std::shared_ptr<data::Node> n)  :
@@ -165,7 +165,7 @@ Node::rename(const std::string& name)
 {
     if (!boost::filesystem::portable_name(name))
     {
-        THROW(ErrorException{"Name is not valid"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Name is not valid"});
     }
     NodesApi::renameNode(id(), name).get();
     _data->name = name;

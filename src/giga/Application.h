@@ -100,9 +100,9 @@ public:
     searchNode (const std::string& search, core::Node::MediaType type) const;
 
 private:
-    core::User _currentUser;
-    Config _config;
-    bool _isInitialized = false;
+    core::User  _currentUser;
+    Config      _config;
+    bool        _isInitialized = false;
 };
 
 } /* namespace giga */

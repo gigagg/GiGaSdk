@@ -206,7 +206,7 @@ int main(int argc, const char* argv[]) {
             {
                 if (node->type() == core::Node::Type::file)
                 {
-                    THROW(ErrorException{"Node must be a folder"});
+                    BOOST_THROW_EXCEPTION(ErrorException{"Node must be a folder"});
                 }
                 core::Uploader uploader{*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<std::string>()};
                 auto t = pplx::create_task([&uploader] () {
@@ -296,41 +296,10 @@ int main(int argc, const char* argv[]) {
         }
         std::cout << "DONE" << std::endl;
     }
-    catch (const ErrorException &e)
-    {
-        e.print();
-        return 1;
-    }
-    catch(boost::system::system_error& e)
-    {
-        std::cout<<"Error: " << e.what() << std::endl;
-        std::cout<<"Info: "  << boost::diagnostic_information(e) <<std::endl;
-
-//#include <boost/lexical_cast.hpp>
-//#include <boost/asio.hpp>
-//#include <openssl/err.h>
-//        auto error = e.code();
-//        auto err = error.message();
-//        err = std::string(" (")
-//                +boost::lexical_cast<std::string>(ERR_GET_LIB(error.value()))+","
-//                +boost::lexical_cast<std::string>(ERR_GET_FUNC(error.value()))+","
-//                +boost::lexical_cast<std::string>(ERR_GET_REASON(error.value()))+") "
-//        ;
-//        char buf[128];
-//        ::ERR_error_string_n(error.value(), buf, sizeof(buf));
-//        err += buf;
-//        std::cout<< err <<std::endl;
-
-        return 1;
-    }
-    catch (const std::exception &e)
-    {
-        std::cout << "Exception: " << e.what() << std::endl;
-        return 1;
-    }
     catch (...)
     {
-        std::cout << "Unknown error" << std::endl;
+        std::cerr << "Unhandled exception!" << std::endl <<
+        boost::current_exception_diagnostic_information();
         return 1;
     }
     return 0;

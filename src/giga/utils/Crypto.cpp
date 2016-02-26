@@ -63,13 +63,16 @@ using CryptoPP::RSAES_PKCS1v15_Decryptor;
 using CryptoPP::RSAES_PKCS1v15_Encryptor;
 using CryptoPP::SecByteBlock;
 
-namespace giga
-{
+namespace {
 
-const byte* toByteCst(const std::string& str) {
+const byte*
+toByteCst (const std::string& str)
+{
     return reinterpret_cast<const byte*>(str.data());
 }
-byte* toByte(std::vector<char>& str) {
+byte*
+toByte (std::vector<char>& str)
+{
     return reinterpret_cast<byte*>(str.data());
 }
 
@@ -80,6 +83,10 @@ void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
     decoder.MessageEnd();
 }
 
+}
+
+namespace giga
+{
 
 Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
 {
@@ -87,40 +94,40 @@ Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
     {
         ByteQueue queue;
         fillQueue(queue, pubStr);
-        pub.BERDecodePublicKey(queue, false, queue.MaxRetrievable());
+        _pub.BERDecodePublicKey(queue, false, queue.MaxRetrievable());
     }
     catch (const std::exception&)
     {
         ByteQueue queue;
         fillQueue(queue, pubStr);
-        pub.BERDecode(queue);
+        _pub.BERDecode(queue);
     }
-    hasPrivateKey = false;
+    _hasPrivateKey = false;
     if (privStr != "")
     {
         try
         {
             ByteQueue queue;
             fillQueue(queue, privStr);
-            priv.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
-            hasPrivateKey = true;
+            _priv.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
+            _hasPrivateKey = true;
         }
         catch (const std::exception&)
         {
             ByteQueue queue;
             fillQueue(queue, privStr);
-            priv.BERDecode(queue);
+            _priv.BERDecode(queue);
         }
 
         AutoSeededRandomPool rnd;
-        if (!priv.Validate(rnd, 3))
+        if (!_priv.Validate(rnd, 3))
         {
-            THROW(ErrorException("Rsa private key validation failed"));
+            BOOST_THROW_EXCEPTION(ErrorException("Rsa private key validation failed"));
         }
 
-        if (!priv.Validate(rnd, 3))
+        if (!_priv.Validate(rnd, 3))
         {
-            THROW(ErrorException("Dsa private key validation failed"));
+            BOOST_THROW_EXCEPTION(ErrorException("Dsa private key validation failed"));
         }
     }
 }
@@ -129,7 +136,7 @@ std::string
 Rsa::encrypt (const std::string& data) const
 {
     AutoSeededRandomPool rng;
-    RSAES_PKCS1v15_Encryptor encryptor( pub );
+    RSAES_PKCS1v15_Encryptor encryptor( _pub );
     std::string encrypted;
     StringSource ss(data, true,
         new PK_EncryptorFilter(rng, encryptor,
@@ -142,11 +149,11 @@ Rsa::encrypt (const std::string& data) const
 std::string
 Rsa::decrypt (const std::string& data) const
 {
-    if (!hasPrivateKey) {
-        THROW(ErrorException("PrivateKey has not been set"));
+    if (!_hasPrivateKey) {
+        BOOST_THROW_EXCEPTION(ErrorException("PrivateKey has not been set"));
     }
     AutoSeededRandomPool rng;
-    RSAES_PKCS1v15_Decryptor decryptor(priv);
+    RSAES_PKCS1v15_Decryptor decryptor(_priv);
     std::string decrypted;
     StringSource ss(data, true,
         new PK_DecryptorFilter(rng, decryptor,

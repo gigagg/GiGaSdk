@@ -18,7 +18,6 @@ namespace data {
 struct DataNode {
     std::unique_ptr<Node> data = nullptr;
     
-    
     template <class Manager>
     void visit(const Manager& m) {
         GIGA_MANAGE(m, data);

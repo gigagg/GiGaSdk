@@ -35,7 +35,7 @@ static const utils::EnumConvertor<core::User::UserGender, 3> userGenderCvrt =
 namespace core
 {
 
-#define _THROW_IF_NO_USER_ if (_data == nullptr) { THROW(ErrorException{"User is not set"}); } do {} while(0)
+#define _THROW_IF_NO_USER_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{"User is not set"}); } do {} while(0)
 
 User::User (std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r) :
         _data{u}, _relation{r},_private{}, _protected{}, _publicKey{}
@@ -188,7 +188,7 @@ User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const std::stri
 {
     if (!u->salt.is_initialized() || !u->nodeKey.is_initialized())
     {
-        THROW(ErrorException{"Salt and NodeKey are required to build PrivateData"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Salt and NodeKey are required to build PrivateData"});
     }
     auto masterKey = Crypto::calculateMasterPassword(u->salt.get(), password);
     auto privateKey = Crypto::aesDecrypt(masterKey,
@@ -229,7 +229,7 @@ User::PersonalData::email () const
     if(_data->nextEmail.is_initialized()) {
         return _data->nextEmail.get();
     }
-    THROW(ErrorException{"Email/nextEmail are not correctly initialized"});
+    BOOST_THROW_EXCEPTION(ErrorException{"Email/nextEmail are not correctly initialized"});
 }
 
 const std::string&
@@ -241,7 +241,7 @@ User::PersonalData::nextEmail () const
     if(_data->email.is_initialized()) {
         return _data->email.get();
     }
-    THROW(ErrorException{"Email/nextEmail are not correctly initialized"});
+    BOOST_THROW_EXCEPTION(ErrorException{"Email/nextEmail are not correctly initialized"});
 }
 
 const std::string&
@@ -295,7 +295,7 @@ User::contactData ()
         }
         return _protected.get();
     }
-    THROW(ErrorException{"No protected data"});
+    BOOST_THROW_EXCEPTION(ErrorException{"No protected data"});
 }
 
 bool
@@ -313,7 +313,7 @@ User::initializePersonalData (const std::string& password)
         }
         return _private.get();
     }
-    THROW(ErrorException{"No private data"});
+    BOOST_THROW_EXCEPTION(ErrorException{"No private data"});
 }
 
 User::PersonalData&
@@ -321,11 +321,11 @@ User::personalData ()
 {
     if(hasPersonalData()) {
         if (!_private.is_initialized()) {
-            THROW(ErrorException{"You must initialize private data first"});
+            BOOST_THROW_EXCEPTION(ErrorException{"You must initialize private data first"});
         }
         return _private.get();
     }
-    THROW(ErrorException{"No private data"});
+    BOOST_THROW_EXCEPTION(ErrorException{"No private data"});
 }
 
 bool
@@ -340,7 +340,7 @@ User::relation () const
     if (hasRelation()) {
         return UserRelation{_relation};
     }
-    THROW(ErrorException{"No relation"});
+    BOOST_THROW_EXCEPTION(ErrorException{"No relation"});
 }
 
 
@@ -349,7 +349,7 @@ User::invite ()
 {
     if (!_publicKey.is_initialized())
     {
-        THROW(ErrorException{"PublicKey is needed"});
+        BOOST_THROW_EXCEPTION(ErrorException{"PublicKey is needed"});
     }
     // TODO: groupIds ...
     auto& user = Application::get().currentUser();
@@ -377,7 +377,7 @@ User::acceptInvitation ()
 {
     if (!_publicKey.is_initialized())
     {
-        THROW(ErrorException{"PublicKey is needed"});
+        BOOST_THROW_EXCEPTION(ErrorException{"PublicKey is needed"});
     }
     auto& user = Application::get().currentUser();
     auto key = Crypto::base64encode(_publicKey.get().encrypt(user._private.get().nodeKeyClear()));
@@ -390,7 +390,7 @@ User::removeRelation ()
 {
     if (!hasRelation())
     {
-        THROW(ErrorException{"No relation to remove"});
+        BOOST_THROW_EXCEPTION(ErrorException{"No relation to remove"});
     }
     auto& user = Application::get().currentUser();
     NetworkApi::deleteUserRelation(user.id(), id(), _relation->type).get();

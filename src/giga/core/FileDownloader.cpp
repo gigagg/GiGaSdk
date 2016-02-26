@@ -65,11 +65,11 @@ FileDownloader::FileDownloader (const std::string& folderDest, const Node& node,
     path folder{folderDest};
     if (!is_directory(folder))
     {
-        THROW(ErrorException{"FolderDest should be a directory"});
+        BOOST_THROW_EXCEPTION(ErrorException{"FolderDest should be a directory"});
     }
     if (node.name() == "" || node.name() == "." || node.name() == "..")
     {
-        THROW(ErrorException{"Invalid node name"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Invalid node name"});
     }
 
     auto name = utils::cleanUpFilename(node.name());
@@ -213,7 +213,7 @@ FileDownloader::doStart()
                     {
                         boost::filesystem::remove(tempFile);
                     }
-                    THROW(BuildHttpError(httpCode));
+                    BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode));
                 }
             } catch (const curl_easy_exception& error) {
                 auto track = error.get_traceback();
@@ -226,13 +226,13 @@ FileDownloader::doStart()
                         throw pplx::task_canceled{"Download canceled"};
                     }
                 }
-                THROW(ErrorException{ss.str()});
+                BOOST_THROW_EXCEPTION(ErrorException{ss.str()});
             }
         }, _cts.get_token()).then([destFile, tempFile, policy]() {
             if (policy != Policy::override && policy != Policy::overrideNewerSize && exists(destFile))
             {
                 // TODO: remove tempFile ?
-                THROW(ErrorException{"Destination file already exists"});
+                BOOST_THROW_EXCEPTION(ErrorException{"Destination file already exists"});
             }
 
             boost::filesystem::rename(tempFile, destFile);

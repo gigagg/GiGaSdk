@@ -22,9 +22,9 @@ BOOST_AUTO_TEST_CASE(test_aes)
 {
     auto result    = Crypto::aesEncrypt("password", "data");
     auto decrypted = Crypto::aesDecrypt("password",
-                                        get<Crypto::aesTuple::salt>(result),
-                                        get<Crypto::aesTuple::iv>(result),
-                                        get<Crypto::aesTuple::data>(result));
+                                        get<Crypto::AesTuple::salt>(result),
+                                        get<Crypto::AesTuple::iv>(result),
+                                        get<Crypto::AesTuple::data>(result));
 
     BOOST_CHECK_EQUAL("data", decrypted);
 }

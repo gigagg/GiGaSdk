@@ -20,34 +20,34 @@ class EnumConvertor
 {
 public:
     template<typename ...E>
-    EnumConvertor(E&&... e) : arr{{std::forward<E>(e)...}} {
+    EnumConvertor(E&&... e) : _arr{{std::forward<E>(e)...}} {
     }
 
     enumT
     fromStr (const std::string& value) const
     {
-        auto it = std::find(arr.begin(), arr.end(), value);
-        if (it != arr.end())
+        auto it = std::find(_arr.begin(), _arr.end(), value);
+        if (it != _arr.end())
         {
-            size_t index = std::distance(arr.begin(), it);
+            size_t index = std::distance(_arr.begin(), it);
             return static_cast<enumT>(index);
         }
-        THROW(ErrorException{"Value not found"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Value not found"});
     }
 
     const std::string&
     toStr (enumT value) const
     {
         auto index = static_cast<size_t>(value);
-        if (index < arr.size())
+        if (index < _arr.size())
         {
-            return arr[index];
+            return _arr[index];
         }
-        THROW(ErrorException{"Str not found"});
+        BOOST_THROW_EXCEPTION(ErrorException{"Str not found"});
     }
 
 private:
-    const std::array<std::string, enumSize> arr;
+    const std::array<std::string, enumSize> _arr;
 };
 
 }

@@ -16,8 +16,7 @@ namespace data {
 struct EmailKey {
     boost::optional<std::string> email = boost::none;
     /** The *fromUserId* nodeKey */
-    boost::optional<std::string> key = boost::none;
-    
+    boost::optional<std::string> key   = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {
