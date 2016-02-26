@@ -9,6 +9,8 @@
 #define GIGA_CORE_FILENODE_H_
 
 #include <cpprest/http_client.h>
+
+#include "FileDownloader.h"
 #include "Node.h"
 
 namespace giga
@@ -29,9 +31,9 @@ private:
 public:
     ~FileNodeData()                               = default;
     FileNodeData(FileNodeData&&)                  = default;
+    FileNodeData& operator=(FileNodeData&&)       = default;
     FileNodeData(const FileNodeData&)             = default;
     FileNodeData& operator=(const FileNodeData&)  = default;
-    FileNodeData& operator=(FileNodeData&&)       = default;
 
 public:
     const std::string&
@@ -65,13 +67,14 @@ private:
 class FileNode final : public Node
 {
 public:
-    FileNode()                        = default; // TODO: private + friend to correct class (pplx).
+    FileNode()                        = default;
     virtual ~FileNode()               = default;
-    FileNode(FileNode&&)                  = default;
-    FileNode(const FileNode&)             = default;
-    FileNode& operator=(const FileNode&)  = default;
-    FileNode& operator=(FileNode&&)       = default;
+    FileNode(FileNode&&)              = default;
+    FileNode& operator=(FileNode&&)   = default;
+
     explicit FileNode(std::shared_ptr<data::Node> n);
+    FileNode(const FileNode&);
+    FileNode& operator=(const FileNode&);
 
 public:
     virtual const std::vector<std::unique_ptr<Node>>&
@@ -87,7 +90,7 @@ public:
     uploadFile(const std::string& filepath) override;
 
     virtual FileDownloader
-    download(const std::string& destinationPath, bool doContinue = false) override;
+    download(const std::string& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) override;
 
     virtual const FileNodeData&
     fileData() const override;

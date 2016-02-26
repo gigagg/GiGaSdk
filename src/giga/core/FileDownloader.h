@@ -13,6 +13,7 @@
 #include <boost/filesystem.hpp>
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
+#include <chrono>
 
 namespace giga
 {
@@ -24,8 +25,14 @@ class Node;
 class FileDownloader : public FileTransferer
 {
 public:
+    enum class Policy
+    {
+        override, overrideNewerSize, ignore, rename
+    };
+
+public:
     explicit
-    FileDownloader (const std::string& folderDest, const Node& node, bool doContinue = false);
+    FileDownloader (const std::string& folderDest, const Node& node, Policy policy = Policy::ignore);
     virtual ~FileDownloader();
     FileDownloader (FileDownloader&& other);
 
@@ -47,11 +54,13 @@ public:
 private:
     pplx::task<boost::filesystem::path> _task;
 
-    boost::filesystem::path _tempFile;
-    boost::filesystem::path _destFile;
-    web::uri                _fileUri;
-    uint64_t                _fileSize;
+    boost::filesystem::path  _tempFile;
+    boost::filesystem::path  _destFile;
+    web::uri                 _fileUri;
+    uint64_t                 _fileSize;
     uint64_t                _startAt;
+    std::chrono::system_clock::time_point _lastUpdateDate;
+    Policy                  _policy;
 };
 
 } /* namespace core */

@@ -89,7 +89,7 @@ FileUploader::doStart ()
     auto fkey       = _fkey;
     auto nodeKeyCl  = Application::get().currentUser().privateData().nodeKeyClear;
     auto cts        = _cts;
-    auto progress   = &_progress;
+    auto progress   = _progress.get();
 
     _task = create_task([=] {
         try {
@@ -139,7 +139,7 @@ FileUploader::task () const
 double
 FileUploader::progress () const
 {
-    auto p = _progress.data();
+    auto p = _progress->data();
     if (_state != State::pending && _task.is_done())
     {
         return 1.;

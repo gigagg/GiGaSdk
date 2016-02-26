@@ -24,7 +24,7 @@ namespace core
 {
 
 Uploader::Uploader(FolderNode parent, const std::string& path):
-    _parent{parent},
+    _parent{std::move(parent)},
     _path{path},
     _preparingList{},
     _uploading{pplx::create_task([]() -> std::shared_ptr<Node> {return nullptr;})},

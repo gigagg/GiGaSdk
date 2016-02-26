@@ -35,6 +35,7 @@ public:
 public:
     explicit
     CurlProgress ();
+    CurlProgress (const CurlProgress& other);
 
     int
     onCallback (long dltotal, long dlnow, long ultotal, long ulnow) noexcept;
@@ -72,7 +73,7 @@ private:
     typedef std::chrono::high_resolution_clock::time_point Time;
     uint64_t   _limitRate;
     uint64_t   _currentLimitRate;
-    Time        _rateTime;
+    Time       _rateTime;
     uint64_t   _rateBytes;
     uint64_t   _bucket;
 

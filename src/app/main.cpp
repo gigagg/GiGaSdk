@@ -13,6 +13,9 @@
 #include <giga/api/data/Node.h>
 #include <giga/rest/JsonSerializer.h>
 #include <giga/rest/HttpErrors.h>
+#include <giga/core/Uploader.h>
+#include <giga/core/Downloader.h>
+#include <giga/utils/Utils.h>
 
 #include <iostream>
 #include <chrono>
@@ -20,9 +23,10 @@
 #include <thread>
 
 #include <boost/program_options.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <algorithm>
-#include "../giga/core/Uploader.h"
 
+using boost::exception_detail::error_info_container;
 using CryptoPP::EncodedObjectFilter;
 
 #include "crypto++/rsa.h"
@@ -119,9 +123,8 @@ int main(int argc, const char* argv[]) {
 
         auto& app = Application::init(
                         std::string("http://localhost:5001"),
-                        std::string("c0bbf6aba502"),
-                        std::string("de90cbf08214f445962eb5f2b68f2a86"));
-
+                        std::string("9ab7baa696ca"),
+                        std::string("b1af65bffd64aa1e44d2408b44b4c4d8"));
 
         auto login = vm["login"].as<std::string>();
         std::string password;
@@ -236,8 +239,7 @@ int main(int argc, const char* argv[]) {
                 });
                 auto task = uploader.start();
 
-                std::array<pplx::task<void>, 2> tasks{t, task};
-                pplx::when_all(tasks.begin(), tasks.end()).wait();
+                utils::waitTasks({t, task});
                 auto uploads = uploader.uploadingFiles();
                 std::vector<std::shared_ptr<core::Node>> arr(uploads.size());
                 std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u){
@@ -248,19 +250,24 @@ int main(int argc, const char* argv[]) {
             }
             if (vm.count("download"))
             {
-                auto dl = node->download(vm["download"].as<std::string>(), vm["continue"].as<bool>());
-                auto t = pplx::create_task([&dl] () {
-                    while( dl.progress() <= 0.99 && dl.state() != core::FileTransferer::State::canceled)
+                auto nbFiles = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
+                core::Downloader dl{std::shared_ptr<core::Node>(node.release()), vm["download"].as<std::string>()};
+                auto dlTask = dl.start();
+                auto t = pplx::create_task([&dl, nbFiles] () {
+                    auto dlding = dl.downloadingFile();
+                    while(dlding == nullptr || (dlding->progress() <= 0.99 && dl.downloadingFileNumber() < nbFiles))
                     {
-                        auto p = dl.progress();
-                        std::cout << "p: " << std::setprecision(3) << p * 100 << "% - " << std::endl;
+                        if (dlding != nullptr)
+                        {
+                            std::cout << dlding->destinationFile().string() << " - " << std::setprecision(3) << dlding->progress() * 100 << "%" << std::endl;
+
+                        }
                         std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                        dlding = dl.downloadingFile();
                     }
                 });
-
-                dl.start();
-                t.wait();
-                std::cout << "File downloaded: " << dl.task().get() << std::endl;
+                utils::waitTasks({t, dlTask});
+                std::cout << "File downloaded: " << dl.downloadingFileNumber() << std::endl;
             }
         }
 
@@ -292,14 +299,39 @@ int main(int argc, const char* argv[]) {
     catch (const ErrorException &e)
     {
         e.print();
+        return 1;
+    }
+    catch(boost::system::system_error& e)
+    {
+        std::cout<<"Error: " << e.what() << std::endl;
+        std::cout<<"Info: "  << boost::diagnostic_information(e) <<std::endl;
+
+//#include <boost/lexical_cast.hpp>
+//#include <boost/asio.hpp>
+//#include <openssl/err.h>
+//        auto error = e.code();
+//        auto err = error.message();
+//        err = std::string(" (")
+//                +boost::lexical_cast<std::string>(ERR_GET_LIB(error.value()))+","
+//                +boost::lexical_cast<std::string>(ERR_GET_FUNC(error.value()))+","
+//                +boost::lexical_cast<std::string>(ERR_GET_REASON(error.value()))+") "
+//        ;
+//        char buf[128];
+//        ::ERR_error_string_n(error.value(), buf, sizeof(buf));
+//        err += buf;
+//        std::cout<< err <<std::endl;
+
+        return 1;
     }
     catch (const std::exception &e)
     {
         std::cout << "Exception: " << e.what() << std::endl;
+        return 1;
     }
     catch (...)
     {
         std::cout << "Unknown error" << std::endl;
+        return 1;
     }
     return 0;
 }

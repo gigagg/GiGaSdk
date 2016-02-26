@@ -23,8 +23,24 @@ namespace details
 {
 
 CurlProgress::CurlProgress () :
-        _item{-1L, -1L, -1L, -1L}, _cancel{false}, _pause{false}, _isPaused{false}, _curl{nullptr},
+        _mut{}, _item{-1L, -1L, -1L, -1L}, _cancel{false}, _pause{false}, _isPaused{false}, _curl{nullptr},
         _limitRate{0}, _currentLimitRate{0}, _rateTime{}, _rateBytes{0}, _bucket{0}, _upPostion{0}
+{
+}
+
+CurlProgress::CurlProgress (const CurlProgress& other) :
+        _mut{},
+        _item{other._item.dltotal, other._item.dlnow, other._item.ultotal, other._item.ulnow},
+        _cancel{other._cancel},
+        _pause{other._pause},
+        _isPaused{other._isPaused},
+        _curl{other._curl},
+        _limitRate{other._limitRate},
+        _currentLimitRate{other._currentLimitRate},
+        _rateTime{other._rateTime},
+        _rateBytes{other._rateBytes},
+        _bucket{other._bucket},
+        _upPostion{other._upPostion}
 {
 }
 

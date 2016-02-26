@@ -9,6 +9,7 @@
 #include "Node.h"
 #include "FileNode.h"
 #include "details/CurlWriter.h"
+#include "details/CurlProgress.h"
 #include "../api/GigaApi.h"
 #include "../rest/HttpErrors.h"
 #include "../utils/Utils.h"
@@ -21,11 +22,13 @@
 #include <mutex>
 #include <curl_easy.h>
 #include <curl_exception.h>
+#include <algorithm>
 #include <thread>
 
 using boost::filesystem::exists;
 using boost::filesystem::is_directory;
 using boost::filesystem::path;
+using boost::filesystem::last_write_time;
 using curl::curl_easy;
 using curl::curl_easy_exception;
 using curl::curl_ios;
@@ -55,8 +58,9 @@ namespace giga
 namespace core
 {
 
-FileDownloader::FileDownloader (const std::string& folderDest, const Node& node, bool doContinue) :
-        FileTransferer{}, _task{}, _tempFile{}, _destFile{}, _fileUri{}, _fileSize{node.size()}, _startAt{0}
+FileDownloader::FileDownloader (const std::string& folderDest, const Node& node, Policy policy) :
+        FileTransferer{}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
+        _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy}
 {
     path folder{folderDest};
     if (!is_directory(folder))
@@ -78,18 +82,20 @@ FileDownloader::FileDownloader (const std::string& folderDest, const Node& node,
         lastPart = name.substr(pos, name.length() - pos + 1);
     }
     auto count = 0;
-    while (exists(folder / name) || (!doContinue && exists(folder / (name + ".part"))))
+    while (policy == Policy::rename && exists(folder / name))
     {
         name = firstPart + "-" + std::to_string(++count) + lastPart;
     }
 
+    auto fid = node.fileData().fid();
+    std::replace(fid.begin(), fid.end(), '/', '_');
 
-    _tempFile = folder /  (name + ".part");
+    _tempFile = folder /  ("." + fid + ".part");
     _destFile = folder / name;
 
     _fileUri = node.fileData().fileUrl();
 
-    if (doContinue && exists(_tempFile))
+    if (exists(_tempFile))
     {
         _startAt = boost::filesystem::file_size(_tempFile);
     }
@@ -107,7 +113,9 @@ FileDownloader::FileDownloader (FileDownloader&& other) :
                 _destFile{std::move(other._destFile)},
                 _fileUri{std::move(other._fileUri)},
                 _fileSize{other._fileSize},
-                _startAt{other._startAt}
+                _startAt{other._startAt},
+                _lastUpdateDate{other._lastUpdateDate},
+                _policy{other._policy}
 {
 }
 
@@ -131,87 +139,106 @@ FileDownloader::doStart()
     auto tempFile = _tempFile;
     auto destFile = _destFile;
     auto fileSize = _fileSize;
-    auto progress = &_progress;
+    auto policy   = _policy;
+    auto progress = _progress.get();
 
     uri_builder b{_fileUri};
     b.append_query("access_token", GigaApi::getOAuthConfig()->token().access_token());
     auto fileUri = b.to_uri();
 
-    _task = pplx::create_task([tempFile, fileUri, progress, fileSize]() {
-        try {
-            details::CurlWriter writer{tempFile};
+    auto ignore = false;
+    if (_policy == Policy::overrideNewerSize && exists(_destFile))
+    {
+        auto lastWriteTime = std::chrono::system_clock::from_time_t(last_write_time(_destFile));
+        ignore = fileSize == boost::filesystem::file_size(_destFile) && lastWriteTime >= _lastUpdateDate;
+    }
 
-            long httpCode = 0;
-            for (auto i = 0; i < 5 && httpCode != 200; ++i)
-            {
-                if (i != 0)
+    if (ignore || (_policy == Policy::ignore && exists(_destFile)))
+    {
+        _task = pplx::create_task([destFile]() {
+            return destFile;
+        });
+    }
+    else
+    {
+        _task = pplx::create_task([tempFile, fileUri, progress, fileSize]() {
+            try {
+                details::CurlWriter writer{tempFile};
+
+                long httpCode = 0;
+                for (auto i = 0; i < 5 && httpCode != 200; ++i)
                 {
-                    // Wait 3 seconds on retry
-                    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-                }
-                auto pos = writer.file().tellp();
-                if (pos == static_cast<int64_t>(fileSize))
-                {
-                    return; // the file is already completed.
-                }
+                    if (i != 0)
+                    {
+                        // Wait 3 seconds on retry
+                        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+                    }
+                    auto pos = writer.file().tellp();
+                    if (pos == static_cast<int64_t>(fileSize))
+                    {
+                        return; // the file is already completed.
+                    }
 
-                curl_ios<details::CurlWriter> easyWriter(&writer, &curlWriteCallback);
-                curl_easy curl(easyWriter);
-                progress->setCurl(curl);
-                writer.setCurl(curl);
+                    curl_ios<details::CurlWriter> easyWriter(&writer, &curlWriteCallback);
+                    curl_easy curl(easyWriter);
+                    progress->setCurl(curl);
+                    writer.setCurl(curl);
 
-                curl.add<CURLOPT_URL>(fileUri.to_string().c_str());
-                curl.add<CURLOPT_FOLLOWLOCATION>(1L);
-                curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
-                curl.add<CURLOPT_XFERINFODATA>(progress);
-                curl.add<CURLOPT_NOPROGRESS>(0L);
+                    GIGA_DEBUG_LOG("downloading: " << fileUri.to_string());
 
-                if (pos > 0)
-                {
-                    curl.add<CURLOPT_RANGE>((std::to_string(pos) + "-").c_str());
-                }
+                    curl.add<CURLOPT_URL>(fileUri.to_string().c_str());
+                    curl.add<CURLOPT_FOLLOWLOCATION>(1L);
+                    curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
+                    curl.add<CURLOPT_XFERINFODATA>(progress);
+                    curl.add<CURLOPT_NOPROGRESS>(0L);
+
+                    if (pos > 0)
+                    {
+                        curl.add<CURLOPT_RANGE>((std::to_string(pos) + "-").c_str());
+                    }
 
 #ifdef DEBUG
-                curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
+                    curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
 #endif
-                curl.perform();
-                curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
-                if (httpCode >= 300)
-                {
-                    std::cout << writer.getErrorData() << std::endl;
+                    curl.perform();
+                    curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
+                    if (httpCode >= 300)
+                    {
+                        GIGA_DEBUG_LOG("downloading error (retrying): " << writer.getErrorData());
+                    }
                 }
+                if (httpCode != 200)
+                {
+                    if (httpCode != CURLE_ABORTED_BY_CALLBACK)
+                    {
+                        boost::filesystem::remove(tempFile);
+                    }
+                    THROW(BuildHttpError(httpCode));
+                }
+            } catch (const curl_easy_exception& error) {
+                auto track = error.get_traceback();
+                std::ostringstream ss;
+                for(const auto& obj : track)
+                {
+                    ss << obj.first << ": " << obj.second << "\n";
+                    if (obj.first == "Operation was aborted by an application callback")
+                    {
+                        throw pplx::task_canceled{"Download canceled"};
+                    }
+                }
+                THROW(ErrorException{ss.str()});
             }
-            if (httpCode != 200)
+        }, _cts.get_token()).then([destFile, tempFile, policy]() {
+            if (policy != Policy::override && policy != Policy::overrideNewerSize && exists(destFile))
             {
-                if (httpCode != CURLE_ABORTED_BY_CALLBACK)
-                {
-                    boost::filesystem::remove(tempFile);
-                }
-                THROW(BuildHttpError(httpCode));
+                // TODO: remove tempFile ?
+                THROW(ErrorException{"Destination file already exists"});
             }
-        } catch (const curl_easy_exception& error) {
-            auto track = error.get_traceback();
-            std::ostringstream ss;
-            for(const auto& obj : track)
-            {
-                ss << obj.first << ": " << obj.second << "\n";
-                if (obj.first == "Operation was aborted by an application callback")
-                {
-                    throw pplx::task_canceled{"Download canceled"};
-                }
-            }
-            THROW(ErrorException{ss.str()});
-        }
-    }, _cts.get_token()).then([destFile, tempFile]() {
-        if (exists(destFile))
-        {
-            // TODO: remove tempFile ?
-            THROW(ErrorException{"Destination file already exists"});
-        }
 
-        boost::filesystem::rename(tempFile, destFile);
-        return destFile;
-    }, _cts.get_token());
+            boost::filesystem::rename(tempFile, destFile);
+            return destFile;
+        }, _cts.get_token());
+    }
 }
 
 const pplx::task<boost::filesystem::path>&
@@ -235,7 +262,11 @@ FileDownloader::destinationFile () const
 double
 FileDownloader::progress () const
 {
-    auto p = _progress.data();
+    auto p = _progress->data();
+    if (_state != State::pending && _task.is_done())
+    {
+        return 1.;
+    }
     if (p.dlnow <= 0)
     {
         return ((double) _startAt) / (double) (_fileSize);

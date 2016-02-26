@@ -26,6 +26,12 @@
 #define THROW(ex) throw (ex)
 #endif
 
+#ifdef DEBUG
+#define GIGA_DEBUG_LOG(data) std::cerr << data << std::endl
+#else
+#define GIGA_DEBUG_LOG(data) do {} while(0)
+#endif
+
 namespace giga {
 
     class ErrorException : public std::exception {

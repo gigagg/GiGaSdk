@@ -60,6 +60,8 @@ public:
 
     template <typename T>
     pplx::task<std::shared_ptr<T>> request(const web::http::method &mtd, web::uri_builder uri) {
+        GIGA_DEBUG_LOG(mtd << "  " << uri.to_string());
+        client = web::http::client::http_client{client.base_uri(), client.client_config()};
         return client.request(mtd, uri.to_string()).then([=](web::http::http_response response) {
             return onRequestPtr<T>(response);
         });
@@ -69,6 +71,7 @@ public:
         auto json = web::json::value::object();
         bodyData.visit(JSonSerializer{json});
         auto data = json.serialize();
+        GIGA_DEBUG_LOG(mtd << "  " << uri.to_string());
         return client.request(mtd, uri.to_string(), data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
             return onRequestPtr<T>(response);
         });
@@ -95,7 +98,7 @@ public:
                     }
                     catch (const std::exception& e)
                     {
-                        std::cout << json.serialize() << std::endl;
+                        GIGA_DEBUG_LOG(json.serialize());
                         throw e;
                     }
                     break;

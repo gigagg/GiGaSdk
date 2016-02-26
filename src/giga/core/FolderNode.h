@@ -18,10 +18,11 @@ namespace core
 class FolderNode final : public Node
 {
 public:
-    FolderNode()                        = default; // TODO: private + friend to correct class (pplx).
+    FolderNode()                        = default;
     virtual ~FolderNode()               = default;
-    FolderNode(FolderNode&&)                  = default;
-    FolderNode& operator=(FolderNode&&)       = default;
+    FolderNode(FolderNode&&)            = default;
+    FolderNode& operator=(FolderNode&&) = default;
+
     FolderNode& operator=(const FolderNode&);
     FolderNode(const FolderNode& other);
     explicit FolderNode(std::shared_ptr<data::Node> n);
@@ -40,7 +41,7 @@ public:
     uploadFile(const std::string& filepath) override;
 
     virtual FileDownloader
-    download(const std::string& destinationPath, bool doContinue = false) override;
+    download(const std::string& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) override;
 
     virtual const FileNodeData&
     fileData() const override;

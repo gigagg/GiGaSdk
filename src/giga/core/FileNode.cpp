@@ -102,6 +102,20 @@ FileNode::FileNode (std::shared_ptr<data::Node> n) :
 {
 }
 
+FileNode::FileNode(const FileNode& rhs) :
+        Node(rhs), _data{rhs.n}
+{
+}
+
+FileNode&
+FileNode::operator=(const FileNode& rhs)
+{
+    Node::operator =(rhs);
+    _data = FileNodeData{rhs.n};
+    return *this;
+}
+
+
 static std::vector<std::unique_ptr<Node>> emptyVector{};
 
 const std::vector<std::unique_ptr<Node>>&
@@ -123,9 +137,9 @@ FileNode::uploadFile(const std::string&)
 }
 
 FileDownloader
-FileNode::download(const std::string& destinationPath, bool doContinue)
+FileNode::download(const std::string& destinationPath, FileDownloader::Policy policy)
 {
-    return FileDownloader{destinationPath, *this, doContinue};
+    return FileDownloader{destinationPath, *this, policy};
 }
 
 const FileNodeData&

@@ -52,6 +52,25 @@ n(n)
     _THROW_IF_NO_NODE_;
 }
 
+Node::Node(const Node& rhs) :
+        n(nullptr)
+{
+    if (rhs.n != nullptr)
+    {
+        n = std::make_shared<data::Node>(*rhs.n);
+    }
+}
+
+Node&
+Node::operator=(const Node& rhs)
+{
+    if (rhs.n != nullptr)
+    {
+        n = std::make_shared<data::Node>(*rhs.n);
+    }
+    return *this;
+}
+
 const std::string&
 Node::id () const
 {

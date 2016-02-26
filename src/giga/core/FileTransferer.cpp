@@ -7,6 +7,7 @@
 
 #include "FileTransferer.h"
 #include "../rest/HttpErrors.h"
+#include "details/CurlProgress.h"
 
 namespace giga
 {
@@ -14,7 +15,7 @@ namespace core
 {
 
 FileTransferer::FileTransferer () :
-        _state{State::pending}, _progress{}, _mut{}, _cts{}
+        _state{State::pending}, _progress{new details::CurlProgress{}}, _mut{}, _cts{}
 {
 }
 
@@ -24,7 +25,7 @@ FileTransferer::~FileTransferer ()
 
 FileTransferer::FileTransferer (FileTransferer&& other) :
                 _state{std::move(other._state)},
-                _progress{},
+                _progress{std::move(other._progress)},
                 _mut{},
                 _cts{std::move(other._cts)}
 {
@@ -50,7 +51,7 @@ FileTransferer::pause ()
     if (_state != State::started) {
         THROW(ErrorException{"Pause is valid only in 'started' state"});
     }
-    _progress.setPause(true);
+    _progress->setPause(true);
     _state = State::paused;
 }
 
@@ -61,7 +62,7 @@ FileTransferer::resume ()
     if (_state != State::paused) {
         THROW(ErrorException{"Resume is valid only in 'paused' state"});
     }
-    _progress.setPause(false);
+    _progress->setPause(false);
     _state = State::started;
 }
 
@@ -73,7 +74,7 @@ FileTransferer::cancel ()
         THROW(ErrorException{"Resume is valid only in 'paused' and 'started' state"});
     }
     _state = State::canceled;
-    _progress.cancel();
+    _progress->cancel();
     _cts.cancel();
 }
 
@@ -87,7 +88,7 @@ FileTransferer::state () const
 void
 FileTransferer::limitRate (uint64_t rate)
 {
-    _progress.setLimitRate(rate);
+    _progress->setLimitRate(rate);
 }
 
 } /* namespace core */

@@ -46,12 +46,13 @@ public:
     static const utils::EnumConvertor<MediaType, 6> mediaTypeCvrt;
 
 public:
-    Node()                        = default; // TODO: protected + friend to correct class (pplx).
+    Node()                        = default;
     virtual ~Node()               = default;
     Node(Node&&)                  = default;
-    Node(const Node&)             = default;
-    Node& operator=(const Node&)  = default;
     Node& operator=(Node&&)       = default;
+
+    Node(const Node&);
+    Node& operator=(const Node&);
 
     static std::unique_ptr<Node>
     create(std::shared_ptr<data::Node> n);
@@ -106,7 +107,7 @@ public:
     loadChildren() = 0;
 
     virtual FileDownloader
-    download(const std::string& destinationPath, bool doContinue = false) = 0;
+    download(const std::string& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) = 0;
 
     virtual const FileNodeData&
     fileData() const = 0;

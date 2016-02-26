@@ -17,18 +17,23 @@
 
 using pplx::create_task;
 
+namespace {
+
+void
+regenerateChildren(std::vector<std::unique_ptr<giga::core::Node>>& chld, std::shared_ptr<giga::data::Node> n)
+{
+    chld.resize(n->nodes.size());
+    std::transform (n->nodes.begin(), n->nodes.end(), chld.begin(), [](const std::shared_ptr<giga::data::Node>& data) {
+        return giga::core::Node::create(data);
+    });
+}
+
+}
+
 namespace giga
 {
 namespace core
 {
-
-void regenerateChildren(std::vector<std::unique_ptr<Node>>& chld, std::shared_ptr<data::Node> n)
-{
-    chld.resize(n->nodes.size());
-    std::transform (n->nodes.begin(), n->nodes.end(), chld.begin(), [](const std::shared_ptr<data::Node>& data) {
-        return Node::create(data);
-    });
-}
 
 FolderNode::FolderNode (std::shared_ptr<data::Node> n) :
         Node(n), _children{}
@@ -36,17 +41,17 @@ FolderNode::FolderNode (std::shared_ptr<data::Node> n) :
     regenerateChildren(_children, n);
 }
 
-FolderNode::FolderNode(const FolderNode& other) :
-        Node(other), _children{}
+FolderNode::FolderNode(const FolderNode& rhs) :
+        Node(rhs), _children{}
 {
-    regenerateChildren(_children, n);
+    regenerateChildren(_children, rhs.n);
 }
 
 FolderNode&
-FolderNode::operator=(const FolderNode& other)
+FolderNode::operator=(const FolderNode& rhs)
 {
-    Node::operator=(other);
-    regenerateChildren(_children, n);
+    Node::operator=(rhs);
+    regenerateChildren(_children, rhs.n);
     return *this;
 }
 
@@ -106,7 +111,7 @@ FolderNode::uploadFile(const std::string& filepath)
 }
 
 FileDownloader
-FolderNode::download(const std::string&, bool)
+FolderNode::download(const std::string&, FileDownloader::Policy)
 {
     THROW(ErrorException{"Not implemented"});
 }

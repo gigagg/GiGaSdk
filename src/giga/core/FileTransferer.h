@@ -8,13 +8,15 @@
 #ifndef GIGA_CORE_FILETRANSFERER_H_
 #define GIGA_CORE_FILETRANSFERER_H_
 
-#include "details/CurlProgress.h"
-
 #include <pplx/pplxtasks.h>
 #include <mutex>
 
 namespace giga
 {
+namespace details {
+class CurlProgress;
+}
+
 namespace core
 {
 
@@ -59,10 +61,10 @@ protected:
     virtual void doStart() = 0;
 
 protected:
-    State                   _state;
-    details::CurlProgress   _progress;
-    mutable std::mutex      _mut;
-    pplx::cancellation_token_source _cts;
+    State                                  _state;
+    std::unique_ptr<details::CurlProgress> _progress;
+    mutable std::mutex                     _mut;
+    pplx::cancellation_token_source        _cts;
 };
 
 } /* namespace core */

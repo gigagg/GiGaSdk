@@ -197,7 +197,11 @@ User::PrivateData::PrivateData (std::shared_ptr<data::User> u, const std::string
                                          Crypto::base64decode(u->rsaKeys->privateKey));
     auto rsa = Rsa{u->rsaKeys->publicKey, privateKey};
     auto tmp = rsa.decrypt(Crypto::base64decode(u->nodeKey.get()));
-    if (tmp.size() > 44)
+    if (tmp.size() == 32)
+    {
+        nodeKeyClear = Crypto::base64encode(tmp);
+    }
+    else if (tmp.size() > 44)
     {
         nodeKeyClear = Crypto::base64decode(tmp);
     }
