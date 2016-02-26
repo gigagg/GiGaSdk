@@ -7,3 +7,6 @@
 [submodule "vendors/cpprestsdk"]
 	path = vendors/casablanca
 	url = https://github.com/Microsoft/cpprestsdk.git
+[submodule "vendors/curl"]
+	path = vendors/curl
+	url = https://github.com/curl/curl.git
