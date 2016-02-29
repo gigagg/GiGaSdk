@@ -1,6 +1,6 @@
 [submodule "vendors/curlcpp"]
 	path = vendors/curlcpp
-	url = https://github.com/Giga-gg/curlcpp.git
+	url = https://github.com/JosephP91/curlcpp.git
 [submodule "vendors/cryptopp/cryptopp"]
 	path = vendors/cryptopp/crypto++
 	url = https://github.com/weidai11/cryptopp.git
