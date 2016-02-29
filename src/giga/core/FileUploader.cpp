@@ -136,19 +136,33 @@ FileUploader::task () const
     return _task;
 }
 
-double
+FileTransferer::Progress
 FileUploader::progress () const
 {
     auto p = _progress->data();
     if (_state != State::pending && _task.is_done())
     {
-        return 1.;
+        return Progress{_fileSize, _fileSize};
     }
-    if (p.ulnow <= 0)
-    {
-        return 0.;
-    }
-    return ((double) p.ulnow) / (double) (_fileSize);
+    return Progress{p.ulnow, _fileSize};
+}
+
+const std::string&
+FileUploader::nodeName() const
+{
+    return _nodeName;
+}
+
+const std::string&
+FileUploader::fileName() const
+{
+    return _filename;
+}
+
+uint64_t
+FileUploader::fileSize() const
+{
+    return _fileSize;
 }
 
 } /* namespace api */

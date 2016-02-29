@@ -13,6 +13,7 @@
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -23,7 +24,7 @@ namespace giga
 namespace core
 {
 
-Uploader::Uploader(FolderNode parent, const std::string& path):
+Uploader::Uploader(FolderNode parent, const std::string& path, ProgressCallback clb):
     _parent{std::move(parent)},
     _path{path},
     _preparingList{},
@@ -32,7 +33,11 @@ Uploader::Uploader(FolderNode parent, const std::string& path):
     _isStarted{false},
     _mut{},
     _readyList{},
-    _isPreparationFinished{false}
+    _isPreparationFinished{false},
+    _upBytes{0},
+    _upCount{0},
+    _isFinished{false},
+    _progressCallback{clb}
 {
 }
 
@@ -68,22 +73,18 @@ Uploader::uploadingFilesCount()
 pplx::task<void>
 Uploader::start()
 {
-    _mainTask = pplx::create_task([this](){
+    auto upTask = pplx::create_task([this]() {
         scanFilesAddUploads(_parent, _path);
 
         while (_preparingList.size() > 0)
         {
             auto ready = pplx::when_any(_preparingList.begin(), _preparingList.end()).get();
-            auto next = ready.first;
-            _uploading = _uploading.then([next] (std::shared_ptr<Node>) {
-                next->start();
-                return next->task();
-            });
+            _uploading = _uploading.then(startNextUpload(ready.first));
             {
                 std::lock_guard<std::mutex> l{_mut};
                 _readyList.emplace_back(std::move(ready.first));
             }
-            _preparingList.erase(_preparingList.begin() + ready.second);;
+            _preparingList.erase(_preparingList.begin() + ready.second);
         }
         return _uploading;
     }).then([this](pplx::task<std::shared_ptr<Node>> _uploading) {
@@ -92,9 +93,29 @@ Uploader::start()
             _isPreparationFinished = true;
         }
         _uploading.get();
+        _isFinished = true;
     });
-    _isStarted = true;
 
+    auto progressTask = pplx::create_task([this]() {
+        while(!_isFinished)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::lock_guard<std::mutex> l(_mut);
+            auto result = std::find_if(_readyList.begin(), _readyList.end(), [](ReadyEntry entry){
+                auto p = entry->progress();
+                return p.size > p.transfered;
+            });
+            if (result != _readyList.end())
+            {
+                _progressCallback(**result, _upCount, _upBytes + result->get()->progress().transfered);
+            }
+        }
+    });
+
+    auto tasks = {upTask, progressTask};
+    _mainTask =  pplx::when_all(tasks.begin(), tasks.end());
+
+    _isStarted = true;
     return _mainTask;
 }
 
@@ -116,22 +137,15 @@ Uploader::scanFilesAddUploads (FolderNode parent, boost::filesystem::path path)
         }
         else
         {
-            std::vector<PreparingEntry>::iterator it;
-            do {
-                auto ready = pplx::when_any(_preparingList.begin(), _preparingList.end()).get();
-                auto next = ready.first;
-                _uploading = _uploading.then([next] (std::shared_ptr<Node>) {
-                    next->start();
-                    return next->task().get();
-                });
-                _preparingList[ready.second] = parent.uploadFile(path.string());
+            auto clb = _progressCallback;
+            auto ready = pplx::when_any(_preparingList.begin(), _preparingList.end()).get();
+            _uploading = _uploading.then(startNextUpload(ready.first));
+            _preparingList[ready.second] = parent.uploadFile(path.string());
 
-                {
-                    std::lock_guard<std::mutex> l{_mut};
-                    _readyList.emplace_back(ready.first);
-                }
-
-            } while (it == _preparingList.end());
+            {
+                std::lock_guard<std::mutex> l{_mut};
+                _readyList.emplace_back(ready.first);
+            }
         }
     }
     else if (is_directory(path))
@@ -171,6 +185,29 @@ Uploader::scanFilesAddUploads (FolderNode parent, boost::filesystem::path path)
     }
 }
 
+std::function<std::shared_ptr<Node> (std::shared_ptr<Node> n)>
+Uploader::startNextUpload(std::shared_ptr<giga::core::FileUploader> next)
+{
+    auto clb      = _progressCallback;
+    auto& upByte  = _upBytes;
+    auto& upCount = _upCount;
+    auto& mut     = _mut;
+    return [next, clb, &upByte, &mut, &upCount] (std::shared_ptr<Node> n) {
+        next->start();
+        {
+            std::lock_guard<std::mutex> l{mut};
+            if (n != nullptr) {
+                upByte += n->size();
+                clb(*next, ++upCount, upByte);
+            }
+            else
+            {
+                clb(*next, ++upCount, 0);
+            }
+        }
+        return next->task().get();
+    };
+}
 
 
 }/* namespace core */

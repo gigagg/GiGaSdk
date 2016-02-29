@@ -28,14 +28,16 @@ namespace giga
 namespace core
 {
 
-Downloader::Downloader (std::shared_ptr<Node> node, const std::string& path) :
+Downloader::Downloader (std::shared_ptr<Node> node, const std::string& path, Downloader::ProgressCallback clb) :
         _node{node},
         _path{path},
         _downloading{},
         _dlCount{0},
+        _dlBytes{0},
         _mainTask{},
-        _isStarted{false},
-        _mut{}
+        _isFinished{false},
+        _mut{},
+        _progressCallback{clb}
 {
 }
 
@@ -60,13 +62,23 @@ Downloader::downloadingFileNumber ()
 pplx::task<void>
 Downloader::start ()
 {
-    _isStarted = true;
-
-    _mainTask = pplx::create_task([this]() {
+    auto dlTask = pplx::create_task([this]() {
         auto g = _node;
         downloadFile(*_node, path{_path});
+        _isFinished = true;
     });
 
+    auto progressTask = pplx::create_task([this]() {
+        while(!_isFinished)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::lock_guard<std::mutex> l(_mut);
+            _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
+        }
+    });
+
+    auto tasks = {dlTask, progressTask};
+    _mainTask =  pplx::when_all(tasks.begin(), tasks.end());
     return _mainTask;
 }
 
@@ -106,8 +118,13 @@ Downloader::downloadFile (Node& node, boost::filesystem::path path)
             std::lock_guard<std::mutex> l{_mut};
             _downloading = std::make_shared<FileDownloader>(std::move(fdownloader));
             ++_dlCount;
+            _progressCallback(*_downloading, _dlCount, _dlBytes);
         }
         task.wait();
+        {
+            std::lock_guard<std::mutex> l{_mut};
+            _dlBytes += node.size();
+        }
     }
     else if (!npathExists)
     {

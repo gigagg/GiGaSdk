@@ -21,11 +21,19 @@ namespace core
 class FileDownloader;
 class Node;
 
-class Downloader
+class Downloader final
 {
 public:
-    explicit Downloader(std::shared_ptr<Node> node, const std::string& path);
+    typedef std::function<void(FileDownloader&, uint64_t count, uint64_t bytes)> ProgressCallback;
+
+public:
+    explicit Downloader(std::shared_ptr<Node> node, const std::string& path, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
     ~Downloader();
+
+    Downloader(Downloader&&)                 = delete;
+    Downloader& operator=(Downloader&&)      = delete;
+    Downloader(const Downloader&)            = delete;
+    Downloader& operator=(const Downloader&) = delete;
 
     std::shared_ptr<FileDownloader>
     downloadingFile();
@@ -41,15 +49,15 @@ private:
     downloadFile (Node& node, boost::filesystem::path path);
 
 private:
-    std::shared_ptr<Node>             _node;
-    std::string                       _path;
-    std::shared_ptr<FileDownloader>   _downloading;
-    uint64_t                          _dlCount;
-
-    pplx::task<void>                  _mainTask;
-    bool                              _isStarted;
-
-    mutable std::mutex                _mut;
+    std::shared_ptr<Node>           _node;
+    std::string                     _path;
+    std::shared_ptr<FileDownloader> _downloading;
+    uint64_t                        _dlCount;
+    uint64_t                        _dlBytes;
+    pplx::task<void>                _mainTask;
+    std::atomic<bool>               _isFinished;
+    mutable std::mutex              _mut;
+    ProgressCallback                _progressCallback;
 };
 
 } /* namespace core */

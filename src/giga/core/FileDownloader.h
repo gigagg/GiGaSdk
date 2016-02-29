@@ -48,7 +48,7 @@ public:
     boost::filesystem::path
     destinationFile () const;
 
-    double
+    FileTransferer::Progress
     progress () const;
 
 private:

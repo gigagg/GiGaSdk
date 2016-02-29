@@ -208,66 +208,53 @@ int main(int argc, const char* argv[]) {
                 {
                     BOOST_THROW_EXCEPTION(ErrorException{"Node must be a folder"});
                 }
-                core::Uploader uploader{*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<std::string>()};
-                auto t = pplx::create_task([&uploader] () {
-                    while(true)
-                    {
-                        std::cout << "prep: " << uploader.isPreparationFinished();
-                        auto count = uploader.uploadingFilesCount();
-                        if (count > 0)
+                auto currentNodeName = std::string{};
+                core::Uploader uploader {
+                    *static_cast<core::FolderNode*>(node.get()),
+                    vm["upload"].as<std::string>(),
+                    [&currentNodeName](core::FileUploader& fd, uint64_t count, uint64_t) {
+                        if (currentNodeName != fd.nodeName())
                         {
-                            std::cout << " count: " << count << " p: " << std::setprecision(3);
-                            uint64_t totalP = 0;
-                            for(auto& up: uploader.uploadingFiles())
-                            {
-                                totalP += up->progress();
-                                std::cout << up->progress() << " ";
-                            }
-                            if ((count - totalP) < 0.01 &&  uploader.isPreparationFinished())
-                            {
-                                std::cout << " FINISH " << std::endl;
-                                return;
-                            }
+                            currentNodeName = fd.nodeName();
+                            std::cout << std::endl;
                         }
                         else
                         {
-                            std::cout << " count: " << count;
+                            (std::cout << "                                                      \r").flush();
                         }
-                        std::cout << std::endl;
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                        std::cout << count << " "
+                                  << std::setprecision(3) << fd.progress().percent() << "% - "
+                                  << fd.nodeName();
                     }
-                });
-                auto task = uploader.start();
+                };
+                uploader.start().get();
 
-                utils::waitTasks({t, task});
                 auto uploads = uploader.uploadingFiles();
                 std::vector<std::shared_ptr<core::Node>> arr(uploads.size());
-                std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u){
-                    std::cout << "transform" << std::endl;
+                std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u) {
                     return u->task().get();
                 });
                 printNodes("uploaded", arr);
             }
             if (vm.count("download"))
             {
-                auto nbFiles = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
-                core::Downloader dl{std::shared_ptr<core::Node>(node.release()), vm["download"].as<std::string>()};
-                auto dlTask = dl.start();
-                auto t = pplx::create_task([&dl, nbFiles] () {
-                    auto dlding = dl.downloadingFile();
-                    while(dlding == nullptr || (dlding->progress() <= 0.99 && dl.downloadingFileNumber() < nbFiles))
-                    {
-                        if (dlding != nullptr)
-                        {
-                            std::cout << dlding->destinationFile().string() << " - " << std::setprecision(3) << dlding->progress() * 100 << "%" << std::endl;
+                auto nbFiles   = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
+                auto totalSize = node->size();
 
-                        }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(250));
-                        dlding = dl.downloadingFile();
+                std::cout << std::endl;
+                core::Downloader dl {
+                    std::shared_ptr<core::Node>(node.release()),
+                    vm["download"].as<std::string>(),
+                    [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
+                        auto percent = ((double) size * 100) / (double) totalSize;
+                        (std::cout << "                                                      \r").flush();
+                        std::cout << count << "/" << nbFiles << " "
+                                  << std::setprecision(3) << percent << "% - "
+                                  << fd.destinationFile().filename().string();
                     }
-                });
-                utils::waitTasks({t, dlTask});
-                std::cout << "File downloaded: " << dl.downloadingFileNumber() << std::endl;
+                };
+                dl.start().wait();
+                std::cout << "\nFile downloaded: " << dl.downloadingFileNumber() << std::endl;
             }
         }
 

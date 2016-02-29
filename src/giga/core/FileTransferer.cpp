@@ -14,6 +14,12 @@ namespace giga
 namespace core
 {
 
+double
+FileTransferer::Progress::percent() const
+{
+    return ((double) (transfered * 100)) / (double) size;
+}
+
 FileTransferer::FileTransferer () :
         _state{State::pending}, _progress{new details::CurlProgress{}}, _mut{}, _cts{}
 {

@@ -259,19 +259,15 @@ FileDownloader::destinationFile () const
     return _destFile;
 }
 
-double
+FileTransferer::Progress
 FileDownloader::progress () const
 {
     auto p = _progress->data();
     if (_state != State::pending && _task.is_done())
     {
-        return 1.;
+        return Progress{_fileSize, _fileSize};
     }
-    if (p.dlnow <= 0)
-    {
-        return ((double) _startAt) / (double) (_fileSize);
-    }
-    return ((double) (p.dlnow + _startAt)) / (double) (_fileSize);
+    return Progress{p.dlnow + _startAt, _fileSize};
 }
 
 } /* namespace core */

@@ -37,7 +37,7 @@ public:
     static std::shared_ptr<web::http::oauth2::experimental::oauth2_config> getOAuthConfig();
 
 protected:
-    static HttpClient client;
+    static HttpClient& client();
     static std::shared_ptr<data::User> currentUser;
 };
 

@@ -26,10 +26,10 @@ class CurlProgress
 public:
     struct Item
     {
-        long dltotal;
-        long dlnow;
-        long ultotal;
-        long ulnow;
+        uint64_t dltotal;
+        uint64_t dlnow;
+        uint64_t ultotal;
+        uint64_t ulnow;
     };
 
 public:

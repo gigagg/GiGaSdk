@@ -14,7 +14,7 @@
 #include <string>
 #include "prepoc_manage.h"
 
-#ifdef DEBUG
+#ifdef DEBUG_LOG
 #define GIGA_DEBUG_LOG(data) std::cerr << data << std::endl
 #else
 #define GIGA_DEBUG_LOG(data) do {} while(0)

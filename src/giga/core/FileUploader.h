@@ -39,8 +39,17 @@ public:
     const pplx::task<std::shared_ptr<Node>>&
     task () const;
 
-    double
+    FileTransferer::Progress
     progress () const;
+
+    const std::string&
+    nodeName() const;
+
+    const std::string&
+    fileName() const;
+
+    uint64_t
+    fileSize() const;
 
 private:
     pplx::task<std::shared_ptr<Node>> _task;

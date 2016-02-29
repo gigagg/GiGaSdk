@@ -23,8 +23,8 @@ namespace details
 {
 
 CurlProgress::CurlProgress () :
-        _mut{}, _item{-1L, -1L, -1L, -1L}, _cancel{false}, _pause{false}, _isPaused{false}, _curl{nullptr},
-        _limitRate{0}, _currentLimitRate{0}, _rateTime{}, _rateBytes{0}, _bucket{0}, _upPostion{0}
+        _mut{}, _item{0ul, 0ul, 0ul, 0ul}, _cancel{false}, _pause{false}, _isPaused{false}, _curl{nullptr},
+        _limitRate{0ul}, _currentLimitRate{0ul}, _rateTime{}, _rateBytes{0ul}, _bucket{0ul}, _upPostion{0ul}
 {
 }
 
@@ -96,10 +96,10 @@ CurlProgress::onCallback (long dltotal, long dlnow, long ultotal, long ulnow) no
             std::lock_guard<std::mutex> l(_mut);
             limitRate = _limitRate;
 
-            _item.dltotal = dltotal;
-            _item.dlnow = dlnow;
-            _item.ultotal = ultotal + _upPostion;
-            _item.ulnow = ulnow + _upPostion;
+            _item.dltotal = static_cast<uint64_t>(dltotal);
+            _item.dlnow   = static_cast<uint64_t>(dlnow);
+            _item.ultotal = static_cast<uint64_t>(ultotal + _upPostion);
+            _item.ulnow   = static_cast<uint64_t>(ulnow + _upPostion);
 
             if (_pause != _isPaused)
             {

@@ -20,8 +20,14 @@ using pplx::task;
 namespace giga
 {
 
-HttpClient GigaApi::client{};
 std::shared_ptr<data::User> GigaApi::currentUser{};
+
+HttpClient&
+GigaApi::client()
+{
+    static HttpClient cl{};
+    return cl;
+}
 
 task<std::shared_ptr<User>>
 GigaApi::authenticate (const std::string& login, const std::string& password)
@@ -32,7 +38,7 @@ GigaApi::authenticate (const std::string& login, const std::string& password)
         if (exists->login.is_initialized())
         {
             auto realLogin = exists->login.get();
-            client.authenticate(exists->login.get(), Crypto::calculateLoginPassword(exists->login.get(), password));
+            client().authenticate(exists->login.get(), Crypto::calculateLoginPassword(exists->login.get(), password));
             currentUser = UsersApi::getCurrentUser().get();
             return currentUser;
         }
@@ -55,7 +61,7 @@ GigaApi::getCurrentUser()
 std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
 GigaApi::getOAuthConfig()
 {
-    return client.http().client_config().oauth2();
+    return client().http().client_config().oauth2();
 }
 
 } // namespace giga

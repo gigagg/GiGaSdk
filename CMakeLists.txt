@@ -15,6 +15,11 @@ IF(CMAKE_BUILD_TYPE MATCHES "Debug")
     ADD_DEFINITIONS(-DDEBUG)
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 
+IF(WITH_DEBUG_LOG)
+    ADD_DEFINITIONS(-DDEBUG_LOG)
+ENDIF(WITH_DEBUG_LOG)
+  
+
 ### FLAGS
 IF(MSVC)
     SET(CMAKE_CXX_WARNING_LEVEL 4)
@@ -24,13 +29,10 @@ IF(MSVC)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
     ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290 /wd4127")
-ELSEIF(CMAKE_COMPILER_IS_GNUCC)
-    SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -fmessage-length=0" )
-    SET (CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -pg" ) # -pedantic deleted because not working on minGW (error in include files)
-    SET (CMAKE_CXX_FLAGS_RELEASE "-O2" )
 ELSE(MSVC)
-    SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra" )
-    SET (CMAKE_CXX_FLAGS_DEBUG "-O0 - -g -pg" )
+    SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -fmessage-length=0" )
+#   SET (CMAKE_EXE_LINKER_FLAGS "-static" )
+    SET (CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -pg" )
     SET (CMAKE_CXX_FLAGS_RELEASE "-O2" )
 ENDIF(MSVC)
 
