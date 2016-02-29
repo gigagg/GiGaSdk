@@ -1,3 +1,9 @@
+GiGaSdk provide an easy access to the https://giga.gg/ api.
+It includes :
+
+- a c++ library for integrating giga with other apps
+- a small cli executable : ``` GiGaSdk -h ``` 
+
 
 Dependancies
 ------------
@@ -28,30 +34,31 @@ cd vendors/casablanca/Release/
 mkdir build.release
 cd build.release/
 cmake .. -DCMAKE_BUILD_TYPE=Release
-cd ../../..
+make
+cd ../../../..
 
 # compiling crypto++
-cd cryptopp/crypto++/
+cd vendors/cryptopp/crypto++/
 make
-cd ../..
+cd ../../..
 
 # compiling/installing libcurl
-cd curl
+cd vendors/curl
 mkdir build
 cd build
 cmake ..
 make
 sudo make install
-cd ../..
+cd ../../..
 
 # compiling curlcpp
-cd curlcpp/build
+cd vendors/curlcpp/build
 cmake ..
 make
-cd ../..
+cd ../../..
 
 # compiling/installing GiGaSdk
-cd ../build
+cd build
 cmake ..
 make
 sudo make install
