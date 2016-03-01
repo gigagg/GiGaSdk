@@ -28,7 +28,7 @@ namespace giga
 namespace core
 {
 
-Downloader::Downloader (std::shared_ptr<Node> node, const std::string& path, Downloader::ProgressCallback clb) :
+Downloader::Downloader (std::shared_ptr<Node> node, const boost::filesystem::path& path, Downloader::ProgressCallback clb) :
         _node{node},
         _path{path},
         _downloading{},
@@ -64,7 +64,7 @@ Downloader::start ()
 {
     auto dlTask = pplx::create_task([this]() {
         auto g = _node;
-        downloadFile(*_node, path{_path});
+        downloadFile(*_node, _path);
         _isFinished = true;
     });
 
@@ -83,7 +83,7 @@ Downloader::start ()
 }
 
 void
-Downloader::downloadFile (Node& node, boost::filesystem::path path)
+Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 {
     if (!is_directory(path))
     {

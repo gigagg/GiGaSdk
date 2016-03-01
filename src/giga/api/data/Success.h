@@ -5,14 +5,14 @@
 #ifndef GIGA_DATA_SUCCESS_MODEL_H_
 #define GIGA_DATA_SUCCESS_MODEL_H_
 
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include "../../rest/prepoc_manage.h"
 
 namespace giga {
 namespace data {
 
 struct Success {
-    std::string success = {};
+    utility::string_t success = {};
     
     template <class Manager>
     void visit(const Manager& m) {

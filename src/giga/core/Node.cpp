@@ -18,6 +18,7 @@
 #include <string>
 
 using std::chrono::_V2::system_clock;
+using utility::string_t;
 
 #define _THROW_IF_NO_NODE_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{"Node is not set"}); } do {} while(0)
 
@@ -71,7 +72,7 @@ Node::operator=(const Node& rhs)
     return *this;
 }
 
-const std::string&
+const string_t&
 Node::id () const
 {
     _THROW_IF_NO_NODE_;
@@ -85,21 +86,21 @@ Node::type () const
     return typeCvrt.fromStr(_data->type);
 }
 
-const std::string&
+const string_t&
 Node::name () const
 {
     _THROW_IF_NO_NODE_;
     return _data->name;
 }
 
-const std::string&
+const string_t&
 Node::parentId () const
 {
     _THROW_IF_NO_NODE_;
     return _data->parentId.get_value_or("");
 }
 
-const std::vector<std::string>&
+const std::vector<string_t>&
 Node::ancestors () const
 {
     _THROW_IF_NO_NODE_;
@@ -161,7 +162,7 @@ Node::remove()
 }
 
 void
-Node::rename(const std::string& name)
+Node::rename(const string_t& name)
 {
     if (!boost::filesystem::portable_name(name))
     {

@@ -35,6 +35,7 @@ using curl::curl_ios;
 using pplx::create_task;
 using web::uri;
 using web::uri_builder;
+using utility::string_t;
 
 namespace
 {
@@ -58,11 +59,10 @@ namespace giga
 namespace core
 {
 
-FileDownloader::FileDownloader (const std::string& folderDest, const Node& node, Policy policy) :
+FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, Policy policy) :
         FileTransferer{}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
         _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy}
 {
-    path folder{folderDest};
     if (!is_directory(folder))
     {
         BOOST_THROW_EXCEPTION(ErrorException{"FolderDest should be a directory"});
@@ -75,8 +75,8 @@ FileDownloader::FileDownloader (const std::string& folderDest, const Node& node,
     auto name = utils::cleanUpFilename(node.name());
     auto pos = name.find_last_of(".");
     auto firstPart = name;
-    auto lastPart = std::string{};
-    if (pos != std::string::npos)
+    auto lastPart = string_t{};
+    if (pos != string_t::npos)
     {
         firstPart = name.substr(0, pos);
         lastPart = name.substr(pos, name.length() - pos + 1);

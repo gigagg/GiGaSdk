@@ -5,7 +5,7 @@
 #ifndef GIGA_DATA_USEREXISTS_MODEL_H_
 #define GIGA_DATA_USEREXISTS_MODEL_H_
 
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include <vector>
 #include <map>
 #include "../../rest/prepoc_manage.h"
@@ -16,13 +16,13 @@ namespace data {
 struct UserExists {
     bool exists = false;
     /** The login with the correct case */
-    boost::optional<std::string> login = boost::none;
+    boost::optional<utility::string_t> login = boost::none;
     /** The user id */
     boost::optional<int64_t> id = boost::none;
     /** the big avatar url */
-    boost::optional<std::string> avatar = boost::none;
+    boost::optional<utility::string_t> avatar = boost::none;
     /** the small avatar url */
-    boost::optional<std::string> icon = boost::none;
+    boost::optional<utility::string_t> icon = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

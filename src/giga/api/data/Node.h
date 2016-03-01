@@ -6,7 +6,7 @@
 #define GIGA_DATA_NODE_MODEL_H_
 
 #include <boost/optional.hpp>
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include <vector>
 #include <map>
 #include "../../rest/prepoc_manage.h"
@@ -18,11 +18,11 @@ namespace data {
  * Either a file or a folder
  */
 struct Node {
-    std::string id = {};
-    std::string name = {};
-    boost::optional<std::string> parentId = boost::none;
-    std::vector<std::string> ancestors = {};
-    std::vector<std::string> servers = {};
+    utility::string_t id = {};
+    utility::string_t name = {};
+    boost::optional<utility::string_t> parentId = boost::none;
+    std::vector<utility::string_t> ancestors = {};
+    std::vector<utility::string_t> servers = {};
     int64_t ownerId = 0;
     int64_t size = 0;
     int64_t creationDate = 0;
@@ -30,21 +30,21 @@ struct Node {
     int64_t nbChildren = 0;
     int64_t nbFiles = 0;
     std::vector<std::shared_ptr<Node>> nodes = {};
-    std::string type = {};
-    boost::optional<std::string> mimeType = boost::none;
-    boost::optional<std::string> fid = boost::none;
-    boost::optional<std::string> fkey = boost::none;
+    utility::string_t type = {};
+    boost::optional<utility::string_t> mimeType = boost::none;
+    boost::optional<utility::string_t> fid = boost::none;
+    boost::optional<utility::string_t> fkey = boost::none;
     boost::optional<int64_t> previewState = boost::none;
     /** DownloadUrl. Concatenate the url encoded nodeKey. */
-    boost::optional<std::string> url = boost::none;
+    boost::optional<utility::string_t> url = boost::none;
     /** Concatenate the url encoded nodeKey. */
-    boost::optional<std::string> icon = boost::none;
+    boost::optional<utility::string_t> icon = boost::none;
     /** Concatenate the url encoded nodeKey. */
-    boost::optional<std::string> square = boost::none;
+    boost::optional<utility::string_t> square = boost::none;
     /** Concatenate the url encoded nodeKey. */
-    boost::optional<std::string> original = boost::none;
+    boost::optional<utility::string_t> original = boost::none;
     /** Concatenate the url encoded nodeKey. */
-    boost::optional<std::string> poster = boost::none;
+    boost::optional<utility::string_t> poster = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

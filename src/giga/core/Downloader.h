@@ -27,7 +27,7 @@ public:
     typedef std::function<void(FileDownloader&, uint64_t count, uint64_t bytes)> ProgressCallback;
 
 public:
-    explicit Downloader(std::shared_ptr<Node> node, const std::string& path, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
+    explicit Downloader(std::shared_ptr<Node> node, const boost::filesystem::path& path, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
     ~Downloader();
 
     Downloader(Downloader&&)                 = delete;
@@ -46,11 +46,11 @@ public:
 
 private:
     void
-    downloadFile (Node& node, boost::filesystem::path path);
+    downloadFile (Node& node, const boost::filesystem::path& path);
 
 private:
     std::shared_ptr<Node>           _node;
-    std::string                     _path;
+    boost::filesystem::path         _path;
     std::shared_ptr<FileDownloader> _downloading;
     uint64_t                        _dlCount;
     uint64_t                        _dlBytes;

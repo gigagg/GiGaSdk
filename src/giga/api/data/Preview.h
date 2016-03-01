@@ -22,20 +22,20 @@ namespace data {
  */
 struct Preview {
     /** video, pdf, image, images, or audio */
-    boost::optional<std::string> type = boost::none;
+    boost::optional<utility::string_t> type = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> icon = boost::none;
+    boost::optional<utility::string_t> icon = boost::none;
     std::unique_ptr<PreviewCover> cover = nullptr;
     std::vector<std::unique_ptr<Stream>> streams = {};
     std::vector<std::unique_ptr<Subtitle>> subtitles = {};
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> albumart = boost::none;
+    boost::optional<utility::string_t> albumart = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> image = boost::none;
+    boost::optional<utility::string_t> image = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> pdf = boost::none;
+    boost::optional<utility::string_t> pdf = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> epub = boost::none;
+    boost::optional<utility::string_t> epub = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

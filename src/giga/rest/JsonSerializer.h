@@ -30,7 +30,7 @@ namespace details {
     inline web::json::value serialize(double& value) {
         return web::json::value::number(value);
     }
-    inline web::json::value serialize(std::string& value) {
+    inline web::json::value serialize(utility::string_t& value) {
         return  web::json::value::string(value);
     }
     inline web::json::value serialize(const char*& value) {
@@ -85,15 +85,15 @@ public:
     template <typename T> void serialize(T visitable) const {
         visitable.visit(*this);
     }
-    template <typename T> void manageOpt(T& current, const std::string& name, T) const {
+    template <typename T> void manageOpt(T& current, const utility::string_t& name, T) const {
         manage(current, name);
     }
-    template <typename T> void manage(T& current, std::string name) const {
+    template <typename T> void manage(T& current, utility::string_t name) const {
         val[name] = details::serialize(current);
     }
 
     template <typename T>
-    static std::string toString(T&& visitable) {
+    static utility::string_t toString(T&& visitable) {
         return toJson(std::forward<T>(visitable)).serialize();
     }
 

@@ -24,7 +24,7 @@ namespace giga
 namespace core
 {
 
-Uploader::Uploader(FolderNode parent, const std::string& path, ProgressCallback clb):
+Uploader::Uploader(FolderNode parent, const path& path, ProgressCallback clb):
     _parent{std::move(parent)},
     _path{path},
     _preparingList{},
@@ -120,14 +120,17 @@ Uploader::start()
 }
 
 void
-Uploader::scanFilesAddUploads (FolderNode parent, boost::filesystem::path path)
+Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path& path)
 {
     using namespace boost::filesystem;
     if (!exists (path))
     {
         BOOST_THROW_EXCEPTION(ErrorException{"File or directory not found"});
     }
-    parent.loadChildren();
+    if (parent.shouldLoadChildren())
+    {
+        parent.loadChildren();
+    }
 
     if (is_regular_file(path))
     {

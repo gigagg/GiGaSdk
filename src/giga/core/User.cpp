@@ -16,6 +16,7 @@
 #include <chrono>
 
 using std::chrono::system_clock;
+using utility::string_t;
 
 namespace giga
 {
@@ -53,7 +54,7 @@ User::id () const
     return _data->id;
 }
 
-const std::string&
+const string_t&
 User::login () const
 {
     _THROW_IF_NO_USER_;
@@ -116,7 +117,7 @@ User::contactCount () const
     return _data->contactCount;
 }
 
-const std::vector<std::string>&
+const std::vector<string_t>&
 User::tags () const
 {
     _THROW_IF_NO_USER_;
@@ -151,7 +152,7 @@ User::ContactData::gender () const
     return User::UserGender::unknown;
 }
 
-const boost::optional<std::string>&
+const boost::optional<string_t>&
 User::ContactData::name () const
 {
     _THROW_IF_NO_USER_;
@@ -184,7 +185,7 @@ User::ContactData::node () const
     return FolderNode{_data->node};
 }
 
-User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const std::string& password) : _data{u}
+User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const string_t& password) : _data{u}
 {
     if (!u->salt.is_initialized() || !u->nodeKey.is_initialized())
     {
@@ -220,7 +221,7 @@ User::PersonalData::reportedState () const
     return User::ReportedState::no_report;
 }
 
-const std::string&
+const string_t&
 User::PersonalData::email () const
 {
     if(_data->email.is_initialized()) {
@@ -232,7 +233,7 @@ User::PersonalData::email () const
     BOOST_THROW_EXCEPTION(ErrorException{"Email/nextEmail are not correctly initialized"});
 }
 
-const std::string&
+const string_t&
 User::PersonalData::nextEmail () const
 {
     if(_data->nextEmail.is_initialized()) {
@@ -244,7 +245,7 @@ User::PersonalData::nextEmail () const
     BOOST_THROW_EXCEPTION(ErrorException{"Email/nextEmail are not correctly initialized"});
 }
 
-const std::string&
+const string_t&
 User::PersonalData::nodeKeyClear () const
 {
     return _nodeKeyClear;
@@ -305,7 +306,7 @@ User::hasPersonalData () const
 }
 
 User::PersonalData&
-User::initializePersonalData (const std::string& password)
+User::initializePersonalData (const string_t& password)
 {
     if(hasPersonalData()) {
         if (!_private.is_initialized()) {

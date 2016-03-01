@@ -62,11 +62,12 @@ using CryptoPP::RSAES_OAEP_SHA_Encryptor;
 using CryptoPP::RSAES_PKCS1v15_Decryptor;
 using CryptoPP::RSAES_PKCS1v15_Encryptor;
 using CryptoPP::SecByteBlock;
+using utility::string_t;
 
 namespace {
 
 const byte*
-toByteCst (const std::string& str)
+toByteCst (const string_t& str)
 {
     return reinterpret_cast<const byte*>(str.data());
 }
@@ -76,7 +77,7 @@ toByte (std::vector<char>& str)
     return reinterpret_cast<byte*>(str.data());
 }
 
-void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
+void fillQueue(ByteQueue& queue, const string_t& b64encoded) {
     Base64Decoder decoder;
     decoder.Attach(new Redirector(queue));
     decoder.Put(toByteCst(b64encoded), b64encoded.size());
@@ -88,7 +89,7 @@ void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
 namespace giga
 {
 
-Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
+Rsa::Rsa (const string_t& pubStr, const string_t& privStr)
 {
     try
     {
@@ -132,12 +133,12 @@ Rsa::Rsa (const std::string& pubStr, const std::string& privStr)
     }
 }
 
-std::string
-Rsa::encrypt (const std::string& data) const
+string_t
+Rsa::encrypt (const string_t& data) const
 {
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Encryptor encryptor( _pub );
-    std::string encrypted;
+    string_t encrypted;
     StringSource ss(data, true,
         new PK_EncryptorFilter(rng, encryptor,
             new StringSink(encrypted)
@@ -146,15 +147,15 @@ Rsa::encrypt (const std::string& data) const
     return encrypted;
 }
 
-std::string
-Rsa::decrypt (const std::string& data) const
+string_t
+Rsa::decrypt (const string_t& data) const
 {
     if (!_hasPrivateKey) {
         BOOST_THROW_EXCEPTION(ErrorException("PrivateKey has not been set"));
     }
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Decryptor decryptor(_priv);
-    std::string decrypted;
+    string_t decrypted;
     StringSource ss(data, true,
         new PK_DecryptorFilter(rng, decryptor,
             new StringSink(decrypted)
@@ -165,8 +166,8 @@ Rsa::decrypt (const std::string& data) const
 
 
 template<typename T>
-std::string
-pbkdf2 (const std::string& password, const std::string& salt, std::size_t length, std::size_t iteration)
+string_t
+pbkdf2 (const string_t& password, const string_t& salt, std::size_t length, std::size_t iteration)
 {
     auto key = std::vector<char>(length);
     PKCS5_PBKDF2_HMAC<T> passToKey;
@@ -182,21 +183,21 @@ pbkdf2 (const std::string& password, const std::string& salt, std::size_t length
     return {key.begin(), key.end()};
 }
 
-std::string
-Crypto::pbkdf2_sha256 (const std::string& password, const std::string& salt, std::size_t length, std::size_t iteration)
+string_t
+Crypto::pbkdf2_sha256 (const string_t& password, const string_t& salt, std::size_t length, std::size_t iteration)
 {
     return pbkdf2<CryptoPP::SHA256> (password, salt, length, iteration);
 }
-std::string
-Crypto::pbkdf2_sha512 (const std::string& password, const std::string& salt, std::size_t length, std::size_t iteration)
+string_t
+Crypto::pbkdf2_sha512 (const string_t& password, const string_t& salt, std::size_t length, std::size_t iteration)
 {
     return pbkdf2<CryptoPP::SHA512> (password, salt, length, iteration);
 }
 
-std::string
-Crypto::base64encode (const std::string& data)
+string_t
+Crypto::base64encode (const string_t& data)
 {
-    std::string encoded;
+    string_t encoded;
     StringSource ss(toByteCst(data), data.size(), true,
         new Base64Encoder(
             new StringSink(encoded)
@@ -211,10 +212,10 @@ Crypto::base64encode (const std::string& data)
     return encoded;
 }
 
-std::string
-Crypto::base64decode (const std::string& data)
+string_t
+Crypto::base64decode (const string_t& data)
 {
-    std::string decoded;
+    string_t decoded;
     StringSource ss(toByteCst(data), data.size(), true,
         new Base64Decoder(
             new StringSink(decoded)
@@ -223,35 +224,35 @@ Crypto::base64decode (const std::string& data)
     return decoded;
 }
 
-std::string
-Crypto::calculateFid(const std::string& hashHexEncoded) {
+string_t
+Crypto::calculateFid(const string_t& hashHexEncoded) {
     auto salt = "5%;[yw\"XG2&Om#i*T$v.B2'Ae/VST4t#u$@pxsauO,H){`hUd7Xu@4q4WCc<>'ie";
     return base64encode(pbkdf2_sha256(hashHexEncoded, salt, 18, 32));
 }
 
-std::string
-Crypto::calculateFkey(const std::string& hashHexEncoded) {
+string_t
+Crypto::calculateFkey(const string_t& hashHexEncoded) {
     auto salt = "={w|>6L:{Xn;HAKf^w=,fgSX}sfw)`hxopaqk.6Hg';w23\"sd+b07`LSOGqz#-)[";
     return base64encode(pbkdf2_sha256(hashHexEncoded, salt, 18, 32));
 }
 
-std::string
-Crypto::calculateLoginPassword(const std::string& login, const std::string& password) {
+string_t
+Crypto::calculateLoginPassword(const string_t& login, const string_t& password) {
     auto salt = login + "\"D<?4'V%Fh(U,9SjdO4v)|1mJV31]#;W";
     auto hashed = pbkdf2_sha256(password, salt, 16);
     return base64encode(hashed);
 }
 
-std::string
-Crypto::calculateMasterPassword(const std::string& salt, const std::string& password) {
+string_t
+Crypto::calculateMasterPassword(const string_t& salt, const string_t& password) {
     return base64encode(pbkdf2_sha256(password, salt, 16));
 }
 
-std::string
-Crypto::sha1File (const std::string& filename)
+string_t
+Crypto::sha1File (const string_t& filename)
 {
     CryptoPP::SHA1 sha1;
-    auto hash = std::string{};
+    auto hash = string_t{};
 
     CryptoPP::FileSource(filename.c_str(), true,
         new CryptoPP::HashFilter(sha1,
@@ -264,8 +265,8 @@ Crypto::sha1File (const std::string& filename)
     return hash;
 }
 
-std::tuple<std::string, std::string, std::string>
-Crypto::aesEncrypt (const std::string& password, const std::string& data)
+std::tuple<string_t, string_t, string_t>
+Crypto::aesEncrypt (const string_t& password, const string_t& data)
 {
 
     SecByteBlock iv(16);
@@ -274,8 +275,8 @@ Crypto::aesEncrypt (const std::string& password, const std::string& data)
     OS_GenerateRandomBlock(true, salt, salt.size());
     OS_GenerateRandomBlock(false, iv, iv.size());
 
-    auto saltStr = std::string(salt.begin(), salt.end());
-    auto ivStr = std::string(iv.begin(), iv.end());
+    auto saltStr = string_t(salt.begin(), salt.end());
+    auto ivStr = string_t(iv.begin(), iv.end());
     auto key = pbkdf2_sha256(password, saltStr, 16);
     auto encrypted = aesEncrypt(key, ivStr, data);
 
@@ -286,13 +287,13 @@ Crypto::aesEncrypt (const std::string& password, const std::string& data)
     );
 }
 
-std::string
-Crypto::aesEncrypt (const std::string& key, const std::string& iv, const std::string& data)
+string_t
+Crypto::aesEncrypt (const string_t& key, const string_t& iv, const string_t& data)
 {
     CBC_Mode<AES>::Encryption e;
     e.SetKeyWithIV(toByteCst(key), key.size(), toByteCst(iv), iv.size());
 
-    std::string encrypted;
+    string_t encrypted;
     StringSource ss(toByteCst (data), data.size(), true,
         new StreamTransformationFilter(e,
             new StringSink(encrypted)
@@ -301,8 +302,8 @@ Crypto::aesEncrypt (const std::string& key, const std::string& iv, const std::st
 
     return encrypted;
 }
-std::string
-Crypto::aesDecrypt (const std::string& password, const std::string& saltStr, const std::string& ivStr, const std::string& data)
+string_t
+Crypto::aesDecrypt (const string_t& password, const string_t& saltStr, const string_t& ivStr, const string_t& data)
 {
     auto key = pbkdf2_sha256(password, saltStr, 16);
 
@@ -312,7 +313,7 @@ Crypto::aesDecrypt (const std::string& password, const std::string& saltStr, con
                    toByteCst(ivStr),
                    ivStr.size());
 
-    std::string decrypted;
+    string_t decrypted;
     StringSource ss(toByteCst (data), data.size(), true,
         new StreamTransformationFilter(e,
             new StringSink(decrypted)

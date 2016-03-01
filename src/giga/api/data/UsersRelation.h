@@ -5,7 +5,7 @@
 #ifndef GIGA_DATA_UsersRelation_MODEL_H_
 #define GIGA_DATA_UsersRelation_MODEL_H_
 
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include <vector>
 #include <map>
 #include "../../rest/prepoc_manage.h"
@@ -20,16 +20,16 @@ namespace data {
  */
 struct UsersRelation {
     std::shared_ptr<User> user = nullptr;
-    std::string type = {};
+    utility::string_t type = {};
     int64_t creationDate = 0;
     /** type=CONTACT */
     boost::optional<bool> favorite = boost::none;
     /** type=CONTACT */
     boost::optional<bool> isNew = boost::none;
     /** type=CONTACT */
-    boost::optional<std::string> key = boost::none;
+    boost::optional<utility::string_t> key = boost::none;
     /** type=CONTACT, OTHER|ME */
-    boost::optional<std::string> initiator = boost::none;
+    boost::optional<utility::string_t> initiator = boost::none;
     /** type=CONTACT|INVITE, list of userId */
     boost::optional<std::vector<int64_t> > suggestedBy = boost::none;
     /** type=SHOULD_INVITE, list of userId */

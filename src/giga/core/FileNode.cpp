@@ -13,8 +13,8 @@
 
 #include <cpprest/http_client.h>
 
-
 using web::uri;
+using utility::string_t;
 
 namespace giga
 {
@@ -44,13 +44,13 @@ FileNodeData::FileNodeData(std::shared_ptr<data::Node> n) :
 //    THROW_IF_NOT_INITIALIZED(poster);
 }
 
-const std::string&
+const string_t&
 FileNodeData::mimeType () const
 {
     return n->mimeType.get();
 }
 
-const std::string&
+const string_t&
 FileNodeData::fid () const
 {
     return n->fid.get();
@@ -125,19 +125,19 @@ FileNode::children () const
 }
 
 FolderNode&
-FileNode::addChildFolder(const std::string&)
+FileNode::addChildFolder(const string_t&)
 {
     BOOST_THROW_EXCEPTION(ErrorException{"Illegal action: this is a fileNode"});
 }
 
 pplx::task<std::shared_ptr<FileUploader>>
-FileNode::uploadFile(const std::string&)
+FileNode::uploadFile(const string_t&)
 {
     BOOST_THROW_EXCEPTION(ErrorException{"Illegal action: this is a fileNode"});
 }
 
 FileDownloader
-FileNode::download(const std::string& destinationPath, FileDownloader::Policy policy)
+FileNode::download(const string_t& destinationPath, FileDownloader::Policy policy)
 {
     return FileDownloader{destinationPath, *this, policy};
 }

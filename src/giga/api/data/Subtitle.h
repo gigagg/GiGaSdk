@@ -5,7 +5,7 @@
 #ifndef GIGA_DATA_SUBTITLE_MODEL_H_
 #define GIGA_DATA_SUBTITLE_MODEL_H_
 
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include <vector>
 #include <map>
 #include "../../rest/prepoc_manage.h"
@@ -15,11 +15,11 @@ namespace data {
 
 struct Subtitle {
     /** ex: 'eng' */
-    boost::optional<std::string> lang = boost::none;
+    boost::optional<utility::string_t> lang = boost::none;
     /** 'vtt' or 'srt' */
-    boost::optional<std::string> type = boost::none;
+    boost::optional<utility::string_t> type = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    std::string url = {};
+    utility::string_t url = {};
     
     template <class Manager>
     void visit(const Manager& m) {

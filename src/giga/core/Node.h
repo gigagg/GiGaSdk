@@ -9,14 +9,14 @@
 #define GIGA_CORE_NODE_H_
 
 #include "FileUploader.h"
+#include "FileDownloader.h"
 #include "../utils/EnumConvertor.h"
 
+#include <cpprest/details/basic_types.h>
 #include <chrono>
-#include <iosfwd>
 #include <memory>
 #include <vector>
 
-#include "FileDownloader.h"
 namespace giga
 {
 
@@ -61,19 +61,19 @@ protected:
     explicit Node(std::shared_ptr<data::Node> n);
 
 public:
-    const std::string&
+    const utility::string_t&
     id() const;
 
     Type
     type() const;
 
-    const std::string&
+    const utility::string_t&
     name() const;
 
-    const std::string&
+    const utility::string_t&
     parentId() const;
 
-    const std::vector<std::string>&
+    const std::vector<utility::string_t>&
     ancestors() const;
 
     int64_t
@@ -98,16 +98,16 @@ public:
     children() const = 0;
 
     virtual FolderNode&
-    addChildFolder(const std::string& name) = 0;
+    addChildFolder(const utility::string_t& name) = 0;
 
     virtual pplx::task<std::shared_ptr<FileUploader>>
-    uploadFile(const std::string& filepath) = 0;
+    uploadFile(const utility::string_t& filepath) = 0;
 
     virtual void
     loadChildren() = 0;
 
     virtual FileDownloader
-    download(const std::string& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) = 0;
+    download(const utility::string_t& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) = 0;
 
     virtual const FileNodeData&
     fileData() const = 0;
@@ -119,7 +119,7 @@ public:
     remove();
 
     void
-    rename(const std::string& name);
+    rename(const utility::string_t& name);
 
 
 protected:

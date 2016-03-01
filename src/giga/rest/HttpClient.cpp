@@ -10,6 +10,7 @@
 using namespace web::http;
 using namespace web::http::client;
 using namespace web::http::oauth2::experimental;
+using utility::string_t;
 
 namespace {
 
@@ -32,14 +33,13 @@ HttpClient::HttpClient () :
 }
 
 web::uri_builder
-HttpClient::uri (const std::string& resource)
+HttpClient::uri (const string_t& resource)
 {
-    return web::uri_builder
-        {API + resource};
+    return web::uri_builder{API + resource};
 }
 
 struct Redirect {
-    std::string redirect = "";
+    string_t redirect = "";
     template <class Manager>
     void visit(const Manager& m) {
         GIGA_MANAGE(m, redirect);
@@ -47,7 +47,7 @@ struct Redirect {
 };
 
 void
-HttpClient::authenticate (const std::string& login, const std::string& password)
+HttpClient::authenticate (const string_t& login, const string_t& password)
 {
     const auto& conf = Application::get().config();
     oauth2_config m_oauth2_config(conf.appId(), conf.appKey(), conf.appOauthAuthorizationEndpoint(),
@@ -55,12 +55,12 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
 
     m_oauth2_config.set_scope(conf.appScope());
     auto auth_uri = m_oauth2_config.build_authorization_uri(true);  /* Get the authorization uri */
-    auto state  = std::string{};
+    auto state  = string_t{};
     auto regex  = boost::regex{".*state=([a-zA-Z0-9]+).*"};
     auto what   = boost::cmatch{};
     if(boost::regex_match(auth_uri.c_str(), what, regex))
     {
-        state = std::string{what[1].first, what[1].second};
+        state = string_t{what[1].first, what[1].second};
     }
 
     // I manually do the browser work here ...
@@ -75,8 +75,8 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
 
         const auto& conf = Application::get().config();
         auto body = JsonObj{};
-        body.add("oauth", std::string("true"));
-        body.add("response_type", std::string("code"));
+        body.add("oauth", string_t("true"));
+        body.add("response_type", string_t("code"));
         body.add("client_id", conf.appId());
         body.add("redirect_uri", conf.appRedirectUri());
         body.add("state", state);
@@ -90,7 +90,7 @@ HttpClient::authenticate (const std::string& login, const std::string& password)
         if (it != headers.end()) {
             r.headers().add("Cookie", it->second);
         }
-        auto request = _http.request(r).then([=](web::http::http_response response) -> std::string {
+        auto request = _http.request(r).then([=](web::http::http_response response) -> string_t {
             auto redirect = onRequest<Redirect>(response);
             return redirect.redirect;
         });

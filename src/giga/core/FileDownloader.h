@@ -32,7 +32,7 @@ public:
 
 public:
     explicit
-    FileDownloader (const std::string& folderDest, const Node& node, Policy policy = Policy::ignore);
+    FileDownloader (const boost::filesystem::path& folderDest, const Node& node, Policy policy = Policy::ignore);
     virtual ~FileDownloader();
     FileDownloader (FileDownloader&& other);
 

@@ -5,7 +5,7 @@
 #ifndef GIGA_DATA_USER_MODEL_H_
 #define GIGA_DATA_USER_MODEL_H_
 
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include <vector>
 #include <map>
 #include "../../rest/prepoc_manage.h"
@@ -23,47 +23,47 @@ namespace data {
  */
 struct User {
     int64_t id = 0;
-    std::string login = {};
+    utility::string_t login = {};
     /** unix timestamp in seconds */
     int64_t creationDate = 0;
     /** unix timestamp in seconds */
     boost::optional<int64_t> lastConnectionDate = boost::none;
-    std::string activity = {};
+    utility::string_t activity = {};
     bool isUnlimited = {};
-    boost::optional<std::string> gender = boost::none;
+    boost::optional<utility::string_t> gender = boost::none;
     /** Y-m-d ex: 1960-01-26 */
-    boost::optional<std::string> birthDate = boost::none;
-    boost::optional<std::string> description = boost::none;
-    std::string avatarUrl = {};
-    std::string bigAvatarUrl = {};
+    boost::optional<utility::string_t> birthDate = boost::none;
+    boost::optional<utility::string_t> description = boost::none;
+    utility::string_t avatarUrl = {};
+    utility::string_t bigAvatarUrl = {};
     int64_t contactCount = 0;
     boost::optional<int64_t> maxContact = boost::none;
-    std::vector<std::string> tags = {};
-    std::string isSeeder = {};
+    std::vector<utility::string_t> tags = {};
+    utility::string_t isSeeder = {};
     /** True if the user is a GiGa bot */
     boost::optional<bool> isBot = boost::none;
     /** The rsa public key of this user */
-    boost::optional<std::string> publicKey = boost::none;
+    boost::optional<utility::string_t> publicKey = boost::none;
     /** DEPRECATED: the country */
-    boost::optional<std::string> country = boost::none;
+    boost::optional<utility::string_t> country = boost::none;
     /** DEPRECATED: The interface languge for this user */
-    boost::optional<std::string> language = boost::none;
+    boost::optional<utility::string_t> language = boost::none;
     /** Protected. The user full name */
-    boost::optional<std::string> name = boost::none;
+    boost::optional<utility::string_t> name = boost::none;
     /** Private. The user root folder */
     std::shared_ptr<Node> node = nullptr;
     /** Private. */
-    boost::optional<std::string> reportedState = boost::none;
+    boost::optional<utility::string_t> reportedState = boost::none;
     /** Private. */
-    boost::optional<std::string> nodeKey = boost::none;
+    boost::optional<utility::string_t> nodeKey = boost::none;
     /** Private. */
     std::unique_ptr<RsaKey> rsaKeys = nullptr;
     /** Private. */
-    boost::optional<std::string> salt = boost::none;
+    boost::optional<utility::string_t> salt = boost::none;
     /** Private. */
-    boost::optional<std::string> email = boost::none;
+    boost::optional<utility::string_t> email = boost::none;
     /** Private. The email when not validated yet */
-    boost::optional<std::string> nextEmail = boost::none;
+    boost::optional<utility::string_t> nextEmail = boost::none;
     /** Private. Value in Gio */
     boost::optional<int64_t> maxStorage = boost::none;
     /** Private. Value in Gio */

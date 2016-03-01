@@ -6,16 +6,17 @@
  */
 
 #include "GigaApi.h"
-
-#include "../utils/Crypto.h"
 #include "UsersApi.h"
-#include "data/UserExists.h"
-#include "pplx/pplxtasks.h"
-
 #include "data/User.h"
+#include "data/UserExists.h"
+#include "../utils/Crypto.h"
+
+#include <pplx/pplxtasks.h>
+
 using giga::data::User;
 using pplx::create_task;
 using pplx::task;
+using utility::string_t;
 
 namespace giga
 {
@@ -30,7 +31,7 @@ GigaApi::client()
 }
 
 task<std::shared_ptr<User>>
-GigaApi::authenticate (const std::string& login, const std::string& password)
+GigaApi::authenticate (const string_t& login, const string_t& password)
 {
     return create_task([=]
     {

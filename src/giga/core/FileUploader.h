@@ -11,6 +11,7 @@
 #include "FileTransferer.h"
 
 #include <pplx/pplxtasks.h>
+#include <cpprest/details/basic_types.h>
 
 namespace giga
 {
@@ -23,8 +24,8 @@ class FileUploader final : public FileTransferer
 {
 public:
     explicit
-    FileUploader (const std::string& filename, const std::string& nodeName, const std::string& parentId, const std::string& sha1,
-                  const std::string& fid, const std::string& fkey);
+    FileUploader (const utility::string_t& filename, const utility::string_t& nodeName, const utility::string_t& parentId,
+                  const utility::string_t& sha1, const utility::string_t& fid, const utility::string_t& fkey);
     ~FileUploader ()                             = default;
 
     FileUploader ()                              = delete;
@@ -42,10 +43,10 @@ public:
     FileTransferer::Progress
     progress () const;
 
-    const std::string&
+    const utility::string_t&
     nodeName() const;
 
-    const std::string&
+    const utility::string_t&
     fileName() const;
 
     uint64_t
@@ -54,12 +55,12 @@ public:
 private:
     pplx::task<std::shared_ptr<Node>> _task;
 
-    std::string _filename;
-    std::string _nodeName;
-    std::string _parentId;
-    std::string _sha1;
-    std::string _fid;
-    std::string _fkey;
+    utility::string_t _filename;
+    utility::string_t _nodeName;
+    utility::string_t _parentId;
+    utility::string_t _sha1;
+    utility::string_t _fid;
+    utility::string_t _fkey;
 
     uint64_t _fileSize;
 };

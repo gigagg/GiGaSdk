@@ -31,7 +31,7 @@ public:
     virtual ~GigaApi() = default;
 
 public:
-    static pplx::task<std::shared_ptr<data::User>> authenticate(const std::string& login, const std::string& password);
+    static pplx::task<std::shared_ptr<data::User>> authenticate(const utility::string_t& login, const utility::string_t& password);
 
     static data::User& getCurrentUser();
     static std::shared_ptr<web::http::oauth2::experimental::oauth2_config> getOAuthConfig();

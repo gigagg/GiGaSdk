@@ -35,13 +35,13 @@ public:
     loadChildren() override;
 
     virtual FolderNode&
-    addChildFolder(const std::string& name) override;
+    addChildFolder(const utility::string_t& name) override;
 
     virtual pplx::task<std::shared_ptr<FileUploader>>
-    uploadFile(const std::string& filepath) override;
+    uploadFile(const utility::string_t& filepath) override;
 
     virtual FileDownloader
-    download(const std::string& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) override;
+    download(const utility::string_t& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) override;
 
     virtual const FileNodeData&
     fileData() const override;

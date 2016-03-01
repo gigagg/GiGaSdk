@@ -17,12 +17,13 @@
 #include <algorithm>
 
 using pplx::create_task;
+using utility::string_t;
 
 namespace giga
 {
 
 Application&
-Application::init(std::string&& appRedirectUri, std::string&& appId, std::string&& appKey, std::string&& appScope)
+Application::init(string_t&& appRedirectUri, string_t&& appId, string_t&& appKey, string_t&& appScope)
 {
     auto& i = instance();
     i._config._appRedirectUri = appRedirectUri;
@@ -57,7 +58,7 @@ Application::isInitialized() const
 
 
 core::User&
-Application::authenticate (const std::string& login, const std::string& password)
+Application::authenticate (const string_t& login, const string_t& password)
 {
     auto duser = GigaApi::authenticate(login, password).get();
     _currentUser = core::User{duser};
@@ -84,7 +85,7 @@ Application::getUserById (int64_t id) const
 }
 
 core::User
-Application::getUserByLogin (const std::string& login) const
+Application::getUserByLogin (const string_t& login) const
 {
     auto duser =  UsersApi::getUserByLogin(login).get();
     return core::User{duser};
@@ -138,7 +139,7 @@ Application::getBlockedUsers() const
 }
 
 std::vector<core::User>
-Application::searchUser (const std::string& search) const
+Application::searchUser (const string_t& search) const
 {
     auto results = UsersApi::searchUsers(search, "" , "").get();
 
@@ -156,14 +157,14 @@ Application::searchUser (const std::string& search) const
 //
 
 std::unique_ptr<core::Node>
-Application::getNodeById (const std::string& id) const
+Application::getNodeById (const string_t& id) const
 {
     auto result = NodesApi::getNodeById(id).get();
     return core::Node::create(result);
 }
 
 std::vector<std::unique_ptr<core::Node>>
-Application::searchNode (const std::string& search, core::Node::MediaType type) const
+Application::searchNode (const string_t& search, core::Node::MediaType type) const
 {
     auto results = NodesApi::searchNodeByType(search, core::Node::mediaTypeCvrt.toStr(type)).get();
     std::vector<std::unique_ptr<core::Node>> nodes{};

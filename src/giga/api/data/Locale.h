@@ -9,21 +9,21 @@
 #define LOCALE_H_
 
 #include <boost/optional.hpp>
-#include <string.h>
+#include <cpprest/details/basic_types.h>
 #include "../../rest/prepoc_manage.h"
 
 struct Locale {
-    std::string contryCode  = "FR";
-    std::string countryName = {};
-    std::string currency    = {};
-    boost::optional<std::string> ip = boost::none;
+    utility::string_t contryCode  = "FR";
+    utility::string_t countryName = {};
+    utility::string_t currency    = {};
+    boost::optional<utility::string_t> ip = boost::none;
 
     template <class Unserializer>
     void visit(const Unserializer& us){
-        us.manageOpt(contryCode, std::string("contryCode"), std::string("FR"));
-        us.manageOpt(countryName, std::string("countryName"), std::string("France"));
-        us.manage(currency, std::string("currency"));
-        us.manage(ip, std::string("ip"));
+        us.manageOpt(contryCode, utility::string_t("contryCode"), utility::string_t("FR"));
+        us.manageOpt(countryName, utility::string_t("countryName"), utility::string_t("France"));
+        us.manage(currency, utility::string_t("currency"));
+        us.manage(ip, utility::string_t("ip"));
     }
 };
 

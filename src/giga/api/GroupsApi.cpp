@@ -10,6 +10,7 @@
 #include <string>
 
 using web::http::methods;
+using utility::string_t;
 
 namespace giga
 {
@@ -23,7 +24,7 @@ GroupsApi::getAllGroups ()
 }
 
 pplx::task<std::shared_ptr<Group>>
-GroupsApi::createGroup (const std::string& name)
+GroupsApi::createGroup (const string_t& name)
 {
     auto uri = client().uri ("groups");
     auto body = JsonObj{};
@@ -39,7 +40,7 @@ GroupsApi::getGroupById (int64_t groupId)
 }
 
 pplx::task<std::shared_ptr<Group>>
-GroupsApi::updateGroupName (int64_t groupId, const std::string& name)
+GroupsApi::updateGroupName (int64_t groupId, const string_t& name)
 {
     auto uri = client().uri ("groups", groupId);
     auto body = JsonObj{};
@@ -55,14 +56,14 @@ GroupsApi::deleteGroup (int64_t groupId)
 }
 
 pplx::task<std::shared_ptr<Group>>
-GroupsApi::shareNodeWithGroup (int64_t groupId, const std::string& nodeId)
+GroupsApi::shareNodeWithGroup (int64_t groupId, const string_t& nodeId)
 {
     auto uri = client().uri ("groups", groupId, "nodes", nodeId);
     return client().request<Group> (methods::PUT, uri);
 }
 
 pplx::task<std::shared_ptr<Group>>
-GroupsApi::unshareNodeFromGroup (int64_t groupId, const std::string& nodeId)
+GroupsApi::unshareNodeFromGroup (int64_t groupId, const string_t& nodeId)
 {
     auto uri = client().uri ("groups", groupId, "nodes", nodeId);
     return client().request<Group> (methods::DEL, uri);

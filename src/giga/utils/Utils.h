@@ -9,18 +9,18 @@
 #define GIGA_UTILS_UTILS_H_
 
 #include <pplx/pplxtasks.h>
-#include <string>
+#include <cpprest/details/basic_types.h>
 
 namespace giga
 {
 namespace utils
 {
 
-std::string
-httpsPrefix(const std::string& url);
+utility::string_t
+httpsPrefix(const utility::string_t& url);
 
-std::string
-cleanUpFilename(std::string name);
+utility::string_t
+cleanUpFilename(utility::string_t name);
 
 template <typename T> void
 waitTasks(std::initializer_list<T> tasks)

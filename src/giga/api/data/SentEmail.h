@@ -17,8 +17,8 @@ namespace data {
 
 struct SentEmail {
     std::unique_ptr<User> fromUser = nullptr;
-    boost::optional<std::string> toEmail = boost::none;
-    boost::optional<std::string> key = boost::none;
+    boost::optional<utility::string_t> toEmail = boost::none;
+    boost::optional<utility::string_t> key = boost::none;
     boost::optional<int64_t> id = boost::none;
     boost::optional<bool> isAccepted = boost::none;
     boost::optional<int64_t> creationDate = boost::none;

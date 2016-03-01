@@ -24,7 +24,7 @@ public:
     }
 
     enumT
-    fromStr (const std::string& value) const
+    fromStr (const utility::string_t& value) const
     {
         auto it = std::find(_arr.begin(), _arr.end(), value);
         if (it != _arr.end())
@@ -35,7 +35,7 @@ public:
         BOOST_THROW_EXCEPTION(ErrorException{"Value not found"});
     }
 
-    const std::string&
+    const utility::string_t&
     toStr (enumT value) const
     {
         auto index = static_cast<size_t>(value);
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    const std::array<std::string, enumSize> _arr;
+    const std::array<utility::string_t, enumSize> _arr;
 };
 
 }

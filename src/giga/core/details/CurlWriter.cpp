@@ -10,6 +10,8 @@
 #include <curl_easy.h>
 #include <ios>
 
+using utility::string_t;
+
 namespace giga
 {
 namespace details
@@ -57,7 +59,7 @@ CurlWriter::write (const char * contents, size_t size) noexcept
     }
 }
 
-std::string
+string_t
 CurlWriter::getErrorData () const
 {
     return _stream.str();

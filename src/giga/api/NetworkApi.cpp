@@ -10,13 +10,14 @@
 #include <string>
 
 using web::http::methods;
+using utility::string_t;
 
 namespace giga
 {
 using namespace data;
 
 pplx::task<std::shared_ptr<UsersRelation>>
-NetworkApi::updateUserRelationData (int64_t fromUserId, int64_t toUserId, const std::string& type, bool favorite, bool isNew)
+NetworkApi::updateUserRelationData (int64_t fromUserId, int64_t toUserId, const string_t& type, bool favorite, bool isNew)
 {
     auto uri = client().uri ("users", fromUserId, "users", toUserId);
     auto body = JsonObj{};
@@ -27,8 +28,8 @@ NetworkApi::updateUserRelationData (int64_t fromUserId, int64_t toUserId, const 
 }
 
 pplx::task<std::shared_ptr<UsersRelation>>
-NetworkApi::createUserRelation (int64_t fromUserId, int64_t toUserId, const std::string& type, const std::string& medium,
-                                    const std::string& key)
+NetworkApi::createUserRelation (int64_t fromUserId, int64_t toUserId, const string_t& type, const string_t& medium,
+                                    const string_t& key)
 {
     auto uri = client().uri ("users", fromUserId, "users", toUserId);
     auto body = JsonObj{};
@@ -39,7 +40,7 @@ NetworkApi::createUserRelation (int64_t fromUserId, int64_t toUserId, const std:
 }
 
 pplx::task<std::shared_ptr<Success>>
-NetworkApi::deleteUserRelation (int64_t fromUserId, int64_t toUserId, const std::string& type)
+NetworkApi::deleteUserRelation (int64_t fromUserId, int64_t toUserId, const string_t& type)
 {
     auto uri = client().uri ("users", fromUserId, "users", toUserId);
     uri.append_query ("type", type);
@@ -47,7 +48,7 @@ NetworkApi::deleteUserRelation (int64_t fromUserId, int64_t toUserId, const std:
 }
 
 pplx::task<std::shared_ptr<std::vector<std::shared_ptr<UsersRelation>>>>
-NetworkApi::getUserRelation (int64_t userId, const std::string& type, const std::string& way)
+NetworkApi::getUserRelation (int64_t userId, const string_t& type, const string_t& way)
 {
     auto uri = client().uri ("users", userId, "users");
     uri.append_query ("type", type);

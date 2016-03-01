@@ -6,6 +6,9 @@
  */
 
 #include "Utils.h"
+#include <cpprest/details/basic_types.h>
+
+using utility::string_t;
 
 namespace
 {
@@ -20,8 +23,8 @@ namespace giga
 namespace utils
 {
 
-std::string
-httpsPrefix(const std::string& url)
+string_t
+httpsPrefix(const string_t& url)
 {
     if (url.length() > 2 && url[0] == '/' && url[1] == '/')
     {
@@ -30,11 +33,11 @@ httpsPrefix(const std::string& url)
     return url;
 }
 
-std::string
-cleanUpFilename(std::string name)
+string_t
+cleanUpFilename(string_t name)
 {
     auto pos = name.find_first_of(invalidChars);
-    while (pos != std::string::npos)
+    while (pos != string_t::npos)
     {
         name.replace(pos, 1, "_");
         pos = name.find_first_of(invalidChars, pos);

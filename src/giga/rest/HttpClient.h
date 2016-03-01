@@ -39,14 +39,14 @@ private:
 
 public:
     void
-    authenticate (const std::string& login, const std::string& password);
+    authenticate (const utility::string_t& login, const utility::string_t& password);
 
     web::uri_builder
-    uri (const std::string& resource);
+    uri (const utility::string_t& resource);
 
     template<typename T>
     web::uri_builder
-    uri (const std::string& resource, const T& id, const std::string& subResource = "")
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = "")
     {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
@@ -60,7 +60,7 @@ public:
 
     template<typename T, typename U>
     web::uri_builder
-    uri (const std::string& resource, const T& id, const std::string& subResource, const U& subId)
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource, const U& subId)
     {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
@@ -103,7 +103,7 @@ public:
     {
         auto headers = response.headers();
         auto ctype = headers.find("Content-Type");
-        auto jsonType = std::string("application/json");
+        auto jsonType = utility::string_t("application/json");
         if (ctype != headers.end() && ctype->second.compare(0, jsonType.size(), jsonType) == 0)
         {
             auto json = response.extract_json(true).get();

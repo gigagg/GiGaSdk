@@ -6,7 +6,7 @@
 #define GIGA_DATA_OFFER_MODEL_H_
 
 #include <boost/optional.hpp>
-#include <string>
+#include <cpprest/details/basic_types.h>
 #include <vector>
 #include <map>
 #include "../../rest/prepoc_manage.h"
@@ -18,13 +18,13 @@ namespace data {
  * Something you can buy
  */
 struct Offer {
-    std::string id          = {};
-    std::string state       = {};
-    std::string duration    = {};
+    utility::string_t id          = {};
+    utility::string_t state       = {};
+    utility::string_t duration    = {};
     int64_t storage         = 0;
     int64_t download        = 0;
-    std::string resetDownload = {};
-    std::string billing     = {};
+    utility::string_t resetDownload = {};
+    utility::string_t billing     = {};
     int64_t costEUR         = 0;
     int64_t costUSD         = 0;
     boost::optional<int64_t> costStar = boost::none;

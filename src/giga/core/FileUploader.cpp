@@ -40,6 +40,7 @@ using web::http::methods;
 using web::http::status_codes;
 using web::uri;
 using web::uri_builder;
+using utility::string_t;
 
 namespace
 {
@@ -64,8 +65,8 @@ namespace giga
 namespace core
 {
 
-FileUploader::FileUploader (const std::string& filename, const std::string& nodeName, const std::string& parentId, const std::string& sha1,
-                            const std::string& fid, const std::string& fkey) :
+FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const string_t& parentId,
+                            const string_t& sha1, const string_t& fid, const string_t& fkey) :
         FileTransferer{},
         _task{},
         _filename{filename},
@@ -147,13 +148,13 @@ FileUploader::progress () const
     return Progress{p.ulnow, _fileSize};
 }
 
-const std::string&
+const string_t&
 FileUploader::nodeName() const
 {
     return _nodeName;
 }
 
-const std::string&
+const string_t&
 FileUploader::fileName() const
 {
     return _filename;

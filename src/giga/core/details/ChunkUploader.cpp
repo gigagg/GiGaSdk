@@ -28,6 +28,7 @@ using giga::data::Node;
 using web::http::oauth2::experimental::oauth2_config;
 using web::uri;
 using web::uri_builder;
+using utility::string_t;
 
 
 namespace
@@ -35,7 +36,7 @@ namespace
 class ReadCallbackData
 {
 public:
-    explicit ReadCallbackData(const std::string filename);
+    explicit ReadCallbackData(const string_t filename);
 
     ~ReadCallbackData();
 
@@ -51,7 +52,7 @@ private:
     uint64_t       _end;
 };
 
-ReadCallbackData::ReadCallbackData (const std::string filename) :
+ReadCallbackData::ReadCallbackData (const string_t filename) :
         _file{}, _start{0}, _end{0}
 {
     _file.open(filename, std::fstream::binary);
@@ -109,8 +110,8 @@ namespace giga
 namespace details
 {
 
-ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const std::string& nodeName, const std::string& sha1, const std::string& filename,
-                              const std::string& mime, details::CurlProgress* progress) :
+ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const string_t& sha1, const string_t& filename,
+                              const string_t& mime, details::CurlProgress* progress) :
                _uploadUrl{uri_builder{uploadUrl}.append_query("access_token", GigaApi::getOAuthConfig()->token().access_token()).to_uri()},
                _nodeName{nodeName},
                _sha1{sha1},
@@ -137,8 +138,8 @@ ChunkUploader::upload ()
         auto what   = boost::cmatch{};
         if(boost::regex_match(response.c_str(), what, regex))
         {
-            auto start = std::stoul(std::string{what[1].first, what[1].second});
-            auto end = std::stoul(std::string{what[2].first, what[2].second});
+            auto start = std::stoul(string_t{what[1].first, what[1].second});
+            auto end = std::stoul(string_t{what[2].first, what[2].second});
             if (start > 0 && end > start)
             {
                 position = 0;
@@ -162,7 +163,7 @@ ChunkUploader::upload ()
     BOOST_THROW_EXCEPTION(ErrorException{"Upload error"});
 }
 
-std::string
+string_t
 ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& curl, std::ostringstream& str)
 {
     if (position >= _fileSize)

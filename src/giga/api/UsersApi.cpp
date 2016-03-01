@@ -3,8 +3,6 @@
  */
 
 #include "UsersApi.h"
-
-
 #include "data/User.h"
 #include "data/UserExists.h"
 #include "../utils/Crypto.h"
@@ -13,6 +11,7 @@
 #include <string>
 
 using web::http::methods;
+using utility::string_t;
 
 namespace giga
 {
@@ -25,16 +24,16 @@ UsersApi::getCurrentUser ()
     return client().request<User> (methods::GET, uri);
 }
 
-pplx::task<std::shared_ptr<std::vector<std::string>>>
-UsersApi::searchTag (const std::string& name)
+pplx::task<std::shared_ptr<std::vector<string_t>>>
+UsersApi::searchTag (const string_t& name)
 {
     auto uri = client().uri ("tags");
     uri.append_query ("name", name);
-    return client().request<std::vector<std::string>> (methods::GET, uri);
+    return client().request<std::vector<string_t>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<UserExists>>
-UsersApi::userExists (const std::string& login, const std::string& email /* = ""*/)
+UsersApi::userExists (const string_t& login, const string_t& email /* = ""*/)
 {
     auto uri = client().uri ("userexists");
     if (!login.empty()) {
@@ -47,7 +46,7 @@ UsersApi::userExists (const std::string& login, const std::string& email /* = ""
 }
 
 pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::User>>>>
-UsersApi::searchUsers (const std::string& search, const std::string& activity, const std::string& isSeeder)
+UsersApi::searchUsers (const string_t& search, const string_t& activity, const string_t& isSeeder)
 {
     auto uri = client().uri ("users");
     uri.append_query ("search", search);
@@ -70,7 +69,7 @@ UsersApi::getUserById (int64_t userId)
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::getUserByLogin (const std::string& login)
+UsersApi::getUserByLogin (const string_t& login)
 {
     auto uri = client().uri ("users");
     uri.append_query("login", login);
@@ -78,10 +77,10 @@ UsersApi::getUserByLogin (const std::string& login)
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUser (int64_t userId, const std::string& email, bool isValidation, const std::string& gender, const std::string& name,
-                      const std::string& description, const std::string& birthdate, const std::string& avatar,
-                      const std::string& currentPassword, const std::string& password, const std::string& clue,
-                      const std::string& privateKey, const std::string& iv, const std::string& salt)
+UsersApi::updateUser (int64_t userId, const string_t& email, bool isValidation, const string_t& gender, const string_t& name,
+                      const string_t& description, const string_t& birthdate, const string_t& avatar,
+                      const string_t& currentPassword, const string_t& password, const string_t& clue,
+                      const string_t& privateKey, const string_t& iv, const string_t& salt)
 {
     auto uri = client().uri ("users", userId);
     auto body = JsonObj{};
@@ -102,7 +101,7 @@ UsersApi::updateUser (int64_t userId, const std::string& email, bool isValidatio
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUserAddTag (int64_t userId, const std::string& name)
+UsersApi::updateUserAddTag (int64_t userId, const string_t& name)
 {
     auto uri = client().uri ("users", userId, "tags", userId);
     auto body = JsonObj{};
@@ -111,7 +110,7 @@ UsersApi::updateUserAddTag (int64_t userId, const std::string& name)
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUserRemoveTag (int64_t userId, const std::string& name)
+UsersApi::updateUserRemoveTag (int64_t userId, const string_t& name)
 {
     auto uri = client().uri ("users", userId, "tags", userId);
     auto body = JsonObj{};
