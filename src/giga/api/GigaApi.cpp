@@ -45,7 +45,7 @@ GigaApi::authenticate (const string_t& login, const string_t& password)
         }
         else
         {
-            BOOST_THROW_EXCEPTION(ErrorNotFound{"Login not found"});
+            BOOST_THROW_EXCEPTION(ErrorNotFound{U("Login not found")});
         }
     });
 }
@@ -56,7 +56,7 @@ GigaApi::getCurrentUser()
     if (currentUser) {
         return *currentUser;
     }
-    BOOST_THROW_EXCEPTION(ErrorException("You must authenticate before using getCurrentUser"));
+    BOOST_THROW_EXCEPTION(ErrorException(U("You must authenticate before using getCurrentUser")));
 }
 
 std::shared_ptr<web::http::oauth2::experimental::oauth2_config>

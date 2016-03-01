@@ -28,7 +28,7 @@ namespace core
 #define THROW_IF_NOT_INITIALIZED(name) \
     if (!n->name.is_initialized())                          \
     {                                                       \
-        BOOST_THROW_EXCEPTION(ErrorException{#name " is not initialized"});    \
+        BOOST_THROW_EXCEPTION(ErrorException{U(#name " is not initialized")});    \
     } do {} while(0)                                        \
 
 FileNodeData::FileNodeData(std::shared_ptr<data::Node> n) :
@@ -127,13 +127,13 @@ FileNode::children () const
 FolderNode&
 FileNode::addChildFolder(const string_t&)
 {
-    BOOST_THROW_EXCEPTION(ErrorException{"Illegal action: this is a fileNode"});
+    BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
 }
 
 pplx::task<std::shared_ptr<FileUploader>>
 FileNode::uploadFile(const string_t&)
 {
-    BOOST_THROW_EXCEPTION(ErrorException{"Illegal action: this is a fileNode"});
+    BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
 }
 
 FileDownloader

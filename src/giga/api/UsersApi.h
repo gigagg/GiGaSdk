@@ -26,7 +26,7 @@ public:
     searchTag (const utility::string_t& name);
 
     static pplx::task<std::shared_ptr<data::UserExists>>
-    userExists (const utility::string_t& login, const utility::string_t& email = "");
+    userExists (const utility::string_t& login, const utility::string_t& email = U(""));
 
     static pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::User>>>>
     searchUsers (const utility::string_t& search, const utility::string_t& activity, const utility::string_t& isSeeder);

@@ -121,7 +121,7 @@ struct User {
     }
 
 //    ~User() {
-//        std::cout << "DELETE USER" << std::endl;
+//        std::cout << U("DELETE USER") << std::endl;
 //    };
 //    User () = default;
 //    User (const User&) = default;

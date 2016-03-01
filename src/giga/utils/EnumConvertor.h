@@ -32,7 +32,7 @@ public:
             size_t index = std::distance(_arr.begin(), it);
             return static_cast<enumT>(index);
         }
-        BOOST_THROW_EXCEPTION(ErrorException{"Value not found"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Value not found")});
     }
 
     const utility::string_t&
@@ -43,7 +43,7 @@ public:
         {
             return _arr[index];
         }
-        BOOST_THROW_EXCEPTION(ErrorException{"Str not found"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Str not found")});
     }
 
 private:

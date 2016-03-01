@@ -30,7 +30,7 @@ public:
 
     static Application&
     init(utility::string_t&& appRedirectUri, utility::string_t&& appId, utility::string_t&& appKey, utility::string_t&& appScope =
-            "basic network groups files basic:write network:write groups:write files:write");
+            U("basic network groups files basic:write network:write groups:write files:write"));
 
     static Application&
     get();

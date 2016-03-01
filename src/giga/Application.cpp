@@ -39,7 +39,7 @@ Application::get()
 {
     if (!instance().isInitialized())
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"App must be initialized first"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("App must be initialized first")});
     }
     return instance();
 }
@@ -106,42 +106,42 @@ toUserVect(std::shared_ptr<std::vector<std::shared_ptr<data::UsersRelation>>> re
 std::vector<core::User>
 Application::getContacts () const
 {
-    auto rels = NetworkApi::getUserRelation(_currentUser.id(), "CONTACT", "OUT").get();
+    auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("CONTACT"), U("OUT")).get();
     return toUserVect(rels);
 }
 
 std::vector<core::User>
 Application::getInvitedUsers() const
 {
-    auto rels = NetworkApi::getUserRelation(_currentUser.id(), "INVITE", "OUT").get();
+    auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("INVITE"), U("OUT")).get();
     return toUserVect(rels);
 }
 
 std::vector<core::User>
 Application::getInvitingUsers() const
 {
-    auto rels = NetworkApi::getUserRelation(_currentUser.id(), "INVITE", "IN").get();
+    auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("INVITE"), U("IN")).get();
     return toUserVect(rels);
 }
 
 std::vector<core::User>
 Application::getSuggestedUsers() const
 {
-    auto rels = NetworkApi::getUserRelation(_currentUser.id(), "SHOULD_INVITE", "OUT").get();
+    auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("SHOULD_INVITE"), U("OUT")).get();
     return toUserVect(rels);
 }
 
 std::vector<core::User>
 Application::getBlockedUsers() const
 {
-    auto rels = NetworkApi::getUserRelation(_currentUser.id(), "BLOCK", "OUT").get();
+    auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("BLOCK"), U("OUT")).get();
     return toUserVect(rels);
 }
 
 std::vector<core::User>
 Application::searchUser (const string_t& search) const
 {
-    auto results = UsersApi::searchUsers(search, "" , "").get();
+    auto results = UsersApi::searchUsers(search, U("") , U("")).get();
 
     std::vector<core::User> users{};
     users.resize(results->size());

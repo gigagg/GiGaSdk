@@ -36,17 +36,17 @@ public:
     what () const noexcept;
 
 protected:
-    utility::string_t whatStr  = "";
+    utility::string_t whatStr  = U("");
 };
 
 class HttpErrorGeneric : public ErrorException
 {
 public:
     static HttpErrorGeneric
-    create(unsigned short status, const utility::string_t& errorStr = "", const utility::string_t& scope = "");
+    create(unsigned short status, const utility::string_t& errorStr = U(""), const utility::string_t& scope = U(""));
 
 public:
-    explicit HttpErrorGeneric (unsigned short status, const utility::string_t& errorStr = "", const utility::string_t& scope = "");
+    explicit HttpErrorGeneric (unsigned short status, const utility::string_t& errorStr = U(""), const utility::string_t& scope = U(""));
 
     virtual ~HttpErrorGeneric ()                = default;
     HttpErrorGeneric (const HttpErrorGeneric&)  = default;
@@ -68,13 +68,13 @@ public:
     void
     visit(const Manager& us)
     {
-        us.manageOpt(whatStr, "errorStr", utility::string_t{});
+        us.manageOpt(whatStr, U("errorStr"), utility::string_t{});
         GIGA_MANAGE_OPT(us, scope, utility::string_t{});
     }
 
 public:
     const unsigned short status = 500;
-    utility::string_t scope           = "";
+    utility::string_t scope           = U("");
 
 private:
     web::json::value json = {};
@@ -85,7 +85,7 @@ template <unsigned short TStatus>
 class HttpError : public HttpErrorGeneric
 {
 public:
-    explicit HttpError (const utility::string_t& errorStr = "", const utility::string_t& scope = "") :
+    explicit HttpError (const utility::string_t& errorStr = U(""), const utility::string_t& scope = U("")) :
         HttpErrorGeneric (TStatus, errorStr, scope)
     {
     }

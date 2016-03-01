@@ -22,10 +22,15 @@ httpsPrefix(const utility::string_t& url);
 utility::string_t
 cleanUpFilename(utility::string_t name);
 
-template <typename T> void
-waitTasks(std::initializer_list<T> tasks)
+template<typename T>
+utility::string_t
+to_string(T&& str)
 {
-    pplx::when_all(tasks.begin(), tasks.end()).wait();
+#ifdef _UTF16_STRINGS
+    return std::to_wstring(str);
+#else
+    return std::to_string(str);
+#endif
 }
 
 } /* namespace utils */

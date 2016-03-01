@@ -125,7 +125,7 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
     using namespace boost::filesystem;
     if (!exists (path))
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"File or directory not found"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("File or directory not found")});
     }
     if (parent.shouldLoadChildren())
     {
@@ -156,7 +156,7 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
         auto name = path.filename().string();
 
         // ignore these folders...
-        if (name == "" || name == "." || name == "..")
+        if (name == U("") || name == U(".") || name == U(".."))
         {
             return;
         }

@@ -43,9 +43,9 @@ private:
     utility::string_t _appKey;
     utility::string_t _appScope;
 
-    const utility::string_t _oauthAuthorizationEndpoint = "https://dev.gg/oauth/authorize";
-    const utility::string_t _oauthTokenEndpoint         = "https://dev.gg/oauth/token";
-    const utility::string_t _apiHost                    = "https://dev.gg";
+    const utility::string_t _oauthAuthorizationEndpoint = U("https://dev.gg/oauth/authorize");
+    const utility::string_t _oauthTokenEndpoint         = U("https://dev.gg/oauth/token");
+    const utility::string_t _apiHost                    = U("https://dev.gg");
 };
 
 } /* namespace giga */

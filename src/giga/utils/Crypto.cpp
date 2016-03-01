@@ -8,6 +8,7 @@
 #include "Crypto.h"
 #include "../rest/HttpErrors.h"
 
+#include <cpprest/details/basic_types.h>
 #include <algorithm>
 
 #ifdef CRYPTOPP
@@ -104,7 +105,7 @@ Rsa::Rsa (const string_t& pubStr, const string_t& privStr)
         _pub.BERDecode(queue);
     }
     _hasPrivateKey = false;
-    if (privStr != "")
+    if (privStr != U(""))
     {
         try
         {
@@ -118,17 +119,18 @@ Rsa::Rsa (const string_t& pubStr, const string_t& privStr)
             ByteQueue queue;
             fillQueue(queue, privStr);
             _priv.BERDecode(queue);
+            _hasPrivateKey = true;
         }
 
         AutoSeededRandomPool rnd;
         if (!_priv.Validate(rnd, 3))
         {
-            BOOST_THROW_EXCEPTION(ErrorException("Rsa private key validation failed"));
+            BOOST_THROW_EXCEPTION(ErrorException(U("Rsa private key validation failed")));
         }
 
         if (!_priv.Validate(rnd, 3))
         {
-            BOOST_THROW_EXCEPTION(ErrorException("Dsa private key validation failed"));
+            BOOST_THROW_EXCEPTION(ErrorException(U("Dsa private key validation failed")));
         }
     }
 }
@@ -151,7 +153,7 @@ string_t
 Rsa::decrypt (const string_t& data) const
 {
     if (!_hasPrivateKey) {
-        BOOST_THROW_EXCEPTION(ErrorException("PrivateKey has not been set"));
+        BOOST_THROW_EXCEPTION(ErrorException(U("PrivateKey has not been set")));
     }
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Decryptor decryptor(_priv);
@@ -226,19 +228,19 @@ Crypto::base64decode (const string_t& data)
 
 string_t
 Crypto::calculateFid(const string_t& hashHexEncoded) {
-    auto salt = "5%;[yw\"XG2&Om#i*T$v.B2'Ae/VST4t#u$@pxsauO,H){`hUd7Xu@4q4WCc<>'ie";
+    auto salt = U("5%;[yw\"XG2&Om#i*T$v.B2'Ae/VST4t#u$@pxsauO,H){`hUd7Xu@4q4WCc<>'ie");
     return base64encode(pbkdf2_sha256(hashHexEncoded, salt, 18, 32));
 }
 
 string_t
 Crypto::calculateFkey(const string_t& hashHexEncoded) {
-    auto salt = "={w|>6L:{Xn;HAKf^w=,fgSX}sfw)`hxopaqk.6Hg';w23\"sd+b07`LSOGqz#-)[";
+    auto salt = U("={w|>6L:{Xn;HAKf^w=,fgSX}sfw)`hxopaqk.6Hg';w23\"sd+b07`LSOGqz#-)[");
     return base64encode(pbkdf2_sha256(hashHexEncoded, salt, 18, 32));
 }
 
 string_t
 Crypto::calculateLoginPassword(const string_t& login, const string_t& password) {
-    auto salt = login + "\"D<?4'V%Fh(U,9SjdO4v)|1mJV31]#;W";
+    auto salt = login + U("\"D<?4'V%Fh(U,9SjdO4v)|1mJV31]#;W");
     auto hashed = pbkdf2_sha256(password, salt, 16);
     return base64encode(hashed);
 }

@@ -18,8 +18,8 @@ namespace giga
 class HttpClient final
 {
 public:
-    static constexpr auto API = "/api/1.0/";
-    static constexpr auto JSON_CONTENT_TYPE = "application/json;charset=utf-8";
+    static constexpr auto API = U("/api/1.0/");
+    static constexpr auto JSON_CONTENT_TYPE = U("application/json;charset=utf-8");
 
 public:
     HttpClient ();
@@ -46,14 +46,14 @@ public:
 
     template<typename T>
     web::uri_builder
-    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = "")
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = U(""))
     {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
-        ss << API << resource << "/" << id;
+        ss << API << resource << U("/") << id;
         if (subResource.size() > 0)
         {
-            ss << "/" << subResource;
+            ss << U("/") << subResource;
         }
         return web::uri_builder{ss.str()};
     }
@@ -64,7 +64,7 @@ public:
     {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
-        ss << API << resource << "/" << id << "/" << subResource << "/" << subId;
+        ss << API << resource << U("/") << id << U("/") << subResource << U("/") << subId;
         return web::uri_builder{ss.str()};
     }
 
@@ -72,7 +72,7 @@ public:
     pplx::task<std::shared_ptr<T>>
     request (const web::http::method &mtd, web::uri_builder uri)
     {
-        GIGA_DEBUG_LOG(mtd << "  " << uri.to_string());
+        GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string());
         return _http.request(mtd, uri.to_string()).then([=](web::http::http_response response) {
             return onRequestPtr<T>(response);
         });
@@ -82,7 +82,7 @@ public:
     pplx::task<std::shared_ptr<T>>
     request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
     {
-        GIGA_DEBUG_LOG(mtd << "  " << uri.to_string());
+        GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string());
         auto json = web::json::value::object();
         auto data = JSonSerializer{json}.toString(std::move(bodyData));
         return _http.request(mtd, uri.to_string(), data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
@@ -102,8 +102,8 @@ public:
     onRequest (web::http::http_response response)
     {
         auto headers = response.headers();
-        auto ctype = headers.find("Content-Type");
-        auto jsonType = utility::string_t("application/json");
+        auto ctype = headers.find(U("Content-Type"));
+        auto jsonType = utility::string_t(U("application/json"));
         if (ctype != headers.end() && ctype->second.compare(0, jsonType.size(), jsonType) == 0)
         {
             auto json = response.extract_json(true).get();
@@ -116,7 +116,7 @@ public:
                 }
                 catch (const std::exception& e)
                 {
-                    GIGA_DEBUG_LOG("Error unserializing: " << json.serialize());
+                    GIGA_DEBUG_LOG(U("Error unserializing: ") << json.serialize());
                     throw e;
                 }
             }

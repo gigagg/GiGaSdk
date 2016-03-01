@@ -39,7 +39,7 @@ HttpClient::uri (const string_t& resource)
 }
 
 struct Redirect {
-    string_t redirect = "";
+    string_t redirect = U("");
     template <class Manager>
     void visit(const Manager& m) {
         GIGA_MANAGE(m, redirect);
@@ -56,7 +56,7 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     m_oauth2_config.set_scope(conf.appScope());
     auto auth_uri = m_oauth2_config.build_authorization_uri(true);  /* Get the authorization uri */
     auto state  = string_t{};
-    auto regex  = boost::regex{".*state=([a-zA-Z0-9]+).*"};
+    auto regex  = boost::regex{U(".*state=([a-zA-Z0-9]+).*")};
     auto what   = boost::cmatch{};
     if(boost::regex_match(auth_uri.c_str(), what, regex))
     {
@@ -66,29 +66,29 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     // I manually do the browser work here ...
 
     auto body = JsonObj{};
-    body.add("login", login);
-    body.add("password", password);
-    auto url = "/rest/login";
+    body.add(U("login"), login);
+    body.add(U("password"), password);
+    auto url = U("/rest/login");
     auto request = _http.request(methods::POST, url, JSonSerializer::toString(body), JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
         onRequest<Empty>(response);
         auto headers = response.headers();
 
         const auto& conf = Application::get().config();
         auto body = JsonObj{};
-        body.add("oauth", string_t("true"));
-        body.add("response_type", string_t("code"));
-        body.add("client_id", conf.appId());
-        body.add("redirect_uri", conf.appRedirectUri());
-        body.add("state", state);
-        body.add("scope", conf.appScope());
-        body.add("authorized", true);
+        body.add(U("oauth"), string_t(U("true")));
+        body.add(U("response_type"), string_t(U("code")));
+        body.add(U("client_id"), conf.appId());
+        body.add(U("redirect_uri"), conf.appRedirectUri());
+        body.add(U("state"), state);
+        body.add(U("scope"), conf.appScope());
+        body.add(U("authorized"), true);
 
         auto r = http_request{methods::POST};
-        r.set_request_uri("/rest/oauthvalidate");
+        r.set_request_uri(U("/rest/oauthvalidate"));
         r.set_body(JSonSerializer::toString(body), JSON_CONTENT_TYPE);
-        auto it = headers.find("Set-Cookie");
+        auto it = headers.find(U("Set-Cookie"));
         if (it != headers.end()) {
-            r.headers().add("Cookie", it->second);
+            r.headers().add(U("Cookie"), it->second);
         }
         auto request = _http.request(r).then([=](web::http::http_response response) -> string_t {
             auto redirect = onRequest<Redirect>(response);

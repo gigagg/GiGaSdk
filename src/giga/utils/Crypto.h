@@ -19,7 +19,7 @@ class Rsa final
 {
 public:
     explicit
-    Rsa (const utility::string_t& pubStr, const utility::string_t& privStr = "");
+    Rsa (const utility::string_t& pubStr, const utility::string_t& privStr = U(""));
 
     utility::string_t
     encrypt (const utility::string_t& data) const;

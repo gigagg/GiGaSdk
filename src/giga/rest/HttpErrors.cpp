@@ -1,6 +1,10 @@
 #include "HttpErrors.h"
+#include "../utils/Utils.h"
+
+#include <cpprest/details/basic_types.h>
 
 using utility::string_t;
+using giga::utils::to_string;
 
 namespace giga
 {
@@ -29,7 +33,7 @@ HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const string_t& error
 const char*
 HttpErrorGeneric::what () const noexcept
 {
-    whatData = "status: " + std::to_string(status) + " err: " + whatStr;
+    whatData = U("status: ") + to_string(status) + U(" err: ") + whatStr;
     return whatData.c_str();
 }
 
