@@ -13,3 +13,14 @@ doc/html/**
 .cproject
 .project
 .settings
+
+vendors/VS2015/**
+!vendors/VS2015/Main.cpp
+!vendors/VS2015/copydep.bat
+!vendors/VS2015/deps/Debug/lib/.gitkeep.txt
+!vendors/VS2015/deps/Release/lib/.gitkeep.txt
+!vendors/VS2015/deps/include/.gitkeep.txt
+!vendors/VS2015/get_dependencies.sln
+!vendors/VS2015/get_dependencies.vcxproj
+!vendors/VS2015/get_dependencies.vcxproj.filters
+!vendors/VS2015/packages.config

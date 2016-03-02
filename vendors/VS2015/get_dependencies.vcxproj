@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props" Condition="Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props')" />
+  <Import Project="packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props" Condition="Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props')" />
+  <Import Project="packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props" Condition="Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props')" />
+  <Import Project="packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.props" Condition="Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.props')" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FCCD5520-F46E-4A25-AD3A-5C2D8F11A445}</ProjectGuid>
+    <RootNamespace>get_dependencies</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <PreBuildEvent>
+      <Command>call "$(SolutionDir)copydep.bat" "$(SolutionDir)"</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="copydep.bat" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.targets" Condition="Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.targets')" />
+    <Import Project="packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.targets" Condition="Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.targets')" />
+    <Import Project="packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.targets" Condition="Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.targets')" />
+    <Import Project="packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.targets" Condition="Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.targets')" />
+    <Import Project="packages\cryptopp.5.6.3.2\build\native\cryptopp.targets" Condition="Exists('packages\cryptopp.5.6.3.2\build\native\cryptopp.targets')" />
+    <Import Project="packages\boost.1.60.0.0\build\native\boost.targets" Condition="Exists('packages\boost.1.60.0.0\build\native\boost.targets')" />
+    <Import Project="packages\boost_atomic-vc140.1.60.0.0\build\native\boost_atomic-vc140.targets" Condition="Exists('packages\boost_atomic-vc140.1.60.0.0\build\native\boost_atomic-vc140.targets')" />
+    <Import Project="packages\boost_chrono-vc140.1.60.0.0\build\native\boost_chrono-vc140.targets" Condition="Exists('packages\boost_chrono-vc140.1.60.0.0\build\native\boost_chrono-vc140.targets')" />
+    <Import Project="packages\boost_container-vc140.1.60.0.0\build\native\boost_container-vc140.targets" Condition="Exists('packages\boost_container-vc140.1.60.0.0\build\native\boost_container-vc140.targets')" />
+    <Import Project="packages\boost_context-vc140.1.60.0.0\build\native\boost_context-vc140.targets" Condition="Exists('packages\boost_context-vc140.1.60.0.0\build\native\boost_context-vc140.targets')" />
+    <Import Project="packages\boost_coroutine-vc140.1.60.0.0\build\native\boost_coroutine-vc140.targets" Condition="Exists('packages\boost_coroutine-vc140.1.60.0.0\build\native\boost_coroutine-vc140.targets')" />
+    <Import Project="packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets" Condition="Exists('packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets')" />
+    <Import Project="packages\boost_exception-vc140.1.60.0.0\build\native\boost_exception-vc140.targets" Condition="Exists('packages\boost_exception-vc140.1.60.0.0\build\native\boost_exception-vc140.targets')" />
+    <Import Project="packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets" Condition="Exists('packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets')" />
+    <Import Project="packages\boost_graph-vc140.1.60.0.0\build\native\boost_graph-vc140.targets" Condition="Exists('packages\boost_graph-vc140.1.60.0.0\build\native\boost_graph-vc140.targets')" />
+    <Import Project="packages\boost_iostreams-vc140.1.60.0.0\build\native\boost_iostreams-vc140.targets" Condition="Exists('packages\boost_iostreams-vc140.1.60.0.0\build\native\boost_iostreams-vc140.targets')" />
+    <Import Project="packages\boost_locale-vc140.1.60.0.0\build\native\boost_locale-vc140.targets" Condition="Exists('packages\boost_locale-vc140.1.60.0.0\build\native\boost_locale-vc140.targets')" />
+    <Import Project="packages\boost_log-vc140.1.60.0.0\build\native\boost_log-vc140.targets" Condition="Exists('packages\boost_log-vc140.1.60.0.0\build\native\boost_log-vc140.targets')" />
+    <Import Project="packages\boost_log_setup-vc140.1.60.0.0\build\native\boost_log_setup-vc140.targets" Condition="Exists('packages\boost_log_setup-vc140.1.60.0.0\build\native\boost_log_setup-vc140.targets')" />
+    <Import Project="packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets" Condition="Exists('packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets')" />
+    <Import Project="packages\boost_math_c99f-vc140.1.60.0.0\build\native\boost_math_c99f-vc140.targets" Condition="Exists('packages\boost_math_c99f-vc140.1.60.0.0\build\native\boost_math_c99f-vc140.targets')" />
+    <Import Project="packages\boost_math_c99l-vc140.1.60.0.0\build\native\boost_math_c99l-vc140.targets" Condition="Exists('packages\boost_math_c99l-vc140.1.60.0.0\build\native\boost_math_c99l-vc140.targets')" />
+    <Import Project="packages\boost_math_tr1-vc140.1.60.0.0\build\native\boost_math_tr1-vc140.targets" Condition="Exists('packages\boost_math_tr1-vc140.1.60.0.0\build\native\boost_math_tr1-vc140.targets')" />
+    <Import Project="packages\boost_math_tr1f-vc140.1.60.0.0\build\native\boost_math_tr1f-vc140.targets" Condition="Exists('packages\boost_math_tr1f-vc140.1.60.0.0\build\native\boost_math_tr1f-vc140.targets')" />
+    <Import Project="packages\boost_math_tr1l-vc140.1.60.0.0\build\native\boost_math_tr1l-vc140.targets" Condition="Exists('packages\boost_math_tr1l-vc140.1.60.0.0\build\native\boost_math_tr1l-vc140.targets')" />
+    <Import Project="packages\boost_prg_exec_monitor-vc140.1.60.0.0\build\native\boost_prg_exec_monitor-vc140.targets" Condition="Exists('packages\boost_prg_exec_monitor-vc140.1.60.0.0\build\native\boost_prg_exec_monitor-vc140.targets')" />
+    <Import Project="packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets" Condition="Exists('packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets')" />
+    <Import Project="packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets" Condition="Exists('packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets')" />
+    <Import Project="packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets" Condition="Exists('packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets')" />
+    <Import Project="packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets" Condition="Exists('packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets')" />
+    <Import Project="packages\boost_signals-vc140.1.60.0.0\build\native\boost_signals-vc140.targets" Condition="Exists('packages\boost_signals-vc140.1.60.0.0\build\native\boost_signals-vc140.targets')" />
+    <Import Project="packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets" Condition="Exists('packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets')" />
+    <Import Project="packages\boost_test_exec_monitor-vc140.1.60.0.0\build\native\boost_test_exec_monitor-vc140.targets" Condition="Exists('packages\boost_test_exec_monitor-vc140.1.60.0.0\build\native\boost_test_exec_monitor-vc140.targets')" />
+    <Import Project="packages\boost_thread-vc140.1.60.0.0\build\native\boost_thread-vc140.targets" Condition="Exists('packages\boost_thread-vc140.1.60.0.0\build\native\boost_thread-vc140.targets')" />
+    <Import Project="packages\boost_timer-vc140.1.60.0.0\build\native\boost_timer-vc140.targets" Condition="Exists('packages\boost_timer-vc140.1.60.0.0\build\native\boost_timer-vc140.targets')" />
+    <Import Project="packages\boost_type_erasure-vc140.1.60.0.0\build\native\boost_type_erasure-vc140.targets" Condition="Exists('packages\boost_type_erasure-vc140.1.60.0.0\build\native\boost_type_erasure-vc140.targets')" />
+    <Import Project="packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets" Condition="Exists('packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets')" />
+    <Import Project="packages\boost_wave-vc140.1.60.0.0\build\native\boost_wave-vc140.targets" Condition="Exists('packages\boost_wave-vc140.1.60.0.0\build\native\boost_wave-vc140.targets')" />
+    <Import Project="packages\boost_wserialization-vc140.1.60.0.0\build\native\boost_wserialization-vc140.targets" Condition="Exists('packages\boost_wserialization-vc140.1.60.0.0\build\native\boost_wserialization-vc140.targets')" />
+    <Import Project="packages\boost-vc140.1.60.0.0\build\native\boost-vc140.targets" Condition="Exists('packages\boost-vc140.1.60.0.0\build\native\boost-vc140.targets')" />
+    <Import Project="packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets" Condition="Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets')" />
+    <Import Project="packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets" Condition="Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets')" />
+    <Import Project="packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets" Condition="Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets')" />
+    <Import Project="packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets" Condition="Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets')" />
+    <Import Project="packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets" Condition="Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" />
+    <Import Project="packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets" Condition="Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" />
+    <Import Project="packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" />
+    <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" />
+    <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Ce projet fait référence à des packages NuGet qui sont manquants sur cet ordinateur. Utilisez l'option de restauration des packages NuGet pour les télécharger. Pour plus d'informations, consultez http://go.microsoft.com/fwlink/?LinkID=322105. Le fichier manquant est : {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winapp.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphone.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winphonesl.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v120.winxp.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.winapp.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.2.8.0\build\native\cpprestsdk.v140.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-Win32.targets'))" />
+    <Error Condition="!Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-dyn-x64.targets'))" />
+    <Error Condition="!Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-Win32.targets'))" />
+    <Error Condition="!Exists('packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.5.6.3\build\native\cryptopp.v140.windesktop.msvcstl.dyn.rt-static-x64.targets'))" />
+    <Error Condition="!Exists('packages\cryptopp.5.6.3.2\build\native\cryptopp.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cryptopp.5.6.3.2\build\native\cryptopp.targets'))" />
+    <Error Condition="!Exists('packages\boost.1.60.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.60.0.0\build\native\boost.targets'))" />
+    <Error Condition="!Exists('packages\boost_atomic-vc140.1.60.0.0\build\native\boost_atomic-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_atomic-vc140.1.60.0.0\build\native\boost_atomic-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_chrono-vc140.1.60.0.0\build\native\boost_chrono-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_chrono-vc140.1.60.0.0\build\native\boost_chrono-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_container-vc140.1.60.0.0\build\native\boost_container-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_container-vc140.1.60.0.0\build\native\boost_container-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_context-vc140.1.60.0.0\build\native\boost_context-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_context-vc140.1.60.0.0\build\native\boost_context-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_coroutine-vc140.1.60.0.0\build\native\boost_coroutine-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_coroutine-vc140.1.60.0.0\build\native\boost_coroutine-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_date_time-vc140.1.60.0.0\build\native\boost_date_time-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_exception-vc140.1.60.0.0\build\native\boost_exception-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_exception-vc140.1.60.0.0\build\native\boost_exception-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_filesystem-vc140.1.60.0.0\build\native\boost_filesystem-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_graph-vc140.1.60.0.0\build\native\boost_graph-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_graph-vc140.1.60.0.0\build\native\boost_graph-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_iostreams-vc140.1.60.0.0\build\native\boost_iostreams-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_iostreams-vc140.1.60.0.0\build\native\boost_iostreams-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_locale-vc140.1.60.0.0\build\native\boost_locale-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_locale-vc140.1.60.0.0\build\native\boost_locale-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_log-vc140.1.60.0.0\build\native\boost_log-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log-vc140.1.60.0.0\build\native\boost_log-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_log_setup-vc140.1.60.0.0\build\native\boost_log_setup-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_log_setup-vc140.1.60.0.0\build\native\boost_log_setup-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_math_c99-vc140.1.60.0.0\build\native\boost_math_c99-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_math_c99f-vc140.1.60.0.0\build\native\boost_math_c99f-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_math_c99f-vc140.1.60.0.0\build\native\boost_math_c99f-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_math_c99l-vc140.1.60.0.0\build\native\boost_math_c99l-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_math_c99l-vc140.1.60.0.0\build\native\boost_math_c99l-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_math_tr1-vc140.1.60.0.0\build\native\boost_math_tr1-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_math_tr1-vc140.1.60.0.0\build\native\boost_math_tr1-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_math_tr1f-vc140.1.60.0.0\build\native\boost_math_tr1f-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_math_tr1f-vc140.1.60.0.0\build\native\boost_math_tr1f-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_math_tr1l-vc140.1.60.0.0\build\native\boost_math_tr1l-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_math_tr1l-vc140.1.60.0.0\build\native\boost_math_tr1l-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_prg_exec_monitor-vc140.1.60.0.0\build\native\boost_prg_exec_monitor-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_prg_exec_monitor-vc140.1.60.0.0\build\native\boost_prg_exec_monitor-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_program_options-vc140.1.60.0.0\build\native\boost_program_options-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_random-vc140.1.60.0.0\build\native\boost_random-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_regex-vc140.1.60.0.0\build\native\boost_regex-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_serialization-vc140.1.60.0.0\build\native\boost_serialization-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_signals-vc140.1.60.0.0\build\native\boost_signals-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_signals-vc140.1.60.0.0\build\native\boost_signals-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_system-vc140.1.60.0.0\build\native\boost_system-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_test_exec_monitor-vc140.1.60.0.0\build\native\boost_test_exec_monitor-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_test_exec_monitor-vc140.1.60.0.0\build\native\boost_test_exec_monitor-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_thread-vc140.1.60.0.0\build\native\boost_thread-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc140.1.60.0.0\build\native\boost_thread-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_timer-vc140.1.60.0.0\build\native\boost_timer-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_timer-vc140.1.60.0.0\build\native\boost_timer-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_type_erasure-vc140.1.60.0.0\build\native\boost_type_erasure-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_type_erasure-vc140.1.60.0.0\build\native\boost_type_erasure-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_unit_test_framework-vc140.1.60.0.0\build\native\boost_unit_test_framework-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_wave-vc140.1.60.0.0\build\native\boost_wave-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_wave-vc140.1.60.0.0\build\native\boost_wave-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost_wserialization-vc140.1.60.0.0\build\native\boost_wserialization-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_wserialization-vc140.1.60.0.0\build\native\boost_wserialization-vc140.targets'))" />
+    <Error Condition="!Exists('packages\boost-vc140.1.60.0.0\build\native\boost-vc140.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost-vc140.1.60.0.0\build\native\boost-vc140.targets'))" />
+    <Error Condition="!Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.props'))" />
+    <Error Condition="!Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets'))" />
+    <Error Condition="!Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props'))" />
+    <Error Condition="!Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets'))" />
+    <Error Condition="!Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props'))" />
+    <Error Condition="!Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets'))" />
+    <Error Condition="!Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props'))" />
+    <Error Condition="!Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets'))" />
+    <Error Condition="!Exists('packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets'))" />
+    <Error Condition="!Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x86.targets'))" />
+    <Error Condition="!Exists('packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
+    <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets'))" />
+    <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets'))" />
+  </Target>
+</Project>
