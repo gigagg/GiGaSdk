@@ -26,7 +26,7 @@ find_path(CRYPTO++_INCLUDE_DIR
 # Library
 find_library(CRYPTO++_UTILS_LIBRARY
   NAMES 
-    cryptopp
+    cryptopp cryptlib
   PATHS 
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++
     ${CRYPTO++_PKGCONF_LIBRARY_DIRS}
@@ -37,6 +37,8 @@ find_library(CRYPTO++_UTILS_LIBRARY
   PATH_SUFFIXES
     build
     lib
+	Debug
+	Release
 )
 
 set(CRYPTO++_PROCESS_LIBS CRYPTO++_LIBRARY CRYPTO++_UTILS_LIBRARY)

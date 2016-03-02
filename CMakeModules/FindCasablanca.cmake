@@ -27,7 +27,7 @@ find_path(CASABLANCA_INCLUDE_DIR
 # Library
 find_library(CASABLANCA_LIBRARY
   NAMES 
-    cpprest
+    cpprest cpprest140d_2_8
   PATHS 
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/casablanca
     ${CASABLANCA_PKGCONF_LIBRARY_DIRS}
@@ -46,7 +46,7 @@ find_library(CASABLANCA_LIBRARY
 
 find_library(CASABLANCA_UTILS_LIBRARY
   NAMES 
-    common_utilities
+    common_utilities cpprest140d_2_8
   PATHS 
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/casablanca
     ${CASABLANCA_PKGCONF_LIBRARY_DIRS}

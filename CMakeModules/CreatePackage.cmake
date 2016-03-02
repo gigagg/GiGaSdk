@@ -1,8 +1,8 @@
-# The BEGIN_PACKAGE  macro prepare the generation of a cpack package. 
+# The BEGIN_PKG  macro prepare the generation of a cpack package. 
 #  It set a lot of CPACK variable, but do not perform the CPACK generation.
 # After calling CONFIGURE_PACKAGE you can call  CREATE_PACKAGE to actually generate the cpack file.
 #
-# 	BEGIN_PACKAGE( packageName
+# 	BEGIN_PKG( packageName
 #					[ DESCRIPTION descritpiron]
 #					[USE_SVN_REVISION  | PACKAGE_VERSION major minor patch]
 #					[FILES_DIRECTORY direcotry]
@@ -40,8 +40,8 @@
 #SET(CPACK_NSIS_URL_INFO_ABOUT "")
 #SET(CPACK_NSIS_CONTACT "")	
 #                      
-#   END_PACKAGE()
-# The END_PACKAGE macro create a previously configured package, and clean-up the CPACK variable if asked.
+#   END_PKG()
+# The END_PKG macro create a previously configured package, and clean-up the CPACK variable if asked.
 # It also add a target "package" that take care of making all the package using the cmake command.
 # The cpack generated files are ${CPACK_PACKAGE_NAME}.cpack
 # 
@@ -81,7 +81,7 @@ MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
   SET(${prefix}_${current_arg_name} ${current_arg_list})
 ENDMACRO(PARSE_ARGUMENTS)
 
-MACRO(BEGIN_PACKAGE PACKAGE_NAME)
+MACRO(BEGIN_PKG PACKAGE_NAME)
 PARSE_ARGUMENTS("${PACKAGE_NAME}" 
 				"DESCRIPTION;PACKAGE_VERSION;FILES_DIRECTORY;EXTERNAL_LIB;ENV_VARIABLE;ENV_FOLDER;SOURCE_IGNORE_FILES" 
 				"PACKAGE_MODIFY_PATH;SOURCE;USE_SVN_REVISION" 
@@ -209,7 +209,7 @@ MACRO(ADD_INSTALL_TYPE insttype)
     ${ARGN})
 ENDMACRO()
 
-MACRO(END_PACKAGE)
+MACRO(END_PKG)
 IF(CPACK_PACKAGE_NAME)
 	PARSE_ARGUMENTS("${CPACK_PACKAGE_NAME}" 
 					"" 
@@ -265,7 +265,7 @@ IF(CPACK_PACKAGE_NAME)
 	ENDIF(${CPACK_PACKAGE_NAME}_EXTERNAL_LIB)
 
 	IF (NOT A_PACKAGE_HAS_BEEN_CREATED)
-		ADD_CUSTOM_TARGET("package" DEPENDS "ALL_PACKAGE_DONE" )
+		ADD_CUSTOM_TARGET("pkg" DEPENDS "ALL_PACKAGE_DONE" )
 		ADD_CUSTOM_COMMAND(OUTPUT "ALL_PACKAGE_DONE" DEPENDS "${PACKAGE_FILE_NAME}")
 		SET_SOURCE_FILES_PROPERTIES("ALL_PACKAGE_DONE" PROPERTIES SYMBOLIC true)
 		SET(A_PACKAGE_HAS_BEEN_CREATED true)
@@ -355,4 +355,4 @@ IF(CPACK_PACKAGE_NAME)
 	SET(CPACK_NSIS_CREATE_ICONS_EXTRA)
 	SET(CPACK_NSIS_DELETE_ICONS_EXTRA)	
 ENDIF(CPACK_PACKAGE_NAME)
-ENDMACRO(END_PACKAGE)
+ENDMACRO(END_PKG)
