@@ -6,6 +6,7 @@
 #include "JsonObj.h"
 #include "../Config.h"
 #include "../Application.h"
+#include "../utils/Utils.h"
 
 using namespace web::http;
 using namespace web::http::client;
@@ -56,9 +57,9 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     m_oauth2_config.set_scope(conf.appScope());
     auto auth_uri = m_oauth2_config.build_authorization_uri(true);  /* Get the authorization uri */
     auto state  = string_t{};
-    auto regex  = boost::regex{U(".*state=([a-zA-Z0-9]+).*")};
+    auto regex  = boost::regex{".*state=([a-zA-Z0-9]+).*"};
     auto what   = boost::cmatch{};
-    if(boost::regex_match(auth_uri.c_str(), what, regex))
+    if(boost::regex_match(utils::wstr2str(auth_uri).c_str(), what, regex))
     {
         state = string_t{what[1].first, what[1].second};
     }

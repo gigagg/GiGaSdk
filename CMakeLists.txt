@@ -7,6 +7,8 @@ SET(DOC_PATH "${CMAKE_SOURCE_DIR}/doc")
 SET(FILE_PATH "${CMAKE_SOURCE_DIR}/files")
 SET(SRC_PATH "${CMAKE_SOURCE_DIR}/src")
 
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/user-asus1/Documents/Visual Studio 2015/Projects/Depandancies/output/" "C:/Users/user-asus1/Documents/Visual Studio 2015/Projects/Depandancies/output/lib/Debug/lib/")
+
 ### Set Configuration Type
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE "Debug")
@@ -18,7 +20,8 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 IF(WITH_DEBUG_LOG)
     ADD_DEFINITIONS(-DDEBUG_LOG)
 ENDIF(WITH_DEBUG_LOG)
-  
+
+ADD_DEFINITIONS(-DNOMINMAX)  
 
 ### FLAGS
 IF(MSVC)

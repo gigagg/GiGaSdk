@@ -70,9 +70,9 @@ namespace details {
         if (!value.is_null()) {
             auto values = value.as_array();
             ret.reserve(values.size());
-            for(auto value : values) {
+            for(auto v : values) {
                 auto t = T{};
-                getValue(value, t);
+                getValue(v, t);
                 ret.push_back(std::move(t));
             }
         }

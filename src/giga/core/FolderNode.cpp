@@ -98,7 +98,7 @@ FolderNode::uploadFile(const string_t& filepath)
     }
 
     auto parentId = this->id();
-    auto nodeName = path.filename().string();
+    auto nodeName = path.filename().native();
     auto nodeKeyClear = Application::get().currentUser().personalData().nodeKeyClear();
 
     return create_task([=]() {

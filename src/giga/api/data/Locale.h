@@ -13,7 +13,7 @@
 #include "../../rest/prepoc_manage.h"
 
 struct Locale {
-    utility::string_t contryCode  = U(U("FR"));
+    utility::string_t contryCode  = U("FR");
     utility::string_t countryName = {};
     utility::string_t currency    = {};
     boost::optional<utility::string_t> ip = boost::none;

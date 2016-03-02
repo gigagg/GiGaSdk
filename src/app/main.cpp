@@ -28,17 +28,15 @@
 #include <algorithm>
 
 using boost::exception_detail::error_info_container;
-using CryptoPP::EncodedObjectFilter;
 using utility::string_t;
 
-#include "crypto++/rsa.h"
 using namespace giga;
 namespace po = boost::program_options;
 
-void printNodeTree(core::Node& n, string_t space = "")
+void printNodeTree(core::Node& n, string_t space = U(""))
 {
-    std::cout << space << n.name() << "\n";
-    space += " ";
+    ucout << space << n.name() << "\n";
+    space += U(" ");
     if (n.shouldLoadChildren())
     {
         n.loadChildren();
@@ -52,20 +50,20 @@ void printNodeTree(core::Node& n, string_t space = "")
 template <typename T>
 void printUsers(const char* name, T users)
 {
-    std::cout << "\n" << name << std::endl;
+    ucout << U("\n") << name << std::endl;
     for(auto& user : users)
     {
-        std::cout << user.login() << "\t" << user.id() << "\t" << user.hasRelation() << "\n";
+        ucout << user.login() << "\t" << user.id() << "\t" << user.hasRelation() << "\n";
     }
 }
 
 template <typename T>
 void printNodes(const char* name, T& nodes)
 {
-    std::cout << "\n" << name << std::endl;
+    ucout << "\n" << name << std::endl;
     for(auto& node : nodes)
     {
-        std::cout << core::Node::typeCvrt.toStr(node->type()) << "\t" << node->id() << "\t" << node->name() << "\n";
+        ucout << core::Node::typeCvrt.toStr(node->type()) << "\t" << node->id() << "\t" << node->name() << "\n";
     }
 }
 
@@ -124,19 +122,19 @@ int main(int argc, const char* argv[]) {
         po::notify(vm);
 
         auto& app = Application::init(
-                        string_t("http://localhost:5001"),
-                        string_t("9ab7baa696ca"),
-                        string_t("b1af65bffd64aa1e44d2408b44b4c4d8"));
+                        string_t(U("http://localhost:5001")),
+                        string_t(U("9ab7baa696ca")),
+                        string_t(U("b1af65bffd64aa1e44d2408b44b4c4d8")));
 
         auto login = vm["login"].as<string_t>();
         string_t password;
-        std::cout << "login: " << login << "\npassword ?" << std::endl;
+        ucout << U("login: ") << login << U("\npassword ?") << std::endl;
 //        std::cin >> password;
-        password = "gigatribe";
+        password = U("gigatribe");
 
-        auto user = app.authenticate(login, password);
-        std::cout << "Logged as: " << user.login()
-                << ", root: " << user.contactData().node().id()
+        auto owner = app.authenticate(login, password);
+        ucout << U("Logged as: ") << owner.login()
+                << U(", root: ") << owner.contactData().node().id()
                 << std::endl;
 
         //
@@ -190,9 +188,9 @@ int main(int argc, const char* argv[]) {
             auto node = app.getNodeById(vm["node"].as<string_t>());
             if (vm.count("tree"))
             {
-                std::cout << "tree" << std::endl;
+                ucout << "tree" << std::endl;
                 printNodeTree(*node);
-                std::cout << std::endl;
+                ucout << std::endl;
             }
             if (vm.count("ls"))
             {
@@ -208,7 +206,7 @@ int main(int argc, const char* argv[]) {
             {
                 if (node->type() == core::Node::Type::file)
                 {
-                    BOOST_THROW_EXCEPTION(ErrorException{"Node must be a folder"});
+                    BOOST_THROW_EXCEPTION(ErrorException{ U("Node must be a folder")});
                 }
                 auto currentNodeName = string_t{};
                 core::Uploader uploader {
@@ -218,13 +216,13 @@ int main(int argc, const char* argv[]) {
                         if (currentNodeName != fd.nodeName())
                         {
                             currentNodeName = fd.nodeName();
-                            std::cout << std::endl;
+                            ucout << std::endl;
                         }
                         else
                         {
-                            (std::cout << "                                                      \r").flush();
+                            (ucout << "                                                      \r").flush();
                         }
-                        std::cout << count << " "
+                        ucout << count << " "
                                   << std::setprecision(3) << fd.progress().percent() << "% - "
                                   << fd.nodeName();
                     }
@@ -243,20 +241,20 @@ int main(int argc, const char* argv[]) {
                 auto nbFiles   = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
                 auto totalSize = node->size();
 
-                std::cout << std::endl;
+                ucout << std::endl;
                 core::Downloader dl {
                     std::shared_ptr<core::Node>(node.release()),
                     vm["download"].as<string_t>(),
                     [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
                         auto percent = ((double) size * 100) / (double) totalSize;
-                        (std::cout << "                                                      \r").flush();
-                        std::cout << count << "/" << nbFiles << " "
+                        (ucout << "                                                      \r").flush();
+                        ucout << count << "/" << nbFiles << " "
                                   << std::setprecision(3) << percent << "% - "
-                                  << fd.destinationFile().filename().string();
+                                  << fd.destinationFile().filename().native();
                     }
                 };
                 dl.start().wait();
-                std::cout << "\nFile downloaded: " << dl.downloadingFileNumber() << std::endl;
+                ucout << "\nFile downloaded: " << dl.downloadingFileNumber() << std::endl;
             }
         }
 
@@ -269,21 +267,21 @@ int main(int argc, const char* argv[]) {
             auto user = app.getUserById(vm["user"].as<int64_t>());
             if (vm.count("invite"))
             {
-                std::cout << "invite" << std::endl;
+                ucout << "invite" << std::endl;
                 user.invite();
             }
             if (vm.count("block"))
             {
-                std::cout << "block" << std::endl;
+                ucout << "block" << std::endl;
                 user.block();
             }
             if (vm.count("accept"))
             {
-                std::cout << "accept" << std::endl;
+                ucout << "accept" << std::endl;
                 user.acceptInvitation();
             }
         }
-        std::cout << "DONE" << std::endl;
+        ucout << "DONE" << std::endl;
     }
     catch (...)
     {

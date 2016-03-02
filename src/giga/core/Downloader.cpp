@@ -111,7 +111,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 
     if (node.type() == Node::Type::file)
     {
-        auto fdownloader = node.download(path.string(), FileDownloader::Policy::overrideNewerSize);
+        auto fdownloader = node.download(path.native(), FileDownloader::Policy::overrideNewerSize);
         fdownloader.start();
         auto task = fdownloader.task();
         {

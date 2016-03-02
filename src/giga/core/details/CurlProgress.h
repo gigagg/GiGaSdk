@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <mutex>
+#include <curl/curlbuild.h>
 
 namespace curl
 {
@@ -38,7 +39,7 @@ public:
     CurlProgress (const CurlProgress& other);
 
     int
-    onCallback (long dltotal, long dlnow, long ultotal, long ulnow) noexcept;
+    onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) noexcept;
 
     Item
     data () const;

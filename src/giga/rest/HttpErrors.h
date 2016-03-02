@@ -74,7 +74,7 @@ public:
 
 public:
     const unsigned short status = 500;
-    utility::string_t scope           = U("");
+    utility::string_t scope     = U("");
 
 private:
     web::json::value json = {};

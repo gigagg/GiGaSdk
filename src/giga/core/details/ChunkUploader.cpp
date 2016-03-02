@@ -80,7 +80,7 @@ ReadCallbackData::callback (char* buffer, size_t size, size_t nitems) noexcept
 {
     try
     {
-        auto sizeToRead = std::min(size * nitems, _end - _start);
+        auto sizeToRead = std::min(size * nitems, static_cast<size_t>(_end - _start));
         _file.read(buffer, sizeToRead);
         _start += sizeToRead;
         return sizeToRead;
@@ -135,9 +135,9 @@ ChunkUploader::upload ()
         curl_easy curl(writer);
 
         auto response = sendChunk(position, callbackData, curl, str);
-        auto regex  = boost::regex{U("^([0-9]+)-([0-9]+)/([0-9]+)$")};
-        auto what   = boost::cmatch{};
-        if(boost::regex_match(response.c_str(), what, regex))
+        auto regex    = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+)$"};
+        auto what     = boost::cmatch{};
+        if(boost::regex_match(utils::wstr2str(response).c_str(), what, regex))
         {
             auto start = std::stoul(string_t{what[1].first, what[1].second});
             auto end = std::stoul(string_t{what[2].first, what[2].second});
@@ -191,8 +191,8 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     auto userId = Application::get().currentUser().id();
     curl_slist* list = nullptr;
     list = curl_slist_append(list, ("Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"").c_str());
-    list = curl_slist_append(list, ("Session-Id: " + std::to_string(userId) + "-" + _sha1).c_str());
-    list = curl_slist_append(list, ("Content-Range: bytes " + std::to_string(position) + U("-") + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize)).c_str());
+    list = curl_slist_append(list, ("Session-Id: " + std::to_string(userId) + "-" + utils::wstr2str(_sha1)).c_str());
+    list = curl_slist_append(list, ("Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize)).c_str());
     list = curl_slist_append(list, "Content-Type: application/octet-stream");
     list = curl_slist_append(list, "Expect: ");
     curl.add<CURLOPT_HTTPHEADER>(list);
@@ -203,7 +203,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     curl.perform();
 
-    long httpCode;
+	unsigned short httpCode;
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
     if (httpCode >= 300)
     {

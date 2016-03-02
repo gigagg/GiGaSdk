@@ -18,7 +18,6 @@
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
-#include <pplx/pplxcancellation_token.h>
 #include <mutex>
 #include <curl_easy.h>
 #include <curl_exception.h>
@@ -166,7 +165,7 @@ FileDownloader::doStart()
             try {
                 details::CurlWriter writer{tempFile};
 
-                long httpCode = 0;
+                unsigned short httpCode = 0;
                 for (auto i = 0; i < 5 && httpCode != 200; ++i)
                 {
                     if (i != 0)
@@ -218,16 +217,16 @@ FileDownloader::doStart()
                 }
             } catch (const curl_easy_exception& error) {
                 auto track = error.get_traceback();
-                utility::ostringstream_t ss;
+                std::ostringstream ss;
                 for(const auto& obj : track)
                 {
-                    ss << obj.first << U(": ") << obj.second << U("\n");
-                    if (obj.first == U("Operation was aborted by an application callback"))
+                    ss << obj.first << ": " << obj.second << "\n";
+                    if (obj.first == "Operation was aborted by an application callback")
                     {
-                        throw pplx::task_canceled{U("Download canceled")};
+                        throw pplx::task_canceled{"Download canceled"};
                     }
                 }
-                BOOST_THROW_EXCEPTION(ErrorException{ss.str()});
+                BOOST_THROW_EXCEPTION(ErrorException{utils::str2wstr(ss.str())});
             }
         }, _cts.get_token()).then([destFile, tempFile, policy]() {
             if (policy != Policy::override && policy != Policy::overrideNewerSize && exists(destFile))

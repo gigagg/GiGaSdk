@@ -22,7 +22,7 @@ ErrorException::ErrorException (const string_t& what) :
 const char*
 ErrorException::what () const noexcept
 {
-    return whatStr.c_str();
+    return utils::wstr2str(whatStr).c_str();
 }
 
 HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const string_t& errorStr, const string_t& scope) :
@@ -34,19 +34,19 @@ const char*
 HttpErrorGeneric::what () const noexcept
 {
     whatData = U("status: ") + to_string(status) + U(" err: ") + whatStr;
-    return whatData.c_str();
+    return utils::wstr2str(whatData).c_str();
 }
 
 HttpErrorGeneric&
-HttpErrorGeneric::setJson (const web::json::value& json)
+HttpErrorGeneric::setJson (const web::json::value& v)
 {
-    this->json = json;
+    this->json = v;
     return *this;
 }
 HttpErrorGeneric&
-HttpErrorGeneric::setJson (web::json::value&& json)
+HttpErrorGeneric::setJson (web::json::value&& v)
 {
-    this->json = json;
+    this->json = v;
     return *this;
 }
 

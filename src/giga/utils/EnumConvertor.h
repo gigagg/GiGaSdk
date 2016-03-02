@@ -9,6 +9,7 @@
 #define GIGA_UTILS_ENUM_H_
 
 #include "../rest/HttpErrors.h"
+#include <array>
 
 namespace giga
 {

@@ -12,8 +12,10 @@
 #include "../api/data/UsersRelation.h"
 #include "../utils/Crypto.h"
 #include "../utils/EnumConvertor.h"
+#include "../utils/Utils.h"
 
 #include <chrono>
+#include <ctime>
 
 using std::chrono::system_clock;
 using utility::string_t;
@@ -164,8 +166,12 @@ User::ContactData::birthDate () const
 {
     _THROW_IF_NO_USER_;
     if (_data->birthDate.is_initialized()) {
-        std::tm tm = {0,0,0,0,0,0,0,0,0,0,0};
-        strptime(_data->birthDate.get().c_str(), "%Y-%m-%d", &tm);
+        std::tm tm = {}; // 0,0,0,0,0,0,0,0,0,0,0
+		int year, month, day;
+		sscanf_s(utils::wstr2str(_data->birthDate.get()).c_str(), "%d-%d-%d", &year, &month, &day);
+		tm.tm_year = year - 1900;
+		tm.tm_mon = month - 1;
+		tm.tm_mday = day;
         return boost::make_optional(std::chrono::system_clock::from_time_t(std::mktime(&tm)));
     }
     return boost::optional<system_clock::time_point>{};

@@ -28,7 +28,7 @@ namespace giga
 {
 namespace data
 {
-class Node;
+struct Node;
 }
 
 namespace details

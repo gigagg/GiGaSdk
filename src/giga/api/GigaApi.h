@@ -19,7 +19,7 @@
 namespace giga {
 
 namespace data {
-class User;
+struct User;
 }
 
 class GigaApi

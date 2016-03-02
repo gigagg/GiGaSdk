@@ -12,12 +12,13 @@
 #include "../api/NodesApi.h"
 #include "../rest/HttpErrors.h"
 #include "../utils/EnumConvertor.h"
+#include "../utils/Utils.h"
 
 #include <boost/filesystem.hpp>
 #include <chrono>
 #include <string>
 
-using std::chrono::_V2::system_clock;
+using std::chrono::system_clock;
 using utility::string_t;
 
 #define _THROW_IF_NO_NODE_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{U("Node is not set")}); } do {} while(0)
@@ -164,7 +165,7 @@ Node::remove()
 void
 Node::rename(const string_t& name)
 {
-    if (!boost::filesystem::portable_name(name))
+    if (!boost::filesystem::portable_name(utils::wstr2str(name)))
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Name is not valid")});
     }

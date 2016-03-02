@@ -10,6 +10,7 @@
 #include "../rest/HttpErrors.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/range/iterator_range_core.hpp>
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
@@ -136,14 +137,14 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
     {
         if (_preparingList.size() < 4)
         {
-            _preparingList.emplace_back(parent.uploadFile(path.string()));
+            _preparingList.emplace_back(parent.uploadFile(path.native()));
         }
         else
         {
             auto clb = _progressCallback;
             auto ready = pplx::when_any(_preparingList.begin(), _preparingList.end()).get();
             _uploading = _uploading.then(startNextUpload(ready.first));
-            _preparingList[ready.second] = parent.uploadFile(path.string());
+            _preparingList[ready.second] = parent.uploadFile(path.native());
 
             {
                 std::lock_guard<std::mutex> l{_mut};
@@ -153,7 +154,7 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
     }
     else if (is_directory(path))
     {
-        auto name = path.filename().string();
+        auto name = path.filename().native();
 
         // ignore these folders...
         if (name == U("") || name == U(".") || name == U(".."))

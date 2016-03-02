@@ -33,7 +33,7 @@ namespace details {
     inline web::json::value serialize(utility::string_t& value) {
         return  web::json::value::string(value);
     }
-    inline web::json::value serialize(const char*& value) {
+    inline web::json::value serialize(const wchar_t*& value) {
         return web::json::value::string(value);
     }
 

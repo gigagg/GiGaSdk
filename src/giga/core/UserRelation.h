@@ -17,7 +17,7 @@ namespace giga
 
 namespace data
 {
-class UsersRelation;
+struct UsersRelation;
 }
 
 namespace core

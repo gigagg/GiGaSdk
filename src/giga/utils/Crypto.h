@@ -6,20 +6,23 @@
 #include <utility>
 #include <cpprest/details/basic_types.h>
 
-#ifdef CRYPTOPP
-#include "cryptopp/rsa.h"
-#else
-#include "crypto++/rsa.h"
-#endif
-
 namespace giga
 {
 
+namespace
+{
+class RsaKeys;
+}
 class Rsa final
 {
 public:
     explicit
     Rsa (const utility::string_t& pubStr, const utility::string_t& privStr = U(""));
+	~Rsa();
+	Rsa& operator=(const Rsa& rhs);
+	Rsa(const Rsa& rhs);
+	Rsa& operator=(Rsa&& rhs);
+	Rsa(Rsa&& rhs);
 
     utility::string_t
     encrypt (const utility::string_t& data) const;
@@ -28,8 +31,7 @@ public:
     decrypt (const utility::string_t& data) const;
 
 private:
-    CryptoPP::RSA::PublicKey    _pub;
-    CryptoPP::RSA::PrivateKey   _priv;
+	std::unique_ptr<RsaKeys>    _keys;
     bool                        _hasPrivateKey;
 };
 

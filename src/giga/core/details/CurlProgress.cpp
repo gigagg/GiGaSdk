@@ -88,7 +88,7 @@ CurlProgress::setCurl (curl::curl_easy& curl)
 }
 
 int
-CurlProgress::onCallback (long dltotal, long dlnow, long ultotal, long ulnow) noexcept
+CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) noexcept
 {
     try {
         uint64_t limitRate = 0;
