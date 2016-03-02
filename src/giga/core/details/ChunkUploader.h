@@ -40,8 +40,8 @@ public:
     static constexpr uint64_t CHUNK_SIZE = 1024ul * 1024ul;
 
     explicit
-    ChunkUploader (web::uri_builder& uploadUrl, const utility::string_t& nodeName, const utility::string_t& sha1, const utility::string_t& filename,
-                   const utility::string_t& mime, CurlProgress* progress);
+    ChunkUploader (web::uri_builder& uploadUrl, const utility::string_t& nodeName, const utility::string_t& sha1,
+                   const utility::string_t& filename, const utility::string_t& mime, CurlProgress* progress);
 
     std::shared_ptr<data::Node>
     upload ();

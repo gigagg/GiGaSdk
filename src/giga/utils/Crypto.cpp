@@ -7,10 +7,12 @@
 
 #include "Crypto.h"
 #include "../rest/HttpErrors.h"
+#include "../utils/Utils.h"
 
 #include <cpprest/details/basic_types.h>
 #include <algorithm>
 
+#include "../utils/Utils.h"
 #ifdef CRYPTOPP
 #include "cryptopp/integer.h"
 #include "cryptopp/osrng.h"
@@ -63,6 +65,8 @@ using CryptoPP::RSAES_OAEP_SHA_Encryptor;
 using CryptoPP::RSAES_PKCS1v15_Decryptor;
 using CryptoPP::RSAES_PKCS1v15_Encryptor;
 using CryptoPP::SecByteBlock;
+using giga::utils::wstr2str;
+using giga::utils::str2wstr;
 using utility::string_t;
 
 namespace {
@@ -78,7 +82,7 @@ toByte (std::vector<char>& str)
     return reinterpret_cast<byte*>(str.data());
 }
 
-void fillQueue(ByteQueue& queue, const string_t& b64encoded) {
+void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
     Base64Decoder decoder;
     decoder.Attach(new Redirector(queue));
     decoder.Put(toByteCst(b64encoded), b64encoded.size());
@@ -107,17 +111,18 @@ Rsa::Rsa (const string_t& pubStr, const string_t& privStr)
     _hasPrivateKey = false;
     if (privStr != U(""))
     {
+        auto privStrStr = wstr2str(privStr);
         try
         {
             ByteQueue queue;
-            fillQueue(queue, privStr);
+            fillQueue(queue, privStrStr);
             _priv.BERDecodePrivateKey(queue, false, queue.MaxRetrievable());
             _hasPrivateKey = true;
         }
         catch (const std::exception&)
         {
             ByteQueue queue;
-            fillQueue(queue, privStr);
+            fillQueue(queue, privStrStr);
             _priv.BERDecode(queue);
             _hasPrivateKey = true;
         }
@@ -136,25 +141,27 @@ Rsa::Rsa (const string_t& pubStr, const string_t& privStr)
 }
 
 string_t
-Rsa::encrypt (const string_t& data) const
+Rsa::encrypt (const string_t& sdata) const
 {
+    auto data = wstr2str(sdata);
     AutoSeededRandomPool rng;
-    RSAES_PKCS1v15_Encryptor encryptor( _pub );
+    RSAES_PKCS1v15_Encryptor encryptor(_pub);
     string_t encrypted;
     StringSource ss(data, true,
         new PK_EncryptorFilter(rng, encryptor,
             new StringSink(encrypted)
         )
     );
-    return encrypted;
+    return str2wstr(encrypted);
 }
 
 string_t
-Rsa::decrypt (const string_t& data) const
+Rsa::decrypt (const string_t& sdata) const
 {
     if (!_hasPrivateKey) {
         BOOST_THROW_EXCEPTION(ErrorException(U("PrivateKey has not been set")));
     }
+    auto data = wstr2str(sdata);
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Decryptor decryptor(_priv);
     string_t decrypted;
@@ -163,14 +170,16 @@ Rsa::decrypt (const string_t& data) const
             new StringSink(decrypted)
         )
     );
-    return decrypted;
+    return str2wstr(decrypted);
 }
 
 
 template<typename T>
 string_t
-pbkdf2 (const string_t& password, const string_t& salt, std::size_t length, std::size_t iteration)
+pbkdf2 (const string_t& spassword, const string_t& ssalt, std::size_t length, std::size_t iteration)
 {
+    auto salt = wstr2str(ssalt);
+    auto password = wstr2str(spassword);
     auto key = std::vector<char>(length);
     PKCS5_PBKDF2_HMAC<T> passToKey;
     passToKey.DeriveKey(toByte(key),
@@ -182,7 +191,7 @@ pbkdf2 (const string_t& password, const string_t& salt, std::size_t length, std:
                         salt.size(),
                         iteration);
 
-    return {key.begin(), key.end()};
+    return str2wstr(std::string{key.begin(), key.end()});
 }
 
 string_t
@@ -197,9 +206,10 @@ Crypto::pbkdf2_sha512 (const string_t& password, const string_t& salt, std::size
 }
 
 string_t
-Crypto::base64encode (const string_t& data)
+Crypto::base64encode (const string_t& sdata)
 {
     string_t encoded;
+    auto data = wstr2str(sdata);
     StringSource ss(toByteCst(data), data.size(), true,
         new Base64Encoder(
             new StringSink(encoded)
@@ -211,19 +221,20 @@ Crypto::base64encode (const string_t& data)
     {
         encoded.pop_back();
     }
-    return encoded;
+    return str2wstr(encoded);
 }
 
 string_t
-Crypto::base64decode (const string_t& data)
+Crypto::base64decode (const string_t& sdata)
 {
+    auto data = wstr2str(sdata);
     string_t decoded;
     StringSource ss(toByteCst(data), data.size(), true,
         new Base64Decoder(
             new StringSink(decoded)
         ) // Base64Encoder
     ); // StringSource
-    return decoded;
+    return str2wstr(decoded);
 }
 
 string_t
@@ -251,10 +262,11 @@ Crypto::calculateMasterPassword(const string_t& salt, const string_t& password) 
 }
 
 string_t
-Crypto::sha1File (const string_t& filename)
+Crypto::sha1File (const string_t& sfilename)
 {
     CryptoPP::SHA1 sha1;
     auto hash = string_t{};
+    auto filename = wstr2str(sfilename);
 
     CryptoPP::FileSource(filename.c_str(), true,
         new CryptoPP::HashFilter(sha1,
@@ -264,12 +276,14 @@ Crypto::sha1File (const string_t& filename)
         )
     );
     std::transform(hash.begin(), hash.end(), hash.begin(), ::tolower);
-    return hash;
+    return str2wstr(hash);
 }
 
 std::tuple<string_t, string_t, string_t>
-Crypto::aesEncrypt (const string_t& password, const string_t& data)
+Crypto::aesEncrypt (const string_t& spassword, const string_t& sdata)
 {
+    auto data = wstr2str(sdata);
+    auto password = wstr2str(spassword);
 
     SecByteBlock iv(16);
     SecByteBlock salt(8);
@@ -283,15 +297,19 @@ Crypto::aesEncrypt (const string_t& password, const string_t& data)
     auto encrypted = aesEncrypt(key, ivStr, data);
 
     return std::make_tuple(
-            encrypted,
-            ivStr,
-            saltStr
+            str2wstr(encrypted),
+            str2wstr(ivStr),
+            str2wstr(saltStr)
     );
 }
 
 string_t
-Crypto::aesEncrypt (const string_t& key, const string_t& iv, const string_t& data)
+Crypto::aesEncrypt (const string_t& skey, const string_t& siv, const string_t& sdata)
 {
+    auto key  = wstr2str(skey);
+    auto iv   = wstr2str(siv);
+    auto data = wstr2str(sdata);
+
     CBC_Mode<AES>::Encryption e;
     e.SetKeyWithIV(toByteCst(key), key.size(), toByteCst(iv), iv.size());
 
@@ -302,11 +320,15 @@ Crypto::aesEncrypt (const string_t& key, const string_t& iv, const string_t& dat
         )
     );
 
-    return encrypted;
+    return str2wstr(encrypted);
 }
 string_t
-Crypto::aesDecrypt (const string_t& password, const string_t& saltStr, const string_t& ivStr, const string_t& data)
+Crypto::aesDecrypt (const string_t& spassword, const string_t& ssaltStr, const string_t& sivStr, const string_t& sdata)
 {
+    auto password = wstr2str(spassword);
+    auto saltStr  = wstr2str(ssaltStr);
+    auto ivStr    = wstr2str(sivStr);
+    auto data     = wstr2str(sdata);
     auto key = pbkdf2_sha256(password, saltStr, 16);
 
     CBC_Mode<AES>::Decryption e;
@@ -322,7 +344,7 @@ Crypto::aesDecrypt (const string_t& password, const string_t& saltStr, const str
         )
     );
 
-    return decrypted;
+    return str2wstr(decrypted);
 }
 
 } /* namespace giga */

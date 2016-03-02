@@ -187,7 +187,7 @@ FileDownloader::doStart()
 
                     GIGA_DEBUG_LOG(U("downloading: ") << fileUri.to_string());
 
-                    curl.add<CURLOPT_URL>(fileUri.to_string().c_str());
+                    curl.add<CURLOPT_URL>(utils::wstr2str(fileUri.to_string()).c_str());
                     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
                     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
                     curl.add<CURLOPT_XFERINFODATA>(progress);
@@ -195,7 +195,7 @@ FileDownloader::doStart()
 
                     if (pos > 0)
                     {
-                        curl.add<CURLOPT_RANGE>((std::to_string(pos) + U("-")).c_str());
+                        curl.add<CURLOPT_RANGE>((std::to_string(pos) + "-").c_str());
                     }
 
 #ifdef DEBUG
@@ -218,7 +218,7 @@ FileDownloader::doStart()
                 }
             } catch (const curl_easy_exception& error) {
                 auto track = error.get_traceback();
-                std::ostringstream ss;
+                utility::ostringstream_t ss;
                 for(const auto& obj : track)
                 {
                     ss << obj.first << U(": ") << obj.second << U("\n");

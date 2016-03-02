@@ -176,7 +176,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     auto chunkSize = std::min(position == 0 ? 1024 : CHUNK_SIZE, _fileSize - position);
     data.setChunck(position, position + chunkSize);
 
-    curl.add<CURLOPT_URL>(_uploadUrl.to_uri().to_string().c_str());
+    curl.add<CURLOPT_URL>(utils::wstr2str(_uploadUrl.to_uri().to_string()).c_str());
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
     curl.add<CURLOPT_XFERINFODATA>(_progress);
@@ -190,11 +190,11 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     auto userId = Application::get().currentUser().id();
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, (U("Content-Disposition: attachment, filename=\"") + web::uri::encode_data_string(_nodeName) + U("\"")).c_str());
-    list = curl_slist_append(list, (U("Session-Id: ") + to_string(userId) + U("-") + _sha1).c_str());
-    list = curl_slist_append(list, (U("Content-Range: bytes ") + to_string(position) + U("-") + to_string(chunkSize - 1 + position) + U("/") + to_string(_fileSize)).c_str());
-    list = curl_slist_append(list, U("Content-Type: application/octet-stream"));
-    list = curl_slist_append(list, U("Expect: "));
+    list = curl_slist_append(list, ("Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"").c_str());
+    list = curl_slist_append(list, ("Session-Id: " + std::to_string(userId) + "-" + _sha1).c_str());
+    list = curl_slist_append(list, ("Content-Range: bytes " + std::to_string(position) + U("-") + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize)).c_str());
+    list = curl_slist_append(list, "Content-Type: application/octet-stream");
+    list = curl_slist_append(list, "Expect: ");
     curl.add<CURLOPT_HTTPHEADER>(list);
 
 #ifdef DEBUG
@@ -207,9 +207,9 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
     if (httpCode >= 300)
     {
-        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, str.str()));
+        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, utils::str2wstr(str.str())));
     }
-    return str.str();
+    return utils::str2wstr(str.str());
 }
 
 } /* namespace details */

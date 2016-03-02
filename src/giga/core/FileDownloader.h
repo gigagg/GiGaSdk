@@ -58,7 +58,7 @@ private:
     boost::filesystem::path  _destFile;
     web::uri                 _fileUri;
     uint64_t                 _fileSize;
-    uint64_t                _startAt;
+    uint64_t                 _startAt;
     std::chrono::system_clock::time_point _lastUpdateDate;
     Policy                  _policy;
 };

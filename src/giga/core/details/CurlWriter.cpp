@@ -6,11 +6,13 @@
  */
 
 #include "CurlWriter.h"
+#include "../../utils/Utils.h"
 
 #include <curl_easy.h>
 #include <ios>
 
 using utility::string_t;
+using giga::utils::str2wstr;
 
 namespace giga
 {
@@ -62,7 +64,7 @@ CurlWriter::write (const char * contents, size_t size) noexcept
 string_t
 CurlWriter::getErrorData () const
 {
-    return _stream.str();
+    return str2wstr(_stream.str());
 }
 
 void

@@ -52,6 +52,30 @@ cleanUpFilename(string_t name)
     return name;
 }
 
+std::string
+wstr2str(const utility::string_t& wstr)
+{
+#ifdef _UTF16_STRINGS
+    typedef std::codecvt_utf8<wchar_t> convert_typeX;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+    return converterX.to_bytes(wstr);
+#else
+    return wstr;
+#endif
+}
+
+utility::string_t
+str2wstr(const std::string& str)
+{
+#ifdef _UTF16_STRINGS
+    typedef std::codecvt_utf8<wchar_t> convert_typeX;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
+    return converterX.from_bytes(str);
+#else
+    return str;
+#endif
+}
+
 
 } /* namespace utils */
 } /* namespace giga */

@@ -10,6 +10,9 @@
 
 #include <pplx/pplxtasks.h>
 #include <cpprest/details/basic_types.h>
+#ifdef _UTF16_STRINGS
+#include <codecvt>
+#endif
 
 namespace giga
 {
@@ -27,11 +30,17 @@ utility::string_t
 to_string(T&& str)
 {
 #ifdef _UTF16_STRINGS
-    return std::to_wstring(str);
+    return std::to_wstring(std::forward<T>(str));
 #else
-    return std::to_string(str);
+    return std::to_string(std::forward<T>(str));
 #endif
 }
+
+std::string
+wstr2str(const utility::string_t& wstr);
+
+utility::string_t
+str2wstr(const std::string& str);
 
 } /* namespace utils */
 } /* namespace giga */
