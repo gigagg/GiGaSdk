@@ -10,9 +10,8 @@ include(LibFindMacros)
 # Include dir
 find_path(CRYPTO++_INCLUDE_DIR
   NAMES
-    crypto++/cryptlib.h
+    crypto++/cryptlib.h cryptopp/cryptlib.h
   PATHS 
-    ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp
     ${CRYPTO++_PKGCONF_INCLUDE_DIRS}
     ${CRYPTO++_DIR}
     $ENV{CRYPTO++_DIR}
@@ -22,6 +21,10 @@ find_path(CRYPTO++_INCLUDE_DIR
     include
     Release/include
 )
+
+IF (NOT EXISTS "${CRYPTO++_INCLUDE_DIR}/crypto++/cryptlib.h" AND EXISTS "${CRYPTO++_INCLUDE_DIR}/cryptopp/cryptlib.h")
+	SET(USE_CRYPTO_PP true)
+ENDIF()
 
 # Library
 find_library(CRYPTO++_UTILS_LIBRARY

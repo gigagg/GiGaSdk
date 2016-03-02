@@ -6,8 +6,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 SET(DOC_PATH "${CMAKE_SOURCE_DIR}/doc")
 SET(FILE_PATH "${CMAKE_SOURCE_DIR}/files")
 SET(SRC_PATH "${CMAKE_SOURCE_DIR}/src")
-
-list(APPEND CMAKE_PREFIX_PATH "C:/Users/user-asus1/Documents/Visual Studio 2015/Projects/Depandancies/output/" "C:/Users/user-asus1/Documents/Visual Studio 2015/Projects/Depandancies/output/lib/Debug/lib/")
+SET(VENDORS_PATH "${CMAKE_SOURCE_DIR}/vendors")
 
 ### Set Configuration Type
 IF(NOT CMAKE_BUILD_TYPE)
@@ -21,7 +20,19 @@ IF(WITH_DEBUG_LOG)
     ADD_DEFINITIONS(-DDEBUG_LOG)
 ENDIF(WITH_DEBUG_LOG)
 
-ADD_DEFINITIONS(-DNOMINMAX)  
+### Specific configuration for Visual Studio
+IF(MSVC)
+	ADD_DEFINITIONS(-DNOMINMAX) 
+
+	IF (CMAKE_BUILD_TYPE MATCHES "Debug")
+		SET(DEPS_PATH "${VENDORS_PATH}/VS2015/deps/Debug")
+	ELSE()
+		SET(DEPS_PATH "${VENDORS_PATH}/VS2015/deps/Release")
+	ENDIF()
+	LIST(APPEND CMAKE_PREFIX_PATH "${VENDORS_PATH}/VS2015/deps/" "${DEPS_PATH}")
+	link_directories("${DEPS_PATH}/lib")
+	link_directories("${VENDORS_PATH}/VS2015/deps/lib")
+ENDIF(MSVC)
 
 ### FLAGS
 IF(MSVC)
@@ -34,7 +45,6 @@ IF(MSVC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290 /wd4127")
 ELSE(MSVC)
     SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -fmessage-length=0" )
-#   SET (CMAKE_EXE_LINKER_FLAGS "-static" )
     SET (CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -pg" )
     SET (CMAKE_CXX_FLAGS_RELEASE "-O2" )
 ENDIF(MSVC)
@@ -52,12 +62,17 @@ SET(PROJECT_DESCRIPTION "The GiGa.GG C++ SDK")
 SET(PROJECT_LOGO "https://giga.gg/public/assets/img/avatar215.jpg")
 
 ### Project dependancies
+SET(Boost_USE_STATIC_LIBS ON)
 FIND_PACKAGE(OpenSSL REQUIRED)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS regex system filesystem program_options)
 FIND_PACKAGE(Casablanca REQUIRED)
 FIND_PACKAGE(Crypto++ REQUIRED)
 FIND_PACKAGE(CURL REQUIRED)
 FIND_PACKAGE(Curlcpp REQUIRED)
+
+IF (USE_CRYPTO_PP)
+    ADD_DEFINITIONS("-DCRYPTOPP")
+ENDIF()
 
 INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${CASABLANCA_INCLUDE_DIR})

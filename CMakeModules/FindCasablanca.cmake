@@ -24,10 +24,16 @@ find_path(CASABLANCA_INCLUDE_DIR
     include
 )
 
+IF (CMAKE_BUILD_TYPE MATCHES "Debug")
+	SET(WS_NAME "cpprest140d_2_8")
+ELSE()
+	SET(WS_NAME "cpprest140_2_8")
+ENDIF()
+
 # Library
 find_library(CASABLANCA_LIBRARY
   NAMES 
-    cpprest cpprest140d_2_8
+    cpprest ${WS_NAME}
   PATHS 
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/casablanca
     ${CASABLANCA_PKGCONF_LIBRARY_DIRS}
@@ -46,7 +52,7 @@ find_library(CASABLANCA_LIBRARY
 
 find_library(CASABLANCA_UTILS_LIBRARY
   NAMES 
-    common_utilities cpprest140d_2_8
+    common_utilities ${WS_NAME}
   PATHS 
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/casablanca
     ${CASABLANCA_PKGCONF_LIBRARY_DIRS}

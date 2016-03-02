@@ -27,7 +27,7 @@ Build On linux (tested on ubuntu 14.04)
 sudo apt-get install g++ git make libboost1.54-all-dev libssl-dev cmake
 
 # getting the sources
-git clone git@gitlab.giga.gg:t.guyard/GiGaSdk.git
+git clone http://gitlab.giga.gg/t.guyard/GiGaSdk.git
 cd GiGaSdk
 git submodule update --init
 
@@ -67,4 +67,33 @@ sudo make install
 
 sudo ldconfig
 ```
+
+Build with Visual Studio 2015
+-----------------------------
+
+- Make sure cmake and git are install and in the PATH
+- Get the sources using git at ```http://gitlab.giga.gg/t.guyard/GiGaSdk.git```
+- Get the dependencies:
+	- Open visual studio project ```vendors/VS2015/get_dependencies.sln```.
+	- Generating the solution should get the dependencies via the NuGet package manager, and copy them in the right folder.
+- Compile curl_cpp: 
+	- In a visual studio command prompt go to ```vendors/curlcpp/build```
+	- Use cmake to build the project: 
+	```cmake .. -DCMAKE_LIBRARY_PATH="../VS2015/deps/Debug/lib" -DCMAKE_PREFIX_PATH="../VS2015/deps/" -DCMAKE_INSTALL_PREFIX="../../VS2015/deps/" -DCMAKE_BUILD_TYPE=Debug```
+	OR for a release build: 
+	```cmake .. -DCMAKE_LIBRARY_PATH="../VS2015/deps/Release/lib" -DCMAKE_PREFIX_PATH="../VS2015/deps/" -DCMAKE_INSTALL_PREFIX="../../VS2015/deps/" -DCMAKE_BUILD_TYPE=Release```
+	- Open the generated vs project and generate it. Do not forget to generate the INSTALL project.
+- Compile the GiGaSdk:
+	- go to ```build```
+	- ```cmake ..``` OR for a release build ```cmake .. -DCMAKE_BUILD_TYPE=Release```
+	- use the generated vs project to build GiGaSdk
+
+
+
+
+
+
+
+
+
 

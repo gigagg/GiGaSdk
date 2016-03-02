@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.props" Condition="Exists('packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.props')" />
   <Import Project="packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props" Condition="Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props')" />
-  <Import Project="packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props" Condition="Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props')" />
   <Import Project="packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props" Condition="Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props')" />
   <Import Project="packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.props" Condition="Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.props')" />
   <ItemGroup Label="ProjectConfigurations">
@@ -89,6 +89,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
+    <PostBuildEvent>
+      <Command>call "$(SolutionDir)copydep.bat" "$(SolutionDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -174,7 +177,6 @@
     <Import Project="packages\boost-vc140.1.60.0.0\build\native\boost-vc140.targets" Condition="Exists('packages\boost-vc140.1.60.0.0\build\native\boost-vc140.targets')" />
     <Import Project="packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets" Condition="Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets')" />
     <Import Project="packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets" Condition="Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets')" />
-    <Import Project="packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets" Condition="Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets')" />
     <Import Project="packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets" Condition="Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets')" />
     <Import Project="packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" />
     <Import Project="packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets" Condition="Exists('packages\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v120.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" />
@@ -182,6 +184,10 @@
     <Import Project="packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" />
     <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" />
     <Import Project="packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets" Condition="Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" />
+    <Import Project="packages\libssh2.redist.1.4.3.3\build\native\libssh2.redist.targets" Condition="Exists('packages\libssh2.redist.1.4.3.3\build\native\libssh2.redist.targets')" />
+    <Import Project="packages\zlib.redist.1.2.8.7\build\native\zlib.redist.targets" Condition="Exists('packages\zlib.redist.1.2.8.7\build\native\zlib.redist.targets')" />
+    <Import Project="packages\zlib.1.2.7.30\build\native\zlib.targets" Condition="Exists('packages\zlib.1.2.7.30\build\native\zlib.targets')" />
+    <Import Project="packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.targets" Condition="Exists('packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -238,8 +244,6 @@
     <Error Condition="!Exists('packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_zlib.1.2.8.5\build\native\rmt_zlib.targets'))" />
     <Error Condition="!Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.props'))" />
     <Error Condition="!Exists('packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_openssl.1.0.2.6\build\native\rmt_openssl.targets'))" />
-    <Error Condition="!Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.props'))" />
-    <Error Condition="!Exists('packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_libssh2.1.6.0.0\build\native\rmt_libssh2.targets'))" />
     <Error Condition="!Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_curl.7.47.1.0\build\native\rmt_curl.props'))" />
     <Error Condition="!Exists('packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_curl.7.47.1.0\build\native\rmt_curl.targets'))" />
     <Error Condition="!Exists('packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v120.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
@@ -248,5 +252,10 @@
     <Error Condition="!Exists('packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.1.2.8.8\build\native\zlib.v140.windesktop.msvcstl.dyn.rt-dyn.targets'))" />
     <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x64.targets'))" />
     <Error Condition="!Exists('packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.1.0.2.0\build\native\openssl.v140.windesktop.msvcstl.dyn.rt-dyn.x86.targets'))" />
+    <Error Condition="!Exists('packages\libssh2.redist.1.4.3.3\build\native\libssh2.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\libssh2.redist.1.4.3.3\build\native\libssh2.redist.targets'))" />
+    <Error Condition="!Exists('packages\zlib.redist.1.2.8.7\build\native\zlib.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.redist.1.2.8.7\build\native\zlib.redist.targets'))" />
+    <Error Condition="!Exists('packages\zlib.1.2.7.30\build\native\zlib.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\zlib.1.2.7.30\build\native\zlib.targets'))" />
+    <Error Condition="!Exists('packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.props'))" />
+    <Error Condition="!Exists('packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\rmt_libssh2.1.6.0.2\build\native\rmt_libssh2.targets'))" />
   </Target>
 </Project>
