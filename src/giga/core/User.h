@@ -32,7 +32,7 @@ namespace core
 class Country final {
 public:
     explicit
-    Country(const std::string& code) : code(code) {}
+    Country(const utility::string_t& code) : code(code) {}
 
     Country(Country&&)                 = default;
     Country(const Country&)            = default;
@@ -40,12 +40,12 @@ public:
     Country& operator=(const Country&) = default;
     Country& operator=(Country&&)      = default;
 
-    const std::string code;
+    const utility::string_t code;
 };
 
 struct Language final {
     explicit
-    Language(const std::string& code) : code(code) {}
+    Language(const utility::string_t& code) : code(code) {}
 
     Language(Language&&)                = default;
     Language(const Language&)           = default;
@@ -53,7 +53,7 @@ struct Language final {
     Language& operator=(const Language&)= default;
     Language& operator=(Language&&)     = default;
 
-    const std::string code;
+    const utility::string_t code;
 };
 
 class User final
@@ -89,7 +89,7 @@ public:
     int64_t
     id () const;
 
-    const std::string&
+    const utility::string_t&
     login () const;
 
     web::uri
@@ -116,7 +116,7 @@ public:
     int64_t
     contactCount () const;
 
-    const std::vector<std::string>&
+    const std::vector<utility::string_t>&
     tags () const;
 
     Country
@@ -125,7 +125,7 @@ public:
     Language
     language () const;
 
-    const std::string&
+    const utility::string_t&
     description () const;
 
 public:
@@ -145,7 +145,7 @@ public:
         UserGender
         gender() const;
 
-        const boost::optional<std::string>&
+        const boost::optional<utility::string_t>&
         name() const;
 
         const boost::optional<std::chrono::system_clock::time_point>
@@ -172,7 +172,7 @@ public:
         PersonalData& operator=(PersonalData&&)      = default;
 
     private:
-        explicit PersonalData(std::shared_ptr<data::User> u, const std::string& password);
+        explicit PersonalData(std::shared_ptr<data::User> u, const utility::string_t& password);
 
     public:
         ReportedState
@@ -181,13 +181,13 @@ public:
         bool
         isEmailValidated() const;
 
-        const std::string&
+        const utility::string_t&
         email() const;
 
-        const std::string&
+        const utility::string_t&
         nextEmail() const;
 
-        const std::string&
+        const utility::string_t&
         nodeKeyClear() const;
 
         int64_t
@@ -210,7 +210,7 @@ public:
 
     private:
         std::shared_ptr<data::User> _data;
-        std::string                 _nodeKeyClear;
+        utility::string_t                 _nodeKeyClear;
     };
 
     bool
@@ -223,7 +223,7 @@ public:
     hasPersonalData() const;
 
     PersonalData&
-    initializePersonalData (const std::string& password);
+    initializePersonalData (const utility::string_t& password);
 
     PersonalData&
     personalData();

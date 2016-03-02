@@ -9,6 +9,7 @@
 #define GIGA_CORE_DETAILS_CURLWRITER_H_
 
 #include <boost/filesystem.hpp>
+#include <cpprest/details/basic_types.h>
 #include <fstream>
 #include <sstream>
 
@@ -33,7 +34,7 @@ public:
     int
     write (const char* contents, size_t size) noexcept;
 
-    std::string
+    utility::string_t
     getErrorData () const;
 
     void

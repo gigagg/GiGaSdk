@@ -27,25 +27,25 @@ private:
     Config() = default;
 
 public:
-    inline const std::string& appRedirectUri() const {return _appRedirectUri;}
-    inline const std::string& appId() const {return _appId;}
-    inline const std::string& appKey() const {return _appKey;}
-    inline const std::string& appScope() const {return _appScope;}
+    inline const utility::string_t& appRedirectUri() const {return _appRedirectUri;}
+    inline const utility::string_t& appId() const {return _appId;}
+    inline const utility::string_t& appKey() const {return _appKey;}
+    inline const utility::string_t& appScope() const {return _appScope;}
 
-    inline const std::string& appOauthAuthorizationEndpoint() const {return _oauthAuthorizationEndpoint;}
-    inline const std::string& appOauthTokenEndpoint() const {return _oauthTokenEndpoint;}
+    inline const utility::string_t& appOauthAuthorizationEndpoint() const {return _oauthAuthorizationEndpoint;}
+    inline const utility::string_t& appOauthTokenEndpoint() const {return _oauthTokenEndpoint;}
 
-    inline const std::string& apiHost() const {return _apiHost;}
+    inline const utility::string_t& apiHost() const {return _apiHost;}
 
 private:
-    std::string _appRedirectUri;
-    std::string _appId;
-    std::string _appKey;
-    std::string _appScope;
+    utility::string_t _appRedirectUri;
+    utility::string_t _appId;
+    utility::string_t _appKey;
+    utility::string_t _appScope;
 
-    const std::string _oauthAuthorizationEndpoint = "https://dev.gg/oauth/authorize";
-    const std::string _oauthTokenEndpoint         = "https://dev.gg/oauth/token";
-    const std::string _apiHost                    = "https://dev.gg";
+    const utility::string_t _oauthAuthorizationEndpoint = U("https://dev.gg/oauth/authorize");
+    const utility::string_t _oauthTokenEndpoint         = U("https://dev.gg/oauth/token");
+    const utility::string_t _apiHost                    = U("https://dev.gg");
 };
 
 } /* namespace giga */

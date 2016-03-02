@@ -31,7 +31,7 @@ namespace details {
     inline void getValue(const web::json::value& value, double& ret) {
         ret = value.as_double();
     }
-    inline void getValue(const web::json::value& value, std::string& ret) {
+    inline void getValue(const web::json::value& value, utility::string_t& ret) {
         ret = value.as_string();
     }
 
@@ -101,7 +101,7 @@ public:
     }
 
     template <typename T>
-    static T fromString(const std::string& json) {
+    static T fromString(const utility::string_t& json) {
         auto val = web::json::value::parse(json);
         auto unserializer = JSonUnserializer{val};
         return unserializer.unserialize<T>();
@@ -118,7 +118,7 @@ private:
     // doUnserialize
     //
 
-//    inline void doUnserialize(std::string& data) const {
+//    inline void doUnserialize(utility::string_t& data) const {
 //        data = val.as_string();
 //    }
     template <typename T> void doUnserialize(T& data) const {
@@ -159,52 +159,52 @@ public:
     // MANAGE
     //
 
-    template <typename T> void manageOpt(T& current, const std::string& name, T defaultValue) const {
+    template <typename T> void manageOpt(T& current, const utility::string_t& name, T defaultValue) const {
         if (val.has_field(name)) {
             manage(current, name);
         } else {
             current = defaultValue;
         }
     }
-    void manage(bool& current, std::string name) const {
+    void manage(bool& current, utility::string_t name) const {
         if (!val.has_field(name)) {
             current = false;
         } else {
             details::getValue(val.at(name), current);
         }
     }
-    template <typename T> void manage(T& current, std::string name) const {
+    template <typename T> void manage(T& current, utility::string_t name) const {
         details::getValue(val.at(name), current);
     }
-    template <typename T> void manage(T* current, const std::string& name) const {
+    template <typename T> void manage(T* current, const utility::string_t& name) const {
         if (!val.has_field(name)) {
             current = nullptr;
         } else {
             details::getValue(val.at(name), current);
         }
     }
-    template <typename T> void manage(std::unique_ptr<T>& current, const std::string& name) const {
+    template <typename T> void manage(std::unique_ptr<T>& current, const utility::string_t& name) const {
         if (!val.has_field(name)) {
             current = nullptr;
         } else {
             details::getValue(val.at(name), current);
         }
     }
-    template <typename T> void manage(std::shared_ptr<T>& current, const std::string& name) const {
+    template <typename T> void manage(std::shared_ptr<T>& current, const utility::string_t& name) const {
         if (!val.has_field(name)) {
             current = nullptr;
         } else {
             details::getValue(val.at(name), current);
         }
     }
-    template <typename T> void manage(boost::optional<T>& current, const std::string& name) const {
+    template <typename T> void manage(boost::optional<T>& current, const utility::string_t& name) const {
         if (!val.has_field(name)) {
             current = boost::none;
         } else {
             details::getValue(val.at(name), current);
         }
     }
-    template <typename T> void manage(std::vector<T>& current, const std::string& name) const {
+    template <typename T> void manage(std::vector<T>& current, const utility::string_t& name) const {
         if (!val.has_field(name)) {
             current = std::vector<T>{};
         } else {

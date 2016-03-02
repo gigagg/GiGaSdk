@@ -15,11 +15,11 @@ namespace giga {
 namespace data {
 
 struct Stream {
-    boost::optional<std::string> mimeType = boost::none;
+    boost::optional<utility::string_t> mimeType = boost::none;
     /** ex: '720p' */
-    boost::optional<std::string> size = boost::none;
+    boost::optional<utility::string_t> size = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> url = boost::none;
+    boost::optional<utility::string_t> url = boost::none;
     
     
     template <class Manager>

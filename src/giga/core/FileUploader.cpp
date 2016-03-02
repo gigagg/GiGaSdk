@@ -40,6 +40,7 @@ using web::http::methods;
 using web::http::status_codes;
 using web::uri;
 using web::uri_builder;
+using utility::string_t;
 
 namespace
 {
@@ -64,8 +65,8 @@ namespace giga
 namespace core
 {
 
-FileUploader::FileUploader (const std::string& filename, const std::string& nodeName, const std::string& parentId, const std::string& sha1,
-                            const std::string& fid, const std::string& fkey) :
+FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const string_t& parentId,
+                            const string_t& sha1, const string_t& fid, const string_t& fkey) :
         FileTransferer{},
         _task{},
         _filename{filename},
@@ -98,7 +99,7 @@ FileUploader::doStart ()
             // Test if the file is on giga (and add it if possible)
             //
 
-            auto res = NodesApi::addNode(nodeName, "file", parentId, fkey, fid).get();
+            auto res = NodesApi::addNode(nodeName, U("file"), parentId, fkey, fid).get();
             return std::shared_ptr<data::Node>{std::move(res->data)};
         } catch (const ErrorNotFound& e) {
 
@@ -106,10 +107,10 @@ FileUploader::doStart ()
             // The file is not yet on giga
             //
 
-            if (e.getJson().has_field("uploadUrl")) {
-                auto uploadUrl = e.getJson().at("uploadUrl").as_string();
-                auto uriBuilder = uri_builder(uri{"https:" + uploadUrl + web::uri::encode_data_string(nodeKeyCl)});
-                ChunkUploader ch{uriBuilder, nodeName, sha1, filename, "application/octet-stream", progress};
+            if (e.getJson().has_field(U("uploadUrl"))) {
+                auto uploadUrl = e.getJson().at(U("uploadUrl")).as_string();
+                auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(nodeKeyCl)});
+                ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress};
                 return ch.upload();
             }
             throw;
@@ -119,8 +120,8 @@ FileUploader::doStart ()
             // The file is already on giga (same fid/name).
             //
 
-            if (e.getJson().has_field("data")) {
-                auto s = JSonUnserializer{e.getJson().at("data")};
+            if (e.getJson().has_field(U("data"))) {
+                auto s = JSonUnserializer{e.getJson().at(U("data"))};
                 return s.unserialize<std::shared_ptr<data::Node>>();
             }
             throw;
@@ -136,19 +137,33 @@ FileUploader::task () const
     return _task;
 }
 
-double
+FileTransferer::Progress
 FileUploader::progress () const
 {
     auto p = _progress->data();
     if (_state != State::pending && _task.is_done())
     {
-        return 1.;
+        return Progress{_fileSize, _fileSize};
     }
-    if (p.ulnow <= 0)
-    {
-        return 0.;
-    }
-    return ((double) p.ulnow) / (double) (_fileSize);
+    return Progress{p.ulnow, _fileSize};
+}
+
+const string_t&
+FileUploader::nodeName() const
+{
+    return _nodeName;
+}
+
+const string_t&
+FileUploader::fileName() const
+{
+    return _filename;
+}
+
+uint64_t
+FileUploader::fileSize() const
+{
+    return _fileSize;
 }
 
 } /* namespace api */

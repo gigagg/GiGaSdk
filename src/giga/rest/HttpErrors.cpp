@@ -1,4 +1,10 @@
 #include "HttpErrors.h"
+#include "../utils/Utils.h"
+
+#include <cpprest/details/basic_types.h>
+
+using utility::string_t;
+using giga::utils::to_string;
 
 namespace giga
 {
@@ -8,7 +14,7 @@ ErrorException::ErrorException () :
 {
 }
 
-ErrorException::ErrorException (const std::string& what) :
+ErrorException::ErrorException (const string_t& what) :
         std::exception(), whatStr(what)
 {
 }
@@ -19,7 +25,7 @@ ErrorException::what () const noexcept
     return whatStr.c_str();
 }
 
-HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const std::string& errorStr, const std::string& scope) :
+HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const string_t& errorStr, const string_t& scope) :
         ErrorException(errorStr), status(status), scope(scope)
 {
 }
@@ -27,7 +33,7 @@ HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const std::string& er
 const char*
 HttpErrorGeneric::what () const noexcept
 {
-    whatData = "status: " + std::to_string(status) + " err: " + whatStr;
+    whatData = U("status: ") + to_string(status) + U(" err: ") + whatStr;
     return whatData.c_str();
 }
 
@@ -51,7 +57,7 @@ HttpErrorGeneric::getJson () const
 }
 
 HttpErrorGeneric
-HttpErrorGeneric::create(unsigned short status, const std::string& errorStr, const std::string& scope)
+HttpErrorGeneric::create(unsigned short status, const string_t& errorStr, const string_t& scope)
 {
     switch (status)
     {

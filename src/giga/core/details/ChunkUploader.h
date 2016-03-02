@@ -12,7 +12,7 @@
 
 #include <cpprest/http_client.h>
 #include <iosfwd>
-#include <string>
+#include <cpprest/details/basic_types.h>
 
 namespace
 {
@@ -40,22 +40,22 @@ public:
     static constexpr uint64_t CHUNK_SIZE = 1024ul * 1024ul;
 
     explicit
-    ChunkUploader (web::uri_builder& uploadUrl, const std::string& nodeName, const std::string& sha1, const std::string& filename,
-                   const std::string& mime, CurlProgress* progress);
+    ChunkUploader (web::uri_builder& uploadUrl, const utility::string_t& nodeName, const utility::string_t& sha1,
+                   const utility::string_t& filename, const utility::string_t& mime, CurlProgress* progress);
 
     std::shared_ptr<data::Node>
     upload ();
 
 private:
-    std::string
+    utility::string_t
     sendChunk (uint64_t position, ReadCallbackData& data, curl::curl_easy& curl, std::ostringstream& str);
 
 private:
     web::uri_builder  _uploadUrl;
-    const std::string _nodeName;
-    const std::string _sha1;
-    const std::string _filename;
-    const std::string _mime;
+    const utility::string_t _nodeName;
+    const utility::string_t _sha1;
+    const utility::string_t _filename;
+    const utility::string_t _mime;
 
     uint64_t          _fileSize;
 

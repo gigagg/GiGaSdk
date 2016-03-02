@@ -9,24 +9,38 @@
 #define GIGA_UTILS_UTILS_H_
 
 #include <pplx/pplxtasks.h>
-#include <string>
+#include <cpprest/details/basic_types.h>
+#ifdef _UTF16_STRINGS
+#include <codecvt>
+#endif
 
 namespace giga
 {
 namespace utils
 {
 
-std::string
-httpsPrefix(const std::string& url);
+utility::string_t
+httpsPrefix(const utility::string_t& url);
 
-std::string
-cleanUpFilename(std::string name);
+utility::string_t
+cleanUpFilename(utility::string_t name);
 
-template <typename T> void
-waitTasks(std::initializer_list<T> tasks)
+template<typename T>
+utility::string_t
+to_string(T&& str)
 {
-    pplx::when_all(tasks.begin(), tasks.end()).wait();
+#ifdef _UTF16_STRINGS
+    return std::to_wstring(std::forward<T>(str));
+#else
+    return std::to_string(std::forward<T>(str));
+#endif
 }
+
+std::string
+wstr2str(const utility::string_t& wstr);
+
+utility::string_t
+str2wstr(const std::string& str);
 
 } /* namespace utils */
 } /* namespace giga */

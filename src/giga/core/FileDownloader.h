@@ -32,7 +32,7 @@ public:
 
 public:
     explicit
-    FileDownloader (const std::string& folderDest, const Node& node, Policy policy = Policy::ignore);
+    FileDownloader (const boost::filesystem::path& folderDest, const Node& node, Policy policy = Policy::ignore);
     virtual ~FileDownloader();
     FileDownloader (FileDownloader&& other);
 
@@ -48,7 +48,7 @@ public:
     boost::filesystem::path
     destinationFile () const;
 
-    double
+    FileTransferer::Progress
     progress () const;
 
 private:
@@ -58,7 +58,7 @@ private:
     boost::filesystem::path  _destFile;
     web::uri                 _fileUri;
     uint64_t                 _fileSize;
-    uint64_t                _startAt;
+    uint64_t                 _startAt;
     std::chrono::system_clock::time_point _lastUpdateDate;
     Policy                  _policy;
 };

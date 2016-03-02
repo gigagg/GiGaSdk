@@ -5,9 +5,7 @@
 #ifndef GIGA_DATA_GROUP_MODEL_H_
 #define GIGA_DATA_GROUP_MODEL_H_
 
-#include <string>
-#include <vector>
-#include <map>
+#include <cpprest/details/basic_types.h>
 #include "../../rest/prepoc_manage.h"
 
 #include "Node.h"
@@ -17,10 +15,10 @@ namespace data {
 
 struct Group {
     int64_t ownerId = 0;
-    std::string name = {};
+    utility::string_t name = {};
     std::vector<int64_t>  users = std::vector<int64_t>();
     std::vector<std::unique_ptr<Node>> nodes = {};
-    std::string id = {};
+    utility::string_t id = {};
     int64_t creationDate = 0;
     boost::optional<bool> isAllMyContacts = boost::none;
     

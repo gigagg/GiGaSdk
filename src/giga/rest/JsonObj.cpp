@@ -7,22 +7,24 @@
 
 #include "JsonObj.h"
 
+using utility::string_t;
+
 namespace giga
 {
 
-JsonObj& JsonObj::add(const std::string& name, int64_t value) {
+JsonObj& JsonObj::add(const string_t& name, int64_t value) {
     intData.push_back(std::make_pair(name, value));
     return *this;
 }
-JsonObj& JsonObj::add(const std::string& name, const std::string& value) {
+JsonObj& JsonObj::add(const string_t& name, const string_t& value) {
     strData.push_back(std::make_pair(name, value));
     return *this;
 }
-JsonObj& JsonObj::add(const std::string& name, bool value) {
+JsonObj& JsonObj::add(const string_t& name, bool value) {
     boolData.push_back(std::make_pair(name, value));
     return *this;
 }
-JsonObj& JsonObj::add(const std::string& name, double value) {
+JsonObj& JsonObj::add(const string_t& name, double value) {
     doubleData.push_back(std::make_pair(name, value));
     return *this;
 }

@@ -6,11 +6,8 @@
 #define GIGA_DATA_EXTERNALACCOUNT_MODEL_H_
 
 #include <boost/optional.hpp>
-#include <string>
-#include <vector>
-#include <map>
+#include <cpprest/details/basic_types.h>
 #include "../../rest/prepoc_manage.h"
-
 
 namespace giga {
 namespace data {
@@ -19,16 +16,16 @@ namespace data {
  * A user account on an other service (ex: Facebook)
  */
 struct ExternalAccount {
-    std::string externalId = {};
-    std::string providerName = {};
+    utility::string_t externalId = {};
+    utility::string_t providerName = {};
     int64_t userId = 0;
-    boost::optional<std::string> email = boost::none;
-    boost::optional<std::string> fullname = boost::none;
-    boost::optional<std::string> profileUrl = boost::none;
+    boost::optional<utility::string_t> email = boost::none;
+    boost::optional<utility::string_t> fullname = boost::none;
+    boost::optional<utility::string_t> profileUrl = boost::none;
     int64_t creationDate = 0;
     int64_t updateDate = 0;
-    boost::optional<std::string> avatarUrl = boost::none;
-    boost::optional<std::string> displayName = boost::none;
+    boost::optional<utility::string_t> avatarUrl = boost::none;
+    boost::optional<utility::string_t> displayName = boost::none;
     
     
     template <class Manager>
@@ -43,7 +40,6 @@ struct ExternalAccount {
         GIGA_MANAGE(m, updateDate);
         GIGA_MANAGE(m, avatarUrl);
         GIGA_MANAGE(m, displayName);
-        
     }
 };
 

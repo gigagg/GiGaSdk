@@ -16,6 +16,7 @@
 #include <algorithm>
 
 using pplx::create_task;
+using utility::string_t;
 
 namespace {
 
@@ -77,7 +78,7 @@ FolderNode::loadChildren()
 }
 
 FolderNode&
-FolderNode::addChildFolder(const std::string& name)
+FolderNode::addChildFolder(const string_t& name)
 {
     auto result = NodesApi::addFolderNode(name, id()).get();
     _children.push_back(Node::create(std::make_shared<data::Node>(*result->data.release())));
@@ -88,12 +89,12 @@ FolderNode::addChildFolder(const std::string& name)
 namespace fs = boost::filesystem;
 
 pplx::task<std::shared_ptr<FileUploader>>
-FolderNode::uploadFile(const std::string& filepath)
+FolderNode::uploadFile(const string_t& filepath)
 {
     auto path = fs::path{filepath};
     if (!fs::exists(path) || !fs::is_regular_file(path))
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"This is not a regular file"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("This is not a regular file")});
     }
 
     auto parentId = this->id();
@@ -111,15 +112,15 @@ FolderNode::uploadFile(const std::string& filepath)
 }
 
 FileDownloader
-FolderNode::download(const std::string&, FileDownloader::Policy)
+FolderNode::download(const string_t&, FileDownloader::Policy)
 {
-    BOOST_THROW_EXCEPTION(ErrorException{"Not implemented"});
+    BOOST_THROW_EXCEPTION(ErrorException{U("Not implemented")});
 }
 
 const FileNodeData&
 FolderNode::fileData() const
 {
-    BOOST_THROW_EXCEPTION(ErrorException{"No file data in a folder"});
+    BOOST_THROW_EXCEPTION(ErrorException{U("No file data in a folder")});
 }
 
 }/* namespace core */

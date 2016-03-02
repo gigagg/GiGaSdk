@@ -8,13 +8,15 @@ It includes :
 Dependancies
 ------------
 
-- openssl >= 1.0.0 [site](https://www.openssl.org/)
-- boost >= 1.54    [site](http://www.boost.org/)
+- [cmake](https://cmake.org) >= 2.8
 
-- libcurl >= 7.46  [site](https://github.com/curl/curl)
-- casablanca       [site](https://github.com/Microsoft/cpprestsdk)
-- curlcpp          [site](https://github.com/Giga-gg/curlcpp)
-- crypto++         [site](http://cryptopp.com/)
+- [openssl](https://www.openssl.org/) >= 1.0.0
+- [boost](http://www.boost.org/) >= 1.54
+
+- [libcurl](https://github.com/curl/curl) >= 7.46
+- [casablanca](https://github.com/Microsoft/cpprestsdk)
+- [curlcpp](https://github.com/Giga-gg/curlcpp)
+- [crypto++](http://cryptopp.com/)
 
 
 Build On linux (tested on ubuntu 14.04)
@@ -62,5 +64,7 @@ cd build
 cmake ..
 make
 sudo make install
+
+sudo ldconfig
 ```
 

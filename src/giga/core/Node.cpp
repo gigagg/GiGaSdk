@@ -18,17 +18,18 @@
 #include <string>
 
 using std::chrono::_V2::system_clock;
+using utility::string_t;
 
-#define _THROW_IF_NO_NODE_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{"Node is not set"}); } do {} while(0)
+#define _THROW_IF_NO_NODE_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{U("Node is not set")}); } do {} while(0)
 
 namespace giga
 {
 
 const utils::EnumConvertor<core::Node::Type, 3> core::Node::typeCvrt =
-    {"root", "folder", "file"};
+    {U("root"), U("folder"), U("file")};
 
 const utils::EnumConvertor<core::Node::MediaType, 6> core::Node::mediaTypeCvrt =
-    {"audio", "document", "video", "image", "unknown", "folder"};
+    {U("audio"), U("document"), U("video"), U("image"), U("unknown"), U("folder")};
 
 namespace core
 {
@@ -43,7 +44,7 @@ Node::create (std::shared_ptr<data::Node> n)
         case Type::root:
             return std::unique_ptr<Node>{new FolderNode{n}};
     }
-    BOOST_THROW_EXCEPTION(ErrorException{"unreachable"});
+    BOOST_THROW_EXCEPTION(ErrorException{U("unreachable")});
 }
 
 Node::Node (std::shared_ptr<data::Node> n)  :
@@ -71,7 +72,7 @@ Node::operator=(const Node& rhs)
     return *this;
 }
 
-const std::string&
+const string_t&
 Node::id () const
 {
     _THROW_IF_NO_NODE_;
@@ -85,21 +86,21 @@ Node::type () const
     return typeCvrt.fromStr(_data->type);
 }
 
-const std::string&
+const string_t&
 Node::name () const
 {
     _THROW_IF_NO_NODE_;
     return _data->name;
 }
 
-const std::string&
+const string_t&
 Node::parentId () const
 {
     _THROW_IF_NO_NODE_;
-    return _data->parentId.get_value_or("");
+    return _data->parentId.get_value_or(U(""));
 }
 
-const std::vector<std::string>&
+const std::vector<string_t>&
 Node::ancestors () const
 {
     _THROW_IF_NO_NODE_;
@@ -157,15 +158,15 @@ void
 Node::remove()
 {
     NodesApi::deleteNode(id()).get();
-    _data->id = "";
+    _data->id = U("");
 }
 
 void
-Node::rename(const std::string& name)
+Node::rename(const string_t& name)
 {
     if (!boost::filesystem::portable_name(name))
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"Name is not valid"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Name is not valid")});
     }
     NodesApi::renameNode(id(), name).get();
     _data->name = name;

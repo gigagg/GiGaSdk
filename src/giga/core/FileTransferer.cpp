@@ -14,6 +14,12 @@ namespace giga
 namespace core
 {
 
+double
+FileTransferer::Progress::percent() const
+{
+    return ((double) (transfered * 100)) / (double) size;
+}
+
 FileTransferer::FileTransferer () :
         _state{State::pending}, _progress{new details::CurlProgress{}}, _mut{}, _cts{}
 {
@@ -37,7 +43,7 @@ FileTransferer::start ()
     std::lock_guard<std::mutex> l{_mut};
 
     if (_state != State::pending) {
-        BOOST_THROW_EXCEPTION(ErrorException{"Start is valid only in 'pending' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Start is valid only in 'pending' state")});
     }
 
     doStart();
@@ -49,7 +55,7 @@ FileTransferer::pause ()
 {
     std::lock_guard<std::mutex> l{_mut};
     if (_state != State::started) {
-        BOOST_THROW_EXCEPTION(ErrorException{"Pause is valid only in 'started' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Pause is valid only in 'started' state")});
     }
     _progress->setPause(true);
     _state = State::paused;
@@ -60,7 +66,7 @@ FileTransferer::resume ()
 {
     std::lock_guard<std::mutex> l{_mut};
     if (_state != State::paused) {
-        BOOST_THROW_EXCEPTION(ErrorException{"Resume is valid only in 'paused' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Resume is valid only in 'paused' state")});
     }
     _progress->setPause(false);
     _state = State::started;
@@ -71,7 +77,7 @@ FileTransferer::cancel ()
 {
     std::lock_guard<std::mutex> l{_mut};
     if (_state != State::paused && _state != State::started) {
-        BOOST_THROW_EXCEPTION(ErrorException{"Resume is valid only in 'paused' and 'started' state"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Resume is valid only in 'paused' and 'started' state")});
     }
     _state = State::canceled;
     _progress->cancel();

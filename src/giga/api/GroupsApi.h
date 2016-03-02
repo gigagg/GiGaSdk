@@ -5,7 +5,7 @@
 #ifndef CLIENT_GROUPSAPI_API_H_
 #define CLIENT_GROUPSAPI_API_H_
 
-#include <iosfwd>
+#include <cpprest/details/basic_types.h>
 #include "GigaApi.h"
 
 namespace giga
@@ -23,22 +23,22 @@ public:
     getAllGroups ();
 
     static pplx::task<std::shared_ptr<data::Group>>
-    createGroup (const std::string& name);
+    createGroup (const utility::string_t& name);
 
     static pplx::task<std::shared_ptr<data::Group>>
     getGroupById (int64_t groupId);
 
     static pplx::task<std::shared_ptr<data::Group>>
-    updateGroupName (int64_t groupId, const std::string& name);
+    updateGroupName (int64_t groupId, const utility::string_t& name);
 
     static pplx::task<std::shared_ptr<Empty>>
     deleteGroup (int64_t groupId);
 
     static pplx::task<std::shared_ptr<data::Group>>
-    shareNodeWithGroup (int64_t groupId, const std::string& nodeId);
+    shareNodeWithGroup (int64_t groupId, const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<data::Group>>
-    unshareNodeFromGroup (int64_t groupId, const std::string& nodeId);
+    unshareNodeFromGroup (int64_t groupId, const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<data::Group>>
     addUserToGroup (int64_t groupId, int64_t userId);

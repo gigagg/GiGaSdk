@@ -24,16 +24,18 @@
 
 #include <boost/program_options.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <cpprest/json.h>
 #include <algorithm>
 
 using boost::exception_detail::error_info_container;
 using CryptoPP::EncodedObjectFilter;
+using utility::string_t;
 
 #include "crypto++/rsa.h"
 using namespace giga;
 namespace po = boost::program_options;
 
-void printNodeTree(core::Node& n, std::string space = "")
+void printNodeTree(core::Node& n, string_t space = "")
 {
     std::cout << space << n.name() << "\n";
     space += " ";
@@ -72,7 +74,7 @@ searchNodes (const po::variables_map& vm, giga::Application& app, const char* na
 {
     if (vm.count(name))
     {
-        auto nodes = app.searchNode(vm[name].as<std::string>(), type);
+        auto nodes = app.searchNode(vm[name].as<string_t>(), type);
         printNodes(name, nodes);
     }
 }
@@ -84,27 +86,27 @@ int main(int argc, const char* argv[]) {
         desc.add_options()
         ("help,h", "produce help message")
 
-        ("login",        po::value<std::string>()->required(), "Current user login")
+        ("login",        po::wvalue<string_t>()->required(), "Current user login")
 
         ("list-contact",         po::value<bool>()->implicit_value(true), "print contacts")
         ("list-received-invits", po::value<bool>()->implicit_value(true), "print received invitation")
         ("list-sent-invits",     po::value<bool>()->implicit_value(true), "print sent invitation")
         ("list-blocked",         po::value<bool>()->implicit_value(true), "print blocked users")
 
-        ("search-user",     po::value<std::string>(), "search users")
-        ("search-video",    po::value<std::string>(), "search video files")
-        ("search-audio",    po::value<std::string>(), "search audio files")
-        ("search-other",    po::value<std::string>(), "search other files")
-        ("search-document", po::value<std::string>(), "search document files")
-        ("search-image",    po::value<std::string>(), "search image files")
-        ("search-folder",   po::value<std::string>(), "search folder files")
+        ("search-user",     po::wvalue<string_t>(), "search users")
+        ("search-video",    po::wvalue<string_t>(), "search video files")
+        ("search-audio",    po::wvalue<string_t>(), "search audio files")
+        ("search-other",    po::wvalue<string_t>(), "search other files")
+        ("search-document", po::wvalue<string_t>(), "search document files")
+        ("search-image",    po::wvalue<string_t>(), "search image files")
+        ("search-folder",   po::wvalue<string_t>(), "search folder files")
 
-        ("node",    po::value<std::string>(), "select the current node by id")
+        ("node",    po::wvalue<string_t>(), "select the current node by id")
         ("tree",    po::value<bool>()->implicit_value(true), "print the current node tree")
         ("ls",      po::value<bool>()->implicit_value(true), "print the current node children")
-        ("mkdir",   po::value<std::string>(), "create a directory under the current node")
-        ("upload",  po::value<std::string>(), "file path")
-        ("download",po::value<std::string>(), "folder path")
+        ("mkdir",   po::wvalue<string_t>(), "create a directory under the current node")
+        ("upload",  po::wvalue<string_t>(), "file path")
+        ("download",po::wvalue<string_t>(), "folder path")
         ("continue",po::value<bool>()->implicit_value(false), "continue the download")
 
         ("user",    po::value<int64_t>(), "select the current user by id")
@@ -122,12 +124,12 @@ int main(int argc, const char* argv[]) {
         po::notify(vm);
 
         auto& app = Application::init(
-                        std::string("http://localhost:5001"),
-                        std::string("9ab7baa696ca"),
-                        std::string("b1af65bffd64aa1e44d2408b44b4c4d8"));
+                        string_t("http://localhost:5001"),
+                        string_t("9ab7baa696ca"),
+                        string_t("b1af65bffd64aa1e44d2408b44b4c4d8"));
 
-        auto login = vm["login"].as<std::string>();
-        std::string password;
+        auto login = vm["login"].as<string_t>();
+        string_t password;
         std::cout << "login: " << login << "\npassword ?" << std::endl;
 //        std::cin >> password;
         password = "gigatribe";
@@ -168,7 +170,7 @@ int main(int argc, const char* argv[]) {
 
         if (vm.count("search-user"))
         {
-            auto users = app.searchUser(vm["search-user"].as<std::string>());
+            auto users = app.searchUser(vm["search-user"].as<string_t>());
             printUsers("search-user", users);
         }
 
@@ -185,7 +187,7 @@ int main(int argc, const char* argv[]) {
 
         if (vm.count("node"))
         {
-            auto node = app.getNodeById(vm["node"].as<std::string>());
+            auto node = app.getNodeById(vm["node"].as<string_t>());
             if (vm.count("tree"))
             {
                 std::cout << "tree" << std::endl;
@@ -198,7 +200,7 @@ int main(int argc, const char* argv[]) {
             }
             if (vm.count("mkdir"))
             {
-                auto dir = node->addChildFolder(vm["mkdir"].as<std::string>());
+                auto dir = node->addChildFolder(vm["mkdir"].as<string_t>());
                 auto arr = std::array<core::Node*, 1>{&dir};
                 printNodes("mkdir", arr);
             }
@@ -208,66 +210,53 @@ int main(int argc, const char* argv[]) {
                 {
                     BOOST_THROW_EXCEPTION(ErrorException{"Node must be a folder"});
                 }
-                core::Uploader uploader{*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<std::string>()};
-                auto t = pplx::create_task([&uploader] () {
-                    while(true)
-                    {
-                        std::cout << "prep: " << uploader.isPreparationFinished();
-                        auto count = uploader.uploadingFilesCount();
-                        if (count > 0)
+                auto currentNodeName = string_t{};
+                core::Uploader uploader {
+                    *static_cast<core::FolderNode*>(node.get()),
+                    vm["upload"].as<string_t>(),
+                    [&currentNodeName](core::FileUploader& fd, uint64_t count, uint64_t) {
+                        if (currentNodeName != fd.nodeName())
                         {
-                            std::cout << " count: " << count << " p: " << std::setprecision(3);
-                            uint64_t totalP = 0;
-                            for(auto& up: uploader.uploadingFiles())
-                            {
-                                totalP += up->progress();
-                                std::cout << up->progress() << " ";
-                            }
-                            if ((count - totalP) < 0.01 &&  uploader.isPreparationFinished())
-                            {
-                                std::cout << " FINISH " << std::endl;
-                                return;
-                            }
+                            currentNodeName = fd.nodeName();
+                            std::cout << std::endl;
                         }
                         else
                         {
-                            std::cout << " count: " << count;
+                            (std::cout << "                                                      \r").flush();
                         }
-                        std::cout << std::endl;
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                        std::cout << count << " "
+                                  << std::setprecision(3) << fd.progress().percent() << "% - "
+                                  << fd.nodeName();
                     }
-                });
-                auto task = uploader.start();
+                };
+                uploader.start().get();
 
-                utils::waitTasks({t, task});
                 auto uploads = uploader.uploadingFiles();
                 std::vector<std::shared_ptr<core::Node>> arr(uploads.size());
-                std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u){
-                    std::cout << "transform" << std::endl;
+                std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u) {
                     return u->task().get();
                 });
                 printNodes("uploaded", arr);
             }
             if (vm.count("download"))
             {
-                auto nbFiles = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
-                core::Downloader dl{std::shared_ptr<core::Node>(node.release()), vm["download"].as<std::string>()};
-                auto dlTask = dl.start();
-                auto t = pplx::create_task([&dl, nbFiles] () {
-                    auto dlding = dl.downloadingFile();
-                    while(dlding == nullptr || (dlding->progress() <= 0.99 && dl.downloadingFileNumber() < nbFiles))
-                    {
-                        if (dlding != nullptr)
-                        {
-                            std::cout << dlding->destinationFile().string() << " - " << std::setprecision(3) << dlding->progress() * 100 << "%" << std::endl;
+                auto nbFiles   = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
+                auto totalSize = node->size();
 
-                        }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(250));
-                        dlding = dl.downloadingFile();
+                std::cout << std::endl;
+                core::Downloader dl {
+                    std::shared_ptr<core::Node>(node.release()),
+                    vm["download"].as<string_t>(),
+                    [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
+                        auto percent = ((double) size * 100) / (double) totalSize;
+                        (std::cout << "                                                      \r").flush();
+                        std::cout << count << "/" << nbFiles << " "
+                                  << std::setprecision(3) << percent << "% - "
+                                  << fd.destinationFile().filename().string();
                     }
-                });
-                utils::waitTasks({t, dlTask});
-                std::cout << "File downloaded: " << dl.downloadingFileNumber() << std::endl;
+                };
+                dl.start().wait();
+                std::cout << "\nFile downloaded: " << dl.downloadingFileNumber() << std::endl;
             }
         }
 

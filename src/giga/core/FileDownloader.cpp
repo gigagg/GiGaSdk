@@ -35,6 +35,8 @@ using curl::curl_ios;
 using pplx::create_task;
 using web::uri;
 using web::uri_builder;
+using utility::string_t;
+using giga::utils::to_string;
 
 namespace
 {
@@ -58,25 +60,24 @@ namespace giga
 namespace core
 {
 
-FileDownloader::FileDownloader (const std::string& folderDest, const Node& node, Policy policy) :
+FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, Policy policy) :
         FileTransferer{}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
         _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy}
 {
-    path folder{folderDest};
     if (!is_directory(folder))
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"FolderDest should be a directory"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("FolderDest should be a directory")});
     }
-    if (node.name() == "" || node.name() == "." || node.name() == "..")
+    if (node.name() == U("") || node.name() == U(".") || node.name() == U(".."))
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"Invalid node name"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Invalid node name")});
     }
 
     auto name = utils::cleanUpFilename(node.name());
-    auto pos = name.find_last_of(".");
+    auto pos = name.find_last_of(U("."));
     auto firstPart = name;
-    auto lastPart = std::string{};
-    if (pos != std::string::npos)
+    auto lastPart = string_t{};
+    if (pos != string_t::npos)
     {
         firstPart = name.substr(0, pos);
         lastPart = name.substr(pos, name.length() - pos + 1);
@@ -84,13 +85,13 @@ FileDownloader::FileDownloader (const std::string& folderDest, const Node& node,
     auto count = 0;
     while (policy == Policy::rename && exists(folder / name))
     {
-        name = firstPart + "-" + std::to_string(++count) + lastPart;
+        name = firstPart + U("-") + to_string(++count) + lastPart;
     }
 
     auto fid = node.fileData().fid();
     std::replace(fid.begin(), fid.end(), '/', '_');
 
-    _tempFile = folder /  ("." + fid + ".part");
+    _tempFile = folder /  (U(".") + fid + U(".part"));
     _destFile = folder / name;
 
     _fileUri = node.fileData().fileUrl();
@@ -143,7 +144,7 @@ FileDownloader::doStart()
     auto progress = _progress.get();
 
     uri_builder b{_fileUri};
-    b.append_query("access_token", GigaApi::getOAuthConfig()->token().access_token());
+    b.append_query(U("access_token"), GigaApi::getOAuthConfig()->token().access_token());
     auto fileUri = b.to_uri();
 
     auto ignore = false;
@@ -184,9 +185,9 @@ FileDownloader::doStart()
                     progress->setCurl(curl);
                     writer.setCurl(curl);
 
-                    GIGA_DEBUG_LOG("downloading: " << fileUri.to_string());
+                    GIGA_DEBUG_LOG(U("downloading: ") << fileUri.to_string());
 
-                    curl.add<CURLOPT_URL>(fileUri.to_string().c_str());
+                    curl.add<CURLOPT_URL>(utils::wstr2str(fileUri.to_string()).c_str());
                     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
                     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
                     curl.add<CURLOPT_XFERINFODATA>(progress);
@@ -204,7 +205,7 @@ FileDownloader::doStart()
                     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
                     if (httpCode >= 300)
                     {
-                        GIGA_DEBUG_LOG("downloading error (retrying): " << writer.getErrorData());
+                        GIGA_DEBUG_LOG(U("downloading error (retrying): ") << writer.getErrorData());
                     }
                 }
                 if (httpCode != 200)
@@ -217,13 +218,13 @@ FileDownloader::doStart()
                 }
             } catch (const curl_easy_exception& error) {
                 auto track = error.get_traceback();
-                std::ostringstream ss;
+                utility::ostringstream_t ss;
                 for(const auto& obj : track)
                 {
-                    ss << obj.first << ": " << obj.second << "\n";
-                    if (obj.first == "Operation was aborted by an application callback")
+                    ss << obj.first << U(": ") << obj.second << U("\n");
+                    if (obj.first == U("Operation was aborted by an application callback"))
                     {
-                        throw pplx::task_canceled{"Download canceled"};
+                        throw pplx::task_canceled{U("Download canceled")};
                     }
                 }
                 BOOST_THROW_EXCEPTION(ErrorException{ss.str()});
@@ -232,7 +233,7 @@ FileDownloader::doStart()
             if (policy != Policy::override && policy != Policy::overrideNewerSize && exists(destFile))
             {
                 // TODO: remove tempFile ?
-                BOOST_THROW_EXCEPTION(ErrorException{"Destination file already exists"});
+                BOOST_THROW_EXCEPTION(ErrorException{U("Destination file already exists")});
             }
 
             boost::filesystem::rename(tempFile, destFile);
@@ -259,19 +260,15 @@ FileDownloader::destinationFile () const
     return _destFile;
 }
 
-double
+FileTransferer::Progress
 FileDownloader::progress () const
 {
     auto p = _progress->data();
     if (_state != State::pending && _task.is_done())
     {
-        return 1.;
+        return Progress{_fileSize, _fileSize};
     }
-    if (p.dlnow <= 0)
-    {
-        return ((double) _startAt) / (double) (_fileSize);
-    }
-    return ((double) (p.dlnow + _startAt)) / (double) (_fileSize);
+    return Progress{p.dlnow + _startAt, _fileSize};
 }
 
 } /* namespace core */

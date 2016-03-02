@@ -14,7 +14,7 @@
 #include <string>
 #include "prepoc_manage.h"
 
-#ifdef DEBUG
+#ifdef DEBUG_LOG
 #define GIGA_DEBUG_LOG(data) std::cerr << data << std::endl
 #else
 #define GIGA_DEBUG_LOG(data) do {} while(0)
@@ -26,7 +26,7 @@ class ErrorException : public std::exception
 {
 public:
     explicit ErrorException ();
-    explicit ErrorException (const std::string& what);
+    explicit ErrorException (const utility::string_t& what);
 
     virtual ~ErrorException ()              = default;
     ErrorException (const ErrorException&)  = default;
@@ -36,17 +36,17 @@ public:
     what () const noexcept;
 
 protected:
-    std::string whatStr  = "";
+    utility::string_t whatStr  = U("");
 };
 
 class HttpErrorGeneric : public ErrorException
 {
 public:
     static HttpErrorGeneric
-    create(unsigned short status, const std::string& errorStr = "", const std::string& scope = "");
+    create(unsigned short status, const utility::string_t& errorStr = U(""), const utility::string_t& scope = U(""));
 
 public:
-    explicit HttpErrorGeneric (unsigned short status, const std::string& errorStr = "", const std::string& scope = "");
+    explicit HttpErrorGeneric (unsigned short status, const utility::string_t& errorStr = U(""), const utility::string_t& scope = U(""));
 
     virtual ~HttpErrorGeneric ()                = default;
     HttpErrorGeneric (const HttpErrorGeneric&)  = default;
@@ -68,24 +68,24 @@ public:
     void
     visit(const Manager& us)
     {
-        us.manageOpt(whatStr, "errorStr", std::string{});
-        GIGA_MANAGE_OPT(us, scope, std::string{});
+        us.manageOpt(whatStr, U("errorStr"), utility::string_t{});
+        GIGA_MANAGE_OPT(us, scope, utility::string_t{});
     }
 
 public:
     const unsigned short status = 500;
-    std::string scope           = "";
+    utility::string_t scope           = U("");
 
 private:
     web::json::value json = {};
-    mutable std::string whatData;
+    mutable utility::string_t whatData;
 };
 
 template <unsigned short TStatus>
 class HttpError : public HttpErrorGeneric
 {
 public:
-    explicit HttpError (const std::string& errorStr = "", const std::string& scope = "") :
+    explicit HttpError (const utility::string_t& errorStr = U(""), const utility::string_t& scope = U("")) :
         HttpErrorGeneric (TStatus, errorStr, scope)
     {
     }

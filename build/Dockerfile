@@ -7,42 +7,46 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
     apt-get install -y g++ git make libboost1.54-all-dev libssl-dev cmake
 
-RUN cd /root                                          && \
-    git clone git@gitlab.giga.gg:t.guyard/GiGaSdk.git && \
-    cd GiGaSdk                                        && \
+RUN cd /root                                             && \
+    git clone http://gitlab.giga.gg/t.guyard/GiGaSdk.git && \
+    cd GiGaSdk                                           && \
     git submodule update --init 
+
+WORKDIR "/root/GiGaSdk"
 
 # compiling casablanca
 RUN cd vendors/casablanca/Release/      && \
     mkdir build.release                 && \
     cd build.release/                   && \
     cmake .. -DCMAKE_BUILD_TYPE=Release && \
-    cd ../../..
+    make                                && \
+    make install
 
-# compiling crypto++      && \
-RUN cd cryptopp/crypto++/ && \
-    make                  && \
-    cd ../..
-
+# compiling crypto++              && \
+RUN cd vendors/cryptopp/crypto++/ && \
+    make                          && \
+    sudo make install
+    
 # compiling/installing libcurl
-RUN cd curl           && \
-    mkdir build       && \
-    cd build          && \
-    cmake ..          && \
-    make              && \
-    sudo make install && \
-    cd ../..
+RUN cd vendors/curl           && \
+    mkdir build               && \
+    cd build                  && \
+    cmake ..                  && \
+    make                      && \
+    sudo make install
 
 # compiling curlcpp
-RUN cd curlcpp/build && \
-    cmake ..         && \
-    make             && \
-    cd ../..
+RUN cd vendors/curlcpp/build && \
+    cmake ..                 && \
+    make                     && \
+    sudo make install
 
 # compiling/installing GiGaSdk
-RUN cd ../build       && \
+RUN cd build          && \
     cmake ..          && \
     make              && \
     sudo make install
+    
+RUN ldconfig
 
 ENTRYPOINT ["/usr/local/bin/GiGaSdk"]

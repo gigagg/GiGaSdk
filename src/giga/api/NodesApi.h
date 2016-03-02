@@ -5,7 +5,7 @@
 #ifndef CLIENT_NODESAPI_API_H_
 #define CLIENT_NODESAPI_API_H_
 
-#include <iosfwd>
+#include <cpprest/details/basic_types.h>
 #include "GigaApi.h"
 
 namespace giga
@@ -24,39 +24,39 @@ class NodesApi final : GigaApi
 {
 public:
     static pplx::task<std::shared_ptr<data::NodeList>>
-    searchNode (const std::string& search, const std::string& mine, const std::string& inFolder, int64_t ownerId);
+    searchNode (const utility::string_t& search, const utility::string_t& mine, const utility::string_t& inFolder, int64_t ownerId);
 
     static pplx::task<std::shared_ptr<std::vector<data::Node>>>
-    searchNodeByType (const std::string& search, const std::string& type, uint16_t max = 50, uint32_t offset = 0);
+    searchNodeByType (const utility::string_t& search, const utility::string_t& type, uint16_t max = 50, uint32_t offset = 0);
 
     static pplx::task<std::shared_ptr<data::DataNode>>
-    addNode (const std::string& name, const std::string& type, const std::string& parentId, const std::string& fkey,
-             const std::string& fid);
+    addNode (const utility::string_t& name, const utility::string_t& type, const utility::string_t& parentId, const utility::string_t& fkey,
+             const utility::string_t& fid);
 
     static pplx::task<std::shared_ptr<data::DataNode>>
-    addFolderNode (const std::string& name, const std::string& parentId);
+    addFolderNode (const utility::string_t& name, const utility::string_t& parentId);
 
     static pplx::task<std::shared_ptr<data::DataNode>>
-    copyNode (const std::string& fromNodeId, const std::string& toNodeId, const std::string& copy, const std::string& cut,
-              const std::string& myNodeKey, const std::string& otherNodeKey);
+    copyNode (const utility::string_t& fromNodeId, const utility::string_t& toNodeId, const utility::string_t& copy, const utility::string_t& cut,
+              const utility::string_t& myNodeKey, const utility::string_t& otherNodeKey);
 
     static pplx::task<std::shared_ptr<data::Node>>
-    getNodeById (const std::string& nodeId);
+    getNodeById (const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<data::Node>>
-    renameNode (const std::string& nodeId, const std::string& name);
+    renameNode (const utility::string_t& nodeId, const utility::string_t& name);
 
     static pplx::task<std::shared_ptr<data::IdContainer>>
-    deleteNode (const std::string& nodeId);
+    deleteNode (const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<std::vector<data::Node>>>
-    getChildrenNode (const std::string& nodeId);
+    getChildrenNode (const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<data::Preview>>
-    getPreviewsData (const std::string& nodeId);
+    getPreviewsData (const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<data::Timeline>>
-    getTimeline (const std::string& head, int64_t from, int64_t owner);
+    getTimeline (const utility::string_t& head, int64_t from, int64_t owner);
 };
 } // namespace giga
 

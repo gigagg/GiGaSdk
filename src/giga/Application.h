@@ -29,8 +29,8 @@ class Application
 public:
 
     static Application&
-    init(std::string&& appRedirectUri, std::string&& appId, std::string&& appKey, std::string&& appScope =
-            "basic network groups files basic:write network:write groups:write files:write");
+    init(utility::string_t&& appRedirectUri, utility::string_t&& appId, utility::string_t&& appKey, utility::string_t&& appScope =
+            U("basic network groups files basic:write network:write groups:write files:write"));
 
     static Application&
     get();
@@ -56,7 +56,7 @@ public:
     isInitialized() const;
 
     core::User&
-    authenticate (const std::string& login, const std::string& password);
+    authenticate (const utility::string_t& login, const utility::string_t& password);
 
     core::User&
     currentUser();
@@ -69,7 +69,7 @@ public:
     getUserById (int64_t id) const;
 
     core::User
-    getUserByLogin (const std::string& login) const;
+    getUserByLogin (const utility::string_t& login) const;
 
     std::vector<core::User>
     getContacts () const;
@@ -87,17 +87,17 @@ public:
     getBlockedUsers () const;
 
     std::vector<core::User>
-    searchUser (const std::string& search) const;
+    searchUser (const utility::string_t& search) const;
 
     //
     // Nodes
     //
 
     std::unique_ptr<core::Node>
-    getNodeById (const std::string& id) const;
+    getNodeById (const utility::string_t& id) const;
 
     std::vector<std::unique_ptr<core::Node>>
-    searchNode (const std::string& search, core::Node::MediaType type) const;
+    searchNode (const utility::string_t& search, core::Node::MediaType type) const;
 
 private:
     core::User  _currentUser;

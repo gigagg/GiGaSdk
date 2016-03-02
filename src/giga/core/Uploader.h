@@ -25,7 +25,10 @@ namespace core
 class Uploader
 {
 public:
-    explicit Uploader(FolderNode parent, const std::string& path);
+    typedef std::function<void(FileUploader&, uint64_t count, uint64_t bytes)> ProgressCallback;
+
+public:
+    explicit Uploader(FolderNode parent, const boost::filesystem::path& path, ProgressCallback clb = [](FileUploader&, uint64_t, uint64_t){});
     ~Uploader();
 
     bool
@@ -42,14 +45,18 @@ public:
 
 private:
     void
-    scanFilesAddUploads (FolderNode parent, boost::filesystem::path path);
+    scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path& path);
+
+    std::function<std::shared_ptr<Node> (std::shared_ptr<Node> n)>
+    startNextUpload(std::shared_ptr<giga::core::FileUploader> next);
+
 
 private:
     typedef pplx::task<std::shared_ptr<FileUploader>> PreparingEntry;
     typedef std::shared_ptr<FileUploader> ReadyEntry;
 
     FolderNode                        _parent;
-    std::string                       _path;
+    boost::filesystem::path           _path;
     std::vector<PreparingEntry>       _preparingList;
     pplx::task<std::shared_ptr<Node>> _uploading;
     pplx::task<void>                  _mainTask;
@@ -58,6 +65,11 @@ private:
     mutable std::mutex                _mut;
     std::vector<ReadyEntry>           _readyList;
     bool                              _isPreparationFinished;
+
+    uint64_t                          _upBytes;
+    uint64_t                          _upCount;
+    std::atomic<bool>                 _isFinished;
+    ProgressCallback                  _progressCallback;
 };
 
 } /* namespace core */

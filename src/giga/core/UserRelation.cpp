@@ -18,10 +18,10 @@ namespace core
 {
 
 static const utils::EnumConvertor<core::UserRelation::Type, 5> typeCvrt =
-    {"CONTACT", "INVITE", "BLOCK", "SHOULD_INVITE", "ENTICE_INTO_GIGA"};
+    {U("CONTACT"), U("INVITE"), U("BLOCK"), U("SHOULD_INVITE"), U("ENTICE_INTO_GIGA")};
 
 static const utils::EnumConvertor<core::UserRelation::Initiator, 3> initiatorCvrt =
-    {"OTHER", "ME", "NA"};
+    {U("OTHER"), U("ME"), U("NA")};
 
 static const std::vector<int64_t> emptyVector = {};
 

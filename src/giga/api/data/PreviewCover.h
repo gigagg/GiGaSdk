@@ -18,11 +18,11 @@ namespace data {
  */
 struct PreviewCover {
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> poster = boost::none;
+    boost::optional<utility::string_t> poster = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> square = boost::none;
+    boost::optional<utility::string_t> square = boost::none;
     /** Concat the url encoded nodeKey at the end of this url */
-    boost::optional<std::string> original = boost::none;
+    boost::optional<utility::string_t> original = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

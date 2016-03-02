@@ -10,6 +10,7 @@
 #include "../../api/GigaApi.h"
 #include "../../api/data/Node.h"
 #include "../../rest/HttpErrors.h"
+#include "../../utils/Utils.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -28,14 +29,15 @@ using giga::data::Node;
 using web::http::oauth2::experimental::oauth2_config;
 using web::uri;
 using web::uri_builder;
-
+using utility::string_t;
+using giga::utils::to_string;
 
 namespace
 {
 class ReadCallbackData
 {
 public:
-    explicit ReadCallbackData(const std::string filename);
+    explicit ReadCallbackData(const string_t filename);
 
     ~ReadCallbackData();
 
@@ -51,7 +53,7 @@ private:
     uint64_t       _end;
 };
 
-ReadCallbackData::ReadCallbackData (const std::string filename) :
+ReadCallbackData::ReadCallbackData (const string_t filename) :
         _file{}, _start{0}, _end{0}
 {
     _file.open(filename, std::fstream::binary);
@@ -109,9 +111,9 @@ namespace giga
 namespace details
 {
 
-ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const std::string& nodeName, const std::string& sha1, const std::string& filename,
-                              const std::string& mime, details::CurlProgress* progress) :
-               _uploadUrl{uri_builder{uploadUrl}.append_query("access_token", GigaApi::getOAuthConfig()->token().access_token()).to_uri()},
+ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const string_t& sha1, const string_t& filename,
+                              const string_t& mime, details::CurlProgress* progress) :
+               _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), GigaApi::getOAuthConfig()->token().access_token()).to_uri()},
                _nodeName{nodeName},
                _sha1{sha1},
                _filename{filename},
@@ -133,12 +135,12 @@ ChunkUploader::upload ()
         curl_easy curl(writer);
 
         auto response = sendChunk(position, callbackData, curl, str);
-        auto regex  = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+)$"};
+        auto regex  = boost::regex{U("^([0-9]+)-([0-9]+)/([0-9]+)$")};
         auto what   = boost::cmatch{};
         if(boost::regex_match(response.c_str(), what, regex))
         {
-            auto start = std::stoul(std::string{what[1].first, what[1].second});
-            auto end = std::stoul(std::string{what[2].first, what[2].second});
+            auto start = std::stoul(string_t{what[1].first, what[1].second});
+            auto end = std::stoul(string_t{what[2].first, what[2].second});
             if (start > 0 && end > start)
             {
                 position = 0;
@@ -153,28 +155,28 @@ ChunkUploader::upload ()
             auto nodes = JSonUnserializer::fromString<std::vector<std::shared_ptr<Node>>>(response);
             if (nodes.size() != 1)
             {
-                BOOST_THROW_EXCEPTION(ErrorException{"Wrong number of nodes"});
+                BOOST_THROW_EXCEPTION(ErrorException{U("Wrong number of nodes")});
             }
             return nodes[0];
         }
     } while (position < _fileSize);
 
-    BOOST_THROW_EXCEPTION(ErrorException{"Upload error"});
+    BOOST_THROW_EXCEPTION(ErrorException{U("Upload error")});
 }
 
-std::string
+string_t
 ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& curl, std::ostringstream& str)
 {
     if (position >= _fileSize)
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"Invalid position/fileSize"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Invalid position/fileSize")});
     }
     _progress->setUploadPosition(position);
 
     auto chunkSize = std::min(position == 0 ? 1024 : CHUNK_SIZE, _fileSize - position);
     data.setChunck(position, position + chunkSize);
 
-    curl.add<CURLOPT_URL>(_uploadUrl.to_uri().to_string().c_str());
+    curl.add<CURLOPT_URL>(utils::wstr2str(_uploadUrl.to_uri().to_string()).c_str());
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
     curl.add<CURLOPT_XFERINFODATA>(_progress);
@@ -188,9 +190,9 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     auto userId = Application::get().currentUser().id();
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, ("Content-Disposition: attachment, filename=\"" + web::uri::encode_data_string(_nodeName) + "\"").c_str());
+    list = curl_slist_append(list, ("Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"").c_str());
     list = curl_slist_append(list, ("Session-Id: " + std::to_string(userId) + "-" + _sha1).c_str());
-    list = curl_slist_append(list, ("Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize)).c_str());
+    list = curl_slist_append(list, ("Content-Range: bytes " + std::to_string(position) + U("-") + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize)).c_str());
     list = curl_slist_append(list, "Content-Type: application/octet-stream");
     list = curl_slist_append(list, "Expect: ");
     curl.add<CURLOPT_HTTPHEADER>(list);
@@ -205,9 +207,9 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
     if (httpCode >= 300)
     {
-        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, str.str()));
+        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, utils::str2wstr(str.str())));
     }
-    return str.str();
+    return utils::str2wstr(str.str());
 }
 
 } /* namespace details */
