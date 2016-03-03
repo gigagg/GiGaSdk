@@ -94,30 +94,30 @@ void fillQueue(ByteQueue& queue, const std::string& b64encoded) {
 namespace giga
 {
 
-namespace
+class RsaKeys final
 {
-	class RsaKeys final
-	{
-	public:
-		CryptoPP::RSA::PublicKey    pub;
-		CryptoPP::RSA::PrivateKey   priv;
-	};
-}
-	
+public:
+    RsaKeys()               = default;
+    RsaKeys(const RsaKeys&) = default;
+
+    CryptoPP::RSA::PublicKey    pub;
+    CryptoPP::RSA::PrivateKey   priv;
+};
+    
 Rsa::Rsa (const std::string& pubStr, const std::string& privStr) :
-	_keys{ new RsaKeys{} }
+    _keys{ new RsaKeys{} }
 {
     try
     {
         ByteQueue queue;
         fillQueue(queue, pubStr);
-		_keys->pub.BERDecodePublicKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
+        _keys->pub.BERDecodePublicKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
     }
     catch (const std::exception&)
     {
         ByteQueue queue;
         fillQueue(queue, pubStr);
-		_keys->pub.BERDecode(queue);
+        _keys->pub.BERDecode(queue);
     }
     _hasPrivateKey = false;
     if (privStr != "")
@@ -126,14 +126,14 @@ Rsa::Rsa (const std::string& pubStr, const std::string& privStr) :
         {
             ByteQueue queue;
             fillQueue(queue, privStr);
-			_keys->priv.BERDecodePrivateKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
+            _keys->priv.BERDecodePrivateKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
             _hasPrivateKey = true;
         }
         catch (const std::exception&)
         {
             ByteQueue queue;
             fillQueue(queue, privStr);
-			_keys->priv.BERDecode(queue);
+            _keys->priv.BERDecode(queue);
             _hasPrivateKey = true;
         }
 
@@ -155,19 +155,19 @@ Rsa::~Rsa() = default;
 Rsa& 
 Rsa::operator=(const Rsa& rhs)
 {
-	this->_keys = std::unique_ptr<RsaKeys>(new RsaKeys{ *rhs._keys });
-	this->_hasPrivateKey = rhs._hasPrivateKey;
-	return *this;
+    this->_keys = std::unique_ptr<RsaKeys>(new RsaKeys{ rhs._keys->pub, rhs._keys->priv });
+    this->_hasPrivateKey = rhs._hasPrivateKey;
+    return *this;
 }
 
 Rsa::Rsa(const Rsa& rhs)
 {
-	this->_keys = std::unique_ptr<RsaKeys>(new RsaKeys{ *rhs._keys });
-	this->_hasPrivateKey = rhs._hasPrivateKey;
+    this->_keys = std::unique_ptr<RsaKeys>(new RsaKeys{ rhs._keys->pub, rhs._keys->priv });
+    this->_hasPrivateKey = rhs._hasPrivateKey;
 }
 
-Rsa::Rsa(Rsa&& rhs) = default;
-Rsa& Rsa::operator=(Rsa&& rhs) = default;
+Rsa::Rsa(Rsa&&)             = default;
+Rsa& Rsa::operator=(Rsa&& ) = default;
 
 std::string
 Rsa::encrypt (const std::string& data) const
@@ -191,7 +191,7 @@ Rsa::decrypt (const std::string& data) const
     }
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Decryptor decryptor(_keys->priv);
-	std::string decrypted;
+    std::string decrypted;
     StringSource ss(data, true,
         new PK_DecryptorFilter(rng, decryptor,
             new StringSink(decrypted)
@@ -234,7 +234,7 @@ Crypto::pbkdf2_sha512 (const string_t& password, const std::string& salt, std::s
 std::string
 Crypto::base64encode (const std::string& data)
 {
-	std::string encoded;
+    std::string encoded;
     StringSource ss(toByteCst(data), data.size(), true,
         new Base64Encoder(
             new StringSink(encoded)
@@ -252,7 +252,7 @@ Crypto::base64encode (const std::string& data)
 std::string
 Crypto::base64decode (const std::string& data)
 {
-	std::string decoded;
+    std::string decoded;
     StringSource ss(toByteCst(data), data.size(), true,
         new Base64Decoder(
             new StringSink(decoded)
@@ -299,7 +299,7 @@ Crypto::sha1File (const string_t& sfilename)
             )
         )
     );
-	std::locale l{};
+    std::locale l{};
     std::transform(hash.begin(), hash.end(), hash.begin(), [&l](unsigned char c) { return std::tolower(c, l); });
     return hash;
 }

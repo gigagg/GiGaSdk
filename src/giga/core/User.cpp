@@ -166,13 +166,20 @@ User::ContactData::birthDate () const
 {
     _THROW_IF_NO_USER_;
     if (_data->birthDate.is_initialized()) {
+#ifdef _MSC_VER
         std::tm tm = {}; // 0,0,0,0,0,0,0,0,0,0,0
-		int year, month, day;
-		auto bdStr = utils::wstr2str(_data->birthDate.get());
-		sscanf_s(bdStr.c_str(), "%d-%d-%d", &year, &month, &day);
-		tm.tm_year = year - 1900;
-		tm.tm_mon = month - 1;
-		tm.tm_mday = day;
+        int year, month, day;
+        auto bdStr = utils::wstr2str(_data->birthDate.get());
+        sscanf_s(bdStr.c_str(), "%d-%d-%d", &year, &month, &day);
+#else
+        std::tm tm = {0,0,0,0,0,0,0,0,0,0,0};
+        int year, month, day;
+        auto bdStr = utils::wstr2str(_data->birthDate.get());
+        sscanf(bdStr.c_str(), "%d-%d-%d", &year, &month, &day);
+#endif
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day;
         return boost::make_optional(std::chrono::system_clock::from_time_t(std::mktime(&tm)));
     }
     return boost::optional<system_clock::time_point>{};

@@ -11,13 +11,13 @@ using utility::string_t;
 BOOST_AUTO_TEST_CASE(test_calculate_fid)
 {
     auto fid = Crypto::calculateFid("177abc9bcd3bc9785b96e06fcf63d82c58b6f8f6");
-	BOOST_CHECK("MUr243SzLSVf11/c7T0SZqyf" == fid);
+    BOOST_CHECK("MUr243SzLSVf11/c7T0SZqyf" == fid);
 }
 
 BOOST_AUTO_TEST_CASE(test_calculate_fkey)
 {
     auto fkey = Crypto::calculateFkey("177abc9bcd3bc9785b96e06fcf63d82c58b6f8f6");
-	BOOST_CHECK("V9leIEW8PYNMhlDuMNvkpWei" == fkey);
+    BOOST_CHECK("V9leIEW8PYNMhlDuMNvkpWei" == fkey);
 }
 
 BOOST_AUTO_TEST_CASE(test_aes)
@@ -25,10 +25,10 @@ BOOST_AUTO_TEST_CASE(test_aes)
     auto result    = Crypto::aesEncrypt(U("password"), "data");
     auto decrypted = Crypto::aesDecrypt(U("password"),
                                         std::get<2>(result),
-										std::get<1>(result),
-										std::get<0>(result));
+                                        std::get<1>(result),
+                                        std::get<0>(result));
 
-	BOOST_CHECK("data" == decrypted);
+    BOOST_CHECK("data" == decrypted);
 }
 
 BOOST_AUTO_TEST_CASE(test_load_rsa_keys)
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(test_load_rsa_keys)
 
     auto r = Rsa{publicKey, privateKey};
     auto encrypted = r.encrypt("test");
-	BOOST_CHECK("test" == r.decrypt(encrypted));
+    BOOST_CHECK("test" == r.decrypt(encrypted));
 }
 
 BOOST_AUTO_TEST_CASE(test_decrypt_nodekey)
@@ -56,15 +56,15 @@ BOOST_AUTO_TEST_CASE(test_decrypt_nodekey)
     auto masterKey = Crypto::calculateMasterPassword(passwordSalt, password);
 
     auto pkey = Crypto::aesDecrypt(giga::utils::str2wstr(masterKey), Crypto::base64decode(aesSalt), Crypto::base64decode(aesIv), Crypto::base64decode(privateKeyEnc));
-	BOOST_CHECK(privateKey == pkey);
+    BOOST_CHECK(privateKey == pkey);
 
     auto rsa = Rsa{publicKey, pkey};
     auto nKey = rsa.decrypt(Crypto::base64decode(nodeKeyEnc));
-	BOOST_CHECK(44 == nKey.size());
+    BOOST_CHECK(44 == nKey.size());
     if (nKey.size() < 44) {
         nKey = Crypto::base64encode(nKey);
     }
-	BOOST_CHECK(nodeKey == nKey);
+    BOOST_CHECK(nodeKey == nKey);
 }
 
 BOOST_AUTO_TEST_CASE(test_uncipher_keys)
@@ -81,19 +81,19 @@ BOOST_AUTO_TEST_CASE(test_uncipher_keys)
     auto aesSalt        = R"(J/wabyBG4WA=)";
 
     auto loginPassword = Crypto::calculateLoginPassword(login, password);
-	BOOST_CHECK("Ju51bwKeziurk32HMdVx8g==" == loginPassword);
+    BOOST_CHECK("Ju51bwKeziurk32HMdVx8g==" == loginPassword);
 
     auto masterKey = Crypto::calculateMasterPassword(passwordSalt, password);
-	BOOST_CHECK("+Q5WdxgwsDFC8/6JgK2JPA==" == masterKey);
+    BOOST_CHECK("+Q5WdxgwsDFC8/6JgK2JPA==" == masterKey);
 
     auto pkey = Crypto::aesDecrypt(giga::utils::str2wstr(masterKey), Crypto::base64decode(aesSalt), Crypto::base64decode(aesIv), Crypto::base64decode(privateKeyEnc));
-	BOOST_CHECK(privateKey == pkey);
+    BOOST_CHECK(privateKey == pkey);
 
     auto rsa = Rsa{publicKey, pkey};
     auto nKey = rsa.decrypt(Crypto::base64decode(nodeKeyEnc));
-	BOOST_CHECK(32 == nKey.size());
+    BOOST_CHECK(32 == nKey.size());
     if (nKey.size() < 44) {
         nKey = Crypto::base64encode(nKey);
     }
-	BOOST_CHECK(nodeKey == nKey);
+    BOOST_CHECK(nodeKey == nKey);
 }

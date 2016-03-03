@@ -57,10 +57,10 @@ private:
 
     utility::string_t _filename;
     utility::string_t _nodeName;
-	std::string       _parentId;
-	std::string	      _sha1;
-	std::string       _fid;
-	std::string       _fkey;
+    std::string       _parentId;
+    std::string          _sha1;
+    std::string       _fid;
+    std::string       _fkey;
 
     uint64_t _fileSize;
 };

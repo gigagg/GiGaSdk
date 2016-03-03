@@ -8,30 +8,26 @@
 
 namespace giga
 {
-
-namespace
-{
 class RsaKeys;
-}
 class Rsa final
 {
 public:
     explicit
     Rsa (const std::string& pubStr, const std::string& privStr = "");
-	~Rsa();
-	Rsa& operator=(const Rsa& rhs);
-	Rsa(const Rsa& rhs);
-	Rsa& operator=(Rsa&& rhs);
-	Rsa(Rsa&& rhs);
+    ~Rsa();
+    Rsa& operator=(const Rsa& rhs);
+    Rsa(const Rsa& rhs);
+    Rsa& operator=(Rsa&& rhs);
+    Rsa(Rsa&& rhs);
 
-	std::string
+    std::string
     encrypt (const std::string& data) const;
 
-	std::string
+    std::string
     decrypt (const std::string& data) const;
 
 private:
-	std::unique_ptr<RsaKeys>    _keys;
+    std::unique_ptr<RsaKeys>    _keys;
     bool                        _hasPrivateKey;
 };
 

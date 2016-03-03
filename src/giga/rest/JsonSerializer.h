@@ -30,15 +30,17 @@ namespace details {
     inline web::json::value serialize(double& value) {
         return web::json::value::number(value);
     }
-	inline web::json::value serialize(std::string& value) {
-		return  web::json::value::string(utils::str2wstr(value));
-	}
-	inline web::json::value serialize(std::wstring& value) {
-		return  web::json::value::string(utils::str2wstr(value));
-	}
+    inline web::json::value serialize(std::string& value) {
+        return  web::json::value::string(utils::str2wstr(value));
+    }
+#ifdef _UTF16_STRINGS
+    inline web::json::value serialize(std::wstring& value) {
+        return  web::json::value::string(utils::str2wstr(value));
+    }
     inline web::json::value serialize(const wchar_t*& value) {
         return web::json::value::string(value);
     }
+#endif
 
     template <typename T> web::json::value serialize(T& value) {
         auto subJson = web::json::value::object();

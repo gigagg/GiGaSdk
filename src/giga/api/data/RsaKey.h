@@ -17,10 +17,10 @@ namespace data {
  * An rsa key pair. Private key is aes encrypted.
  */
 struct RsaKey {
-	std::string publicKey   = {};
-	std::string privateKey  = {};
-	std::string aesIv       = {};
-	std::string aesSalt     = {};
+    std::string publicKey   = {};
+    std::string privateKey  = {};
+    std::string aesIv       = {};
+    std::string aesSalt     = {};
     
     
     template <class Manager>

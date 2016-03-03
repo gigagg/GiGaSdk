@@ -186,7 +186,7 @@ FileDownloader::doStart()
 
                     GIGA_DEBUG_LOG(U("downloading: ") << fileUri.to_string());
 
-					auto filUriStr = utils::wstr2str(fileUri.to_string());
+                    auto filUriStr = utils::wstr2str(fileUri.to_string());
                     curl.add<CURLOPT_URL>(filUriStr.c_str());
                     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
                     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
@@ -195,7 +195,7 @@ FileDownloader::doStart()
 
                     if (pos > 0)
                     {
-						auto posStr = std::to_string(pos) + "-";
+                        auto posStr = std::to_string(pos) + "-";
                         curl.add<CURLOPT_RANGE>(posStr.c_str());
                     }
 

@@ -17,13 +17,15 @@ JsonObj& JsonObj::add(const string_t& name, int64_t value) {
     intData.push_back(std::make_pair(name, value));
     return *this;
 }
+#ifdef _UTF16_STRINGS
 JsonObj& JsonObj::add(const string_t& name, const std::wstring& value) {
     strData.push_back(std::make_pair(name, utils::str2wstr(value)));
     return *this;
 }
+#endif
 JsonObj& JsonObj::add(const string_t& name, const std::string& value) {
-	strData.push_back(std::make_pair(name, utils::str2wstr(value)));
-	return *this;
+    strData.push_back(std::make_pair(name, utils::str2wstr(value)));
+    return *this;
 }
 JsonObj& JsonObj::add(const string_t& name, bool value) {
     boolData.push_back(std::make_pair(name, value));

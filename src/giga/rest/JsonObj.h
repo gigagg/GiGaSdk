@@ -20,7 +20,9 @@ class JsonObj
 public:
     JsonObj& add(const utility::string_t& name, int64_t value);
     JsonObj& add(const utility::string_t& name, const std::string& value);
-	JsonObj& add(const utility::string_t& name, const std::wstring& value);
+#ifdef _UTF16_STRINGS
+    JsonObj& add(const utility::string_t& name, const std::wstring& value);
+#endif
     JsonObj& add(const utility::string_t& name, bool value);
     JsonObj& add(const utility::string_t& name, double value);
     JsonObj& add(const utility::string_t& name, const char* value) = delete;

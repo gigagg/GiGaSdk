@@ -137,7 +137,7 @@ ChunkUploader::upload ()
         auto response = sendChunk(position, callbackData, curl, str);
         auto regex    = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+)$"};
         auto what     = boost::cmatch{};
-		auto resp     = utils::wstr2str(response);
+        auto resp     = utils::wstr2str(response);
         if(boost::regex_match(resp.c_str(), what, regex))
         {
             auto start = std::stoul(string_t{what[1].first, what[1].second});
@@ -177,7 +177,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     auto chunkSize = std::min(position == 0 ? 1024 : CHUNK_SIZE, _fileSize - position);
     data.setChunck(position, position + chunkSize);
 
-	auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
+    auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
     curl.add<CURLOPT_URL>(upUri.c_str());
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
@@ -192,10 +192,10 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     auto userId = Application::get().currentUser().id();
     curl_slist* list = nullptr;
-	auto hcontentDisposition = "Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"";
-	auto hSession            = "Session-Id: " + std::to_string(userId) + "-" + _sha1;
-	auto hcontentRange       = "Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize);
-	auto hcontentType        = "Content-Type: application/octet-stream";
+    auto hcontentDisposition = "Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"";
+    auto hSession            = "Session-Id: " + std::to_string(userId) + "-" + _sha1;
+    auto hcontentRange       = "Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize);
+    auto hcontentType        = "Content-Type: application/octet-stream";
     list = curl_slist_append(list, hcontentDisposition.c_str());
     list = curl_slist_append(list, hSession.c_str());
     list = curl_slist_append(list, hcontentRange.c_str());
@@ -209,7 +209,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     curl.perform();
 
-	unsigned short httpCode;
+    unsigned short httpCode;
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
     if (httpCode >= 300)
     {

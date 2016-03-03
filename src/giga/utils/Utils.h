@@ -42,9 +42,6 @@ wstr2str(const utility::string_t& wstr);
 utility::string_t
 str2wstr(const std::string& str);
 
-utility::string_t
-str2wstr(const std::wstring& wstr);
-
 } /* namespace utils */
 } /* namespace giga */
 

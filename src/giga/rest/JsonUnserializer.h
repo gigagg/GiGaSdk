@@ -32,12 +32,14 @@ namespace details {
     inline void getValue(const web::json::value& value, double& ret) {
         ret = value.as_double();
     }
-	inline void getValue(const web::json::value& value, std::string& ret) {
-		ret = utils::wstr2str(value.as_string());
-	}
-	inline void getValue(const web::json::value& value, std::wstring& ret) {
-		ret = utils::str2wstr(value.as_string());
-	}
+    inline void getValue(const web::json::value& value, std::string& ret) {
+        ret = utils::wstr2str(value.as_string());
+    }
+#ifdef _UTF16_STRINGS
+    inline void getValue(const web::json::value& value, std::wstring& ret) {
+        ret = utils::str2wstr(value.as_string());
+    }
+#endif
 
     template <typename T>
     void getValue(const web::json::value& value, T& ret) {

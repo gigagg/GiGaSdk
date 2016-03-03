@@ -76,17 +76,5 @@ str2wstr(const std::string& str)
 #endif
 }
 
-utility::string_t
-str2wstr(const std::wstring& wstr)
-{
-#ifdef _UTF16_STRINGS
-	return wstr;
-#else
-	typedef std::codecvt_utf8<wchar_t> convert_typeX;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-	return converterX.to_bytes(wstr);
-#endif
-}
-
 } /* namespace utils */
 } /* namespace giga */
