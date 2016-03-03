@@ -15,6 +15,7 @@
 #include "../api/data/User.h"
 #include "../api/NodesApi.h"
 #include "../utils/Crypto.h"
+#include "../utils/Utils.h"
 
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
@@ -65,8 +66,8 @@ namespace giga
 namespace core
 {
 
-FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const string_t& parentId,
-                            const string_t& sha1, const string_t& fid, const string_t& fkey) :
+FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const std::string& parentId,
+                            const std::string& sha1, const std::string& fid, const std::string& fkey) :
         FileTransferer{},
         _task{},
         _filename{filename},
@@ -109,7 +110,7 @@ FileUploader::doStart ()
 
             if (e.getJson().has_field(U("uploadUrl"))) {
                 auto uploadUrl = e.getJson().at(U("uploadUrl")).as_string();
-                auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(nodeKeyCl)});
+                auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(utils::str2wstr(nodeKeyCl))});
                 ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress};
                 return ch.upload();
             }

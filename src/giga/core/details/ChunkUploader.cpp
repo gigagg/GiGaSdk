@@ -111,7 +111,7 @@ namespace giga
 namespace details
 {
 
-ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const string_t& sha1, const string_t& filename,
+ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const std::string& sha1, const string_t& filename,
                               const string_t& mime, details::CurlProgress* progress) :
                _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), GigaApi::getOAuthConfig()->token().access_token()).to_uri()},
                _nodeName{nodeName},
@@ -137,7 +137,8 @@ ChunkUploader::upload ()
         auto response = sendChunk(position, callbackData, curl, str);
         auto regex    = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+)$"};
         auto what     = boost::cmatch{};
-        if(boost::regex_match(utils::wstr2str(response).c_str(), what, regex))
+		auto resp     = utils::wstr2str(response);
+        if(boost::regex_match(resp.c_str(), what, regex))
         {
             auto start = std::stoul(string_t{what[1].first, what[1].second});
             auto end = std::stoul(string_t{what[2].first, what[2].second});
@@ -176,7 +177,8 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     auto chunkSize = std::min(position == 0 ? 1024 : CHUNK_SIZE, _fileSize - position);
     data.setChunck(position, position + chunkSize);
 
-    curl.add<CURLOPT_URL>(utils::wstr2str(_uploadUrl.to_uri().to_string()).c_str());
+	auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
+    curl.add<CURLOPT_URL>(upUri.c_str());
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
     curl.add<CURLOPT_XFERINFODATA>(_progress);
@@ -190,10 +192,14 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     auto userId = Application::get().currentUser().id();
     curl_slist* list = nullptr;
-    list = curl_slist_append(list, ("Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"").c_str());
-    list = curl_slist_append(list, ("Session-Id: " + std::to_string(userId) + "-" + utils::wstr2str(_sha1)).c_str());
-    list = curl_slist_append(list, ("Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize)).c_str());
-    list = curl_slist_append(list, "Content-Type: application/octet-stream");
+	auto hcontentDisposition = "Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"";
+	auto hSession            = "Session-Id: " + std::to_string(userId) + "-" + _sha1;
+	auto hcontentRange       = "Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize);
+	auto hcontentType        = "Content-Type: application/octet-stream";
+    list = curl_slist_append(list, hcontentDisposition.c_str());
+    list = curl_slist_append(list, hSession.c_str());
+    list = curl_slist_append(list, hcontentRange.c_str());
+    list = curl_slist_append(list, hcontentType);
     list = curl_slist_append(list, "Expect: ");
     curl.add<CURLOPT_HTTPHEADER>(list);
 

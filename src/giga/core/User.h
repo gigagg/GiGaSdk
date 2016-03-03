@@ -187,7 +187,7 @@ public:
         const utility::string_t&
         nextEmail() const;
 
-        const utility::string_t&
+        const std::string&
         nodeKeyClear() const;
 
         int64_t
@@ -210,7 +210,7 @@ public:
 
     private:
         std::shared_ptr<data::User> _data;
-        utility::string_t                 _nodeKeyClear;
+        std::string                 _nodeKeyClear;
     };
 
     bool

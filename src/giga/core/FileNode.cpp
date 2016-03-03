@@ -50,7 +50,7 @@ FileNodeData::mimeType () const
     return n->mimeType.get();
 }
 
-const string_t&
+const std::string&
 FileNodeData::fid () const
 {
     return n->fid.get();
@@ -89,7 +89,7 @@ FileNodeData::posterUrl () const
 uri
 FileNodeData::fileUrl () const
 {
-    return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(Application::get().currentUser().personalData().nodeKeyClear())};
+    return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(utils::str2wstr(Application::get().currentUser().personalData().nodeKeyClear()))};
 }
 
 //

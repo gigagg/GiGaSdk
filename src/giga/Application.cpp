@@ -157,7 +157,7 @@ Application::searchUser (const string_t& search) const
 //
 
 std::unique_ptr<core::Node>
-Application::getNodeById (const string_t& id) const
+Application::getNodeById (const std::string& id) const
 {
     auto result = NodesApi::getNodeById(id).get();
     return core::Node::create(result);

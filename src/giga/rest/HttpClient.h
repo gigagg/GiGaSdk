@@ -19,7 +19,7 @@ class HttpClient final
 {
 public:
     static constexpr auto API = U("/api/1.0/");
-    static constexpr auto JSON_CONTENT_TYPE = U("application/json;charset=utf-8");
+    static constexpr auto JSON_CONTENT_TYPE = U("application/json");
 
 public:
     HttpClient ();

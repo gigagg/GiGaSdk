@@ -18,11 +18,11 @@ namespace data {
  * Either a file or a folder
  */
 struct Node {
-    utility::string_t id = {};
+    std::string id = {};
     utility::string_t name = {};
-    boost::optional<utility::string_t> parentId = boost::none;
-    std::vector<utility::string_t> ancestors = {};
-    std::vector<utility::string_t> servers = {};
+    boost::optional<std::string> parentId = boost::none;
+    std::vector<std::string> ancestors = {};
+    std::vector<std::string> servers = {};
     int64_t ownerId = 0;
     int64_t size = 0;
     int64_t creationDate = 0;
@@ -32,8 +32,8 @@ struct Node {
     std::vector<std::shared_ptr<Node>> nodes = {};
     utility::string_t type = {};
     boost::optional<utility::string_t> mimeType = boost::none;
-    boost::optional<utility::string_t> fid = boost::none;
-    boost::optional<utility::string_t> fkey = boost::none;
+    boost::optional<std::string> fid = boost::none;
+    boost::optional<std::string> fkey = boost::none;
     boost::optional<int64_t> previewState = boost::none;
     /** DownloadUrl. Concatenate the url encoded nodeKey. */
     boost::optional<utility::string_t> url = boost::none;

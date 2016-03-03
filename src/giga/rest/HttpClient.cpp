@@ -59,9 +59,10 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     auto state  = string_t{};
     auto regex  = boost::regex{".*state=([a-zA-Z0-9]+).*"};
     auto what   = boost::cmatch{};
-    if(boost::regex_match(utils::wstr2str(auth_uri).c_str(), what, regex))
+	auto uriStr = utils::wstr2str(auth_uri);
+    if(boost::regex_match(uriStr.c_str(), what, regex))
     {
-        state = string_t{what[1].first, what[1].second};
+        state = utils::str2wstr(what.str(1));
     }
 
     // I manually do the browser work here ...

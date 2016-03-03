@@ -56,7 +56,7 @@ std::string
 wstr2str(const utility::string_t& wstr)
 {
 #ifdef _UTF16_STRINGS
-    typedef std::codecvt_utf8<wchar_t> convert_typeX;
+    typedef std::codecvt_utf8_utf16<wchar_t> convert_typeX;
     std::wstring_convert<convert_typeX, wchar_t> converterX;
     return converterX.to_bytes(wstr);
 #else
@@ -68,7 +68,7 @@ utility::string_t
 str2wstr(const std::string& str)
 {
 #ifdef _UTF16_STRINGS
-    typedef std::codecvt_utf8<wchar_t> convert_typeX;
+    typedef std::codecvt_utf8_utf16<wchar_t> convert_typeX;
     std::wstring_convert<convert_typeX, wchar_t> converterX;
     return converterX.from_bytes(str);
 #else
@@ -76,6 +76,17 @@ str2wstr(const std::string& str)
 #endif
 }
 
+utility::string_t
+str2wstr(const std::wstring& wstr)
+{
+#ifdef _UTF16_STRINGS
+	return wstr;
+#else
+	typedef std::codecvt_utf8<wchar_t> convert_typeX;
+	std::wstring_convert<convert_typeX, wchar_t> converterX;
+	return converterX.to_bytes(wstr);
+#endif
+}
 
 } /* namespace utils */
 } /* namespace giga */

@@ -10,6 +10,7 @@
 
 #include <cpprest/json.h>
 #include <boost/optional.hpp>
+#include "../utils/Utils.h"
 
 namespace giga {
 
@@ -31,9 +32,12 @@ namespace details {
     inline void getValue(const web::json::value& value, double& ret) {
         ret = value.as_double();
     }
-    inline void getValue(const web::json::value& value, utility::string_t& ret) {
-        ret = value.as_string();
-    }
+	inline void getValue(const web::json::value& value, std::string& ret) {
+		ret = utils::wstr2str(value.as_string());
+	}
+	inline void getValue(const web::json::value& value, std::wstring& ret) {
+		ret = utils::str2wstr(value.as_string());
+	}
 
     template <typename T>
     void getValue(const web::json::value& value, T& ret) {

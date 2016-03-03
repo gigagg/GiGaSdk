@@ -39,7 +39,7 @@ public:
     const utility::string_t&
     mimeType() const;
 
-    const utility::string_t&
+    const std::string&
     fid() const;
 
     int64_t

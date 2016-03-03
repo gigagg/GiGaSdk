@@ -5,6 +5,7 @@
 #include "NetworkApi.h"
 #include "data/UsersRelation.h"
 #include "data/Success.h"
+#include "../utils/Utils.h"
 
 #include <cpprest/http_client.h>
 #include <string>
@@ -29,13 +30,13 @@ NetworkApi::updateUserRelationData (int64_t fromUserId, int64_t toUserId, const 
 
 pplx::task<std::shared_ptr<UsersRelation>>
 NetworkApi::createUserRelation (int64_t fromUserId, int64_t toUserId, const string_t& type, const string_t& medium,
-                                    const string_t& key)
+                                    const std::string& key)
 {
     auto uri = client().uri (U("users"), fromUserId, U("users"), toUserId);
     auto body = JsonObj{};
     body.add (U("type"), type);
     body.add (U("medium"), medium);
-    body.add (U("key"), key);
+    body.add (U("key"), utils::str2wstr(key));
     return client().request<UsersRelation> (methods::POST, uri, std::move(body));
 }
 

@@ -24,7 +24,7 @@ public:
 
     static pplx::task<std::shared_ptr<data::UsersRelation>>
     createUserRelation (int64_t fromUserId, int64_t toUserId, const utility::string_t& type, const utility::string_t& medium,
-                            const utility::string_t& key);
+                            const std::string& key);
 
     static pplx::task<std::shared_ptr<data::Success>>
     deleteUserRelation (int64_t fromUserId, int64_t toUserId, const utility::string_t& type);

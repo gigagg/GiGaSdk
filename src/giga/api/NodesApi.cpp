@@ -9,24 +9,26 @@
 #include "data/Timeline.h"
 #include "data/DataNode.h"
 #include "data/IdContainer.h"
+#include "../utils/Utils.h"
 
 #include <cpprest/http_client.h>
 #include <string>
 
 using web::http::methods;
 using utility::string_t;
+using giga::utils::str2wstr;
 
 namespace giga
 {
 using namespace data;
 
 pplx::task<std::shared_ptr<NodeList>>
-NodesApi::searchNode (const string_t& search, const string_t& mine, const string_t& inFolder, int64_t ownerId)
+NodesApi::searchNode (const string_t& search, const string_t& mine, const std::string& inFolder, int64_t ownerId)
 {
     auto uri = client().uri (U("nodes"));
     uri.append_query (U("search"), search);
     uri.append_query (U("mine"), mine);
-    uri.append_query (U("inFolder"), inFolder);
+    uri.append_query (U("inFolder"), str2wstr(inFolder));
     uri.append_query (U("ownerId"), ownerId);
     return client().request<NodeList> (methods::GET, uri);
 }
@@ -41,35 +43,35 @@ NodesApi::searchNodeByType (const string_t& search, const string_t& type, uint16
     return client().request<std::vector<data::Node>> (methods::GET, uri);}
 
 pplx::task<std::shared_ptr<DataNode>>
-NodesApi::addNode (const string_t& name, const string_t& type, const string_t& parentId, const string_t& fkey,
-                   const string_t& fid)
+NodesApi::addNode (const string_t& name, const string_t& type, const std::string& parentId, const std::string& fkey,
+                   const std::string& fid)
 {
     auto uri = client().uri (U("nodes"));
     auto body = JsonObj{};
     body.add (U("name"), name);
     body.add (U("type"), type);
-    body.add (U("parentId"), parentId);
-    body.add (U("fkey"), fkey);
-    body.add (U("fid"), fid);
+    body.add (U("parentId"), str2wstr(parentId));
+    body.add (U("fkey"), str2wstr(fkey));
+    body.add (U("fid"), str2wstr(fid));
     return client().request<DataNode> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<DataNode>>
-NodesApi::addFolderNode (const string_t& name, const string_t& parentId)
+NodesApi::addFolderNode (const string_t& name, const std::string& parentId)
 {
     auto uri = client().uri (U("nodes"));
     auto body = JsonObj{};
     body.add (U("name"), name);
     body.add (U("type"), string_t(U("folder")));
-    body.add (U("parentId"), parentId);
+    body.add (U("parentId"), str2wstr(parentId));
     return client().request<DataNode> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<DataNode>>
-NodesApi::copyNode (const string_t& fromNodeId, const string_t& toNodeId, const string_t& copy, const string_t& cut,
-                    const string_t& myNodeKey, const string_t& otherNodeKey)
+NodesApi::copyNode (const std::string& fromNodeId, const std::string& toNodeId, const string_t& copy, const string_t& cut,
+                    const std::string& myNodeKey, const std::string& otherNodeKey)
 {
-    auto uri = client().uri (U("nodes"), fromNodeId, U("nodes"), toNodeId);
+    auto uri = client().uri (U("nodes"), str2wstr(fromNodeId), U("nodes"), str2wstr(toNodeId));
     uri.append_query (U("copy"), copy);
     uri.append_query (U("cut"), cut);
     auto body = JsonObj{};
@@ -79,39 +81,39 @@ NodesApi::copyNode (const string_t& fromNodeId, const string_t& toNodeId, const 
 }
 
 pplx::task<std::shared_ptr<Node>>
-NodesApi::getNodeById (const string_t& nodeId)
+NodesApi::getNodeById (const std::string& nodeId)
 {
-    auto uri = client().uri (U("nodes"), nodeId);
+    auto uri = client().uri (U("nodes"), str2wstr(nodeId));
     return client().request<Node> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<Node>>
-NodesApi::renameNode (const string_t& nodeId, const string_t& name)
+NodesApi::renameNode (const std::string& nodeId, const string_t& name)
 {
-    auto uri = client().uri (U("nodes"), nodeId);
+    auto uri = client().uri (U("nodes"), str2wstr(nodeId));
     auto body = JsonObj{};
     body.add (U("name"), name);
     return client().request<Node> (methods::PUT, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<IdContainer>>
-NodesApi::deleteNode (const string_t& nodeId)
+NodesApi::deleteNode (const std::string& nodeId)
 {
-    auto uri = client().uri (U("nodes"), nodeId);
+    auto uri = client().uri (U("nodes"), str2wstr(nodeId));
     return client().request<IdContainer> (methods::DEL, uri);
 }
 
 pplx::task<std::shared_ptr<std::vector<Node>>>
-NodesApi::getChildrenNode (const string_t& nodeId)
+NodesApi::getChildrenNode (const std::string& nodeId)
 {
-    auto uri = client().uri (U("nodes"), nodeId, U("nodes"));
+    auto uri = client().uri (U("nodes"), str2wstr(nodeId), U("nodes"));
     return client().request<std::vector<Node>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<Preview>>
-NodesApi::getPreviewsData (const string_t& nodeId)
+NodesApi::getPreviewsData (const std::string& nodeId)
 {
-    auto uri = client().uri (U("nodes"), nodeId, U("previews"));
+    auto uri = client().uri (U("nodes"), str2wstr(nodeId), U("previews"));
     return client().request<Preview> (methods::GET, uri);
 }
 

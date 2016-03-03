@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(test_data_node)
     BOOST_CHECK(boost::none == node.fid);
 	BOOST_CHECK(boost::none == node.fkey);
 	BOOST_CHECK(boost::none == node.icon);
-	BOOST_CHECK(U("561cc82833e5dfb5008b4567") == node.id);
+	BOOST_CHECK("561cc82833e5dfb5008b4567" == node.id);
     BOOST_CHECK_EQUAL(1452174320, node.lastUpdateDate);
 	BOOST_CHECK(boost::none == node.mimeType);
 	BOOST_CHECK(U("All my files") == node.name);
@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_CASE(test_data_node)
 	BOOST_CHECK(U("file") == file->type);
 	BOOST_CHECK(1 == file->ancestors.size());
     BOOST_CHECK_EQUAL(1448984709, file->creationDate);
-	BOOST_CHECK(U("zjIENuYyf27JN7xxil6M0cc1") == file->fid.get());
-	BOOST_CHECK(U("z1DwH5cOZirP3vbtj2QsD4vGd3PyN+ldYe9U02GIoN4=") == file->fkey.get());
+	BOOST_CHECK("zjIENuYyf27JN7xxil6M0cc1" == file->fid.get());
+	BOOST_CHECK("z1DwH5cOZirP3vbtj2QsD4vGd3PyN+ldYe9U02GIoN4=" == file->fkey.get());
 	BOOST_CHECK(U("//cloud03.dev.gg/preview/565dc08533e5dfa8008b4568/icon?k=") == file->icon.get());
-	BOOST_CHECK(U("565dc08533e5dfa8008b4568") == file->id);
+	BOOST_CHECK("565dc08533e5dfa8008b4568" == file->id);
     BOOST_CHECK_EQUAL(1448984709, file->lastUpdateDate);
 	BOOST_CHECK(U("video/x-matroska") == file->mimeType.get());
 	BOOST_CHECK(U("testFile") == file->name);
@@ -171,12 +171,12 @@ BOOST_AUTO_TEST_CASE(test_data_node)
 	BOOST_CHECK(0 == file->nodes.size());
 	BOOST_CHECK(U("//cloud03.dev.gg/preview/565dc08533e5dfa8008b4568/original?") == file->original.get());
     BOOST_CHECK_EQUAL(1, file->ownerId);
-	BOOST_CHECK(U("561cc82833e5dfb5008b4567") == file->parentId.get());
+	BOOST_CHECK("561cc82833e5dfb5008b4567" == file->parentId.get());
 	BOOST_CHECK(U("//cloud03.dev.gg/preview/565dc08533e5dfa8008b4568/poster?") == file->poster.get());
     BOOST_CHECK_EQUAL(7, file->previewState.get());
     BOOST_CHECK_EQUAL(728464990, file->size);
 	BOOST_CHECK(1 == file->servers.size());
-	BOOST_CHECK(U("03") == file->servers[0]);
+	BOOST_CHECK("03" == file->servers[0]);
 	BOOST_CHECK(U("//cloud03.dev.gg/preview/565dc08533e5dfa8008b4568/square?") == file->square.get());
 	BOOST_CHECK(U("//cloud03.dev.gg/download/565dc08533e5dfa8008b4568/testFile?k=") == file->url.get());
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(test_data_node)
 	BOOST_CHECK(boost::none == folder->fid);
 	BOOST_CHECK(boost::none == folder->fkey);
 	BOOST_CHECK(boost::none == folder->icon);
-	BOOST_CHECK(U("568e5e7233e5df3b008b4567") == folder->id);
+	BOOST_CHECK("568e5e7233e5df3b008b4567" == folder->id);
     BOOST_CHECK_EQUAL(1452170867, folder->lastUpdateDate);
 	BOOST_CHECK(boost::none == folder->mimeType);
 	BOOST_CHECK(U("images") == folder->name);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(test_data_node)
 	BOOST_CHECK(0 == folder->nodes.size());
 	BOOST_CHECK(boost::none == folder->original);
     BOOST_CHECK_EQUAL(1, folder->ownerId);
-	BOOST_CHECK(U("561cc82833e5dfb5008b4567") == folder->parentId.get());
+	BOOST_CHECK("561cc82833e5dfb5008b4567" == folder->parentId.get());
 	BOOST_CHECK(boost::none == folder->poster);
 	BOOST_CHECK(boost::none == folder->previewState);
 	BOOST_CHECK(0 == folder->size);

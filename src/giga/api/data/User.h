@@ -43,7 +43,7 @@ struct User {
     /** True if the user is a GiGa bot */
     boost::optional<bool> isBot = boost::none;
     /** The rsa public key of this user */
-    boost::optional<utility::string_t> publicKey = boost::none;
+    boost::optional<std::string> publicKey = boost::none;
     /** DEPRECATED: the country */
     boost::optional<utility::string_t> country = boost::none;
     /** DEPRECATED: The interface languge for this user */
@@ -55,11 +55,11 @@ struct User {
     /** Private. */
     boost::optional<utility::string_t> reportedState = boost::none;
     /** Private. */
-    boost::optional<utility::string_t> nodeKey = boost::none;
+    boost::optional<std::string> nodeKey = boost::none;
     /** Private. */
     std::unique_ptr<RsaKey> rsaKeys = nullptr;
     /** Private. */
-    boost::optional<utility::string_t> salt = boost::none;
+    boost::optional<std::string> salt = boost::none;
     /** Private. */
     boost::optional<utility::string_t> email = boost::none;
     /** Private. The email when not validated yet */

@@ -11,7 +11,7 @@
 #include <cpprest/json.h>
 #include <boost/optional.hpp>
 #include <map>
-
+#include "../utils/Utils.h"
 
 namespace giga {
 
@@ -30,9 +30,12 @@ namespace details {
     inline web::json::value serialize(double& value) {
         return web::json::value::number(value);
     }
-    inline web::json::value serialize(utility::string_t& value) {
-        return  web::json::value::string(value);
-    }
+	inline web::json::value serialize(std::string& value) {
+		return  web::json::value::string(utils::str2wstr(value));
+	}
+	inline web::json::value serialize(std::wstring& value) {
+		return  web::json::value::string(utils::str2wstr(value));
+	}
     inline web::json::value serialize(const wchar_t*& value) {
         return web::json::value::string(value);
     }
@@ -120,7 +123,6 @@ private:
 
 private:
     web::json::value& val;
-
 };
 
 } // namespace giga

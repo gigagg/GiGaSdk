@@ -63,7 +63,7 @@ void printNodes(const char* name, T& nodes)
     ucout << "\n" << name << std::endl;
     for(auto& node : nodes)
     {
-        ucout << core::Node::typeCvrt.toStr(node->type()) << "\t" << node->id() << "\t" << node->name() << "\n";
+        ucout << core::Node::typeCvrt.toStr(node->type()) << "\t" << utils::str2wstr(node->id()) << "\t" << node->name() << "\n";
     }
 }
 
@@ -99,7 +99,7 @@ int main(int argc, const char* argv[]) {
         ("search-image",    po::wvalue<string_t>(), "search image files")
         ("search-folder",   po::wvalue<string_t>(), "search folder files")
 
-        ("node",    po::wvalue<string_t>(), "select the current node by id")
+        ("node",    po::value<std::string>(), "select the current node by id")
         ("tree",    po::value<bool>()->implicit_value(true), "print the current node tree")
         ("ls",      po::value<bool>()->implicit_value(true), "print the current node children")
         ("mkdir",   po::wvalue<string_t>(), "create a directory under the current node")
@@ -134,7 +134,7 @@ int main(int argc, const char* argv[]) {
 
         auto owner = app.authenticate(login, password);
         ucout << U("Logged as: ") << owner.login()
-                << U(", root: ") << owner.contactData().node().id()
+                << U(", root: ") << utils::str2wstr(owner.contactData().node().id())
                 << std::endl;
 
         //
@@ -185,7 +185,7 @@ int main(int argc, const char* argv[]) {
 
         if (vm.count("node"))
         {
-            auto node = app.getNodeById(vm["node"].as<string_t>());
+            auto node = app.getNodeById(vm["node"].as<std::string>());
             if (vm.count("tree"))
             {
                 ucout << "tree" << std::endl;

@@ -39,7 +39,7 @@ GigaApi::authenticate (const string_t& login, const string_t& password)
         if (exists->login.is_initialized())
         {
             auto realLogin = exists->login.get();
-            client().authenticate(exists->login.get(), Crypto::calculateLoginPassword(exists->login.get(), password));
+            client().authenticate(realLogin, utils::str2wstr(Crypto::calculateLoginPassword(realLogin, password)));
             currentUser = UsersApi::getCurrentUser().get();
             return currentUser;
         }

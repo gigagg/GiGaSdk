@@ -24,8 +24,8 @@ class FileUploader final : public FileTransferer
 {
 public:
     explicit
-    FileUploader (const utility::string_t& filename, const utility::string_t& nodeName, const utility::string_t& parentId,
-                  const utility::string_t& sha1, const utility::string_t& fid, const utility::string_t& fkey);
+    FileUploader (const utility::string_t& filename, const utility::string_t& nodeName, const std::string& parentId,
+                  const std::string& sha1, const std::string& fid, const std::string& fkey);
     ~FileUploader ()                             = default;
 
     FileUploader ()                              = delete;
@@ -57,10 +57,10 @@ private:
 
     utility::string_t _filename;
     utility::string_t _nodeName;
-    utility::string_t _parentId;
-    utility::string_t _sha1;
-    utility::string_t _fid;
-    utility::string_t _fkey;
+	std::string       _parentId;
+	std::string	      _sha1;
+	std::string       _fid;
+	std::string       _fkey;
 
     uint64_t _fileSize;
 };

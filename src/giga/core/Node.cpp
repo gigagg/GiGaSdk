@@ -73,7 +73,7 @@ Node::operator=(const Node& rhs)
     return *this;
 }
 
-const string_t&
+const std::string&
 Node::id () const
 {
     _THROW_IF_NO_NODE_;
@@ -94,14 +94,14 @@ Node::name () const
     return _data->name;
 }
 
-const string_t&
+const std::string&
 Node::parentId () const
 {
     _THROW_IF_NO_NODE_;
-    return _data->parentId.get_value_or(U(""));
+    return _data->parentId.get_value_or("");
 }
 
-const std::vector<string_t>&
+const std::vector<std::string>&
 Node::ancestors () const
 {
     _THROW_IF_NO_NODE_;
@@ -159,7 +159,7 @@ void
 Node::remove()
 {
     NodesApi::deleteNode(id()).get();
-    _data->id = U("");
+    _data->id = "";
 }
 
 void

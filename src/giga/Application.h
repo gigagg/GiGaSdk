@@ -94,7 +94,7 @@ public:
     //
 
     std::unique_ptr<core::Node>
-    getNodeById (const utility::string_t& id) const;
+    getNodeById (const std::string& id) const;
 
     std::vector<std::unique_ptr<core::Node>>
     searchNode (const utility::string_t& search, core::Node::MediaType type) const;

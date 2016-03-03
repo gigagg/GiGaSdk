@@ -6,6 +6,7 @@
  */
 
 #include "JsonObj.h"
+#include "../utils/Utils.h"
 
 using utility::string_t;
 
@@ -16,9 +17,13 @@ JsonObj& JsonObj::add(const string_t& name, int64_t value) {
     intData.push_back(std::make_pair(name, value));
     return *this;
 }
-JsonObj& JsonObj::add(const string_t& name, const string_t& value) {
-    strData.push_back(std::make_pair(name, value));
+JsonObj& JsonObj::add(const string_t& name, const std::wstring& value) {
+    strData.push_back(std::make_pair(name, utils::str2wstr(value)));
     return *this;
+}
+JsonObj& JsonObj::add(const string_t& name, const std::string& value) {
+	strData.push_back(std::make_pair(name, utils::str2wstr(value)));
+	return *this;
 }
 JsonObj& JsonObj::add(const string_t& name, bool value) {
     boolData.push_back(std::make_pair(name, value));

@@ -61,7 +61,7 @@ protected:
     explicit Node(std::shared_ptr<data::Node> n);
 
 public:
-    const utility::string_t&
+    const std::string&
     id() const;
 
     Type
@@ -70,10 +70,10 @@ public:
     const utility::string_t&
     name() const;
 
-    const utility::string_t&
+    const std::string&
     parentId() const;
 
-    const std::vector<utility::string_t>&
+    const std::vector<std::string>&
     ancestors() const;
 
     int64_t

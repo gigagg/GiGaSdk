@@ -12,6 +12,7 @@ find_path(CRYPTO++_INCLUDE_DIR
   NAMES
     crypto++/cryptlib.h cryptopp/cryptlib.h
   PATHS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp
     ${CRYPTO++_PKGCONF_INCLUDE_DIRS}
     ${CRYPTO++_DIR}
     $ENV{CRYPTO++_DIR}
@@ -32,6 +33,7 @@ find_library(CRYPTO++_UTILS_LIBRARY
     cryptopp cryptlib
   PATHS 
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++
+	${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++/Win32/Output
     ${CRYPTO++_PKGCONF_LIBRARY_DIRS}
     ${CRYPTO++_DIR}
     $ENV{CRYPTO++_DIR}

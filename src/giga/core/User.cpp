@@ -168,7 +168,8 @@ User::ContactData::birthDate () const
     if (_data->birthDate.is_initialized()) {
         std::tm tm = {}; // 0,0,0,0,0,0,0,0,0,0,0
 		int year, month, day;
-		sscanf_s(utils::wstr2str(_data->birthDate.get()).c_str(), "%d-%d-%d", &year, &month, &day);
+		auto bdStr = utils::wstr2str(_data->birthDate.get());
+		sscanf_s(bdStr.c_str(), "%d-%d-%d", &year, &month, &day);
 		tm.tm_year = year - 1900;
 		tm.tm_mon = month - 1;
 		tm.tm_mday = day;
@@ -198,7 +199,7 @@ User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const string_t&
         BOOST_THROW_EXCEPTION(ErrorException{U("Salt and NodeKey are required to build PrivateData")});
     }
     auto masterKey = Crypto::calculateMasterPassword(u->salt.get(), password);
-    auto privateKey = Crypto::aesDecrypt(masterKey,
+    auto privateKey = Crypto::aesDecrypt(utils::str2wstr(masterKey),
                                          Crypto::base64decode(u->rsaKeys->aesSalt),
                                          Crypto::base64decode(u->rsaKeys->aesIv),
                                          Crypto::base64decode(u->rsaKeys->privateKey));
@@ -251,7 +252,7 @@ User::PersonalData::nextEmail () const
     BOOST_THROW_EXCEPTION(ErrorException{U("Email/nextEmail are not correctly initialized")});
 }
 
-const string_t&
+const std::string&
 User::PersonalData::nodeKeyClear () const
 {
     return _nodeKeyClear;
@@ -369,14 +370,14 @@ User
 User::block ()
 {
     auto& app = Application::get();
-    auto r =  NetworkApi::createUserRelation(app.currentUser().id(), id(), U("BLOCK"), U(""), U("")).get();
+    auto r =  NetworkApi::createUserRelation(app.currentUser().id(), id(), U("BLOCK"), U(""), "").get();
     return User{r->user, r};
 }
 
 void
 User::suggest (const User& contact)
 {
-    auto r = NetworkApi::createUserRelation(id(), contact.id(), U("SHOULD_INVITE"), U(""), U("")).get();
+    auto r = NetworkApi::createUserRelation(id(), contact.id(), U("SHOULD_INVITE"), U(""), "").get();
 }
 
 User

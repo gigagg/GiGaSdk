@@ -17,18 +17,18 @@ class Rsa final
 {
 public:
     explicit
-    Rsa (const utility::string_t& pubStr, const utility::string_t& privStr = U(""));
+    Rsa (const std::string& pubStr, const std::string& privStr = "");
 	~Rsa();
 	Rsa& operator=(const Rsa& rhs);
 	Rsa(const Rsa& rhs);
 	Rsa& operator=(Rsa&& rhs);
 	Rsa(Rsa&& rhs);
 
-    utility::string_t
-    encrypt (const utility::string_t& data) const;
+	std::string
+    encrypt (const std::string& data) const;
 
-    utility::string_t
-    decrypt (const utility::string_t& data) const;
+	std::string
+    decrypt (const std::string& data) const;
 
 private:
 	std::unique_ptr<RsaKeys>    _keys;
@@ -38,34 +38,34 @@ private:
 class Crypto final
 {
 public:
-    static utility::string_t
-    pbkdf2_sha256 (const utility::string_t& password, const utility::string_t& salt, std::size_t length, std::size_t iteration = 1024);
+    static std::string
+    pbkdf2_sha256 (const utility::string_t& password, const std::string& salt, std::size_t length, std::size_t iteration = 1024);
 
-    static utility::string_t
-    pbkdf2_sha512 (const utility::string_t& password, const utility::string_t& salt, std::size_t length, std::size_t iteration = 1024);
-
-public:
-    static utility::string_t
-    base64encode (const utility::string_t& data);
-
-    static utility::string_t
-    base64decode (const utility::string_t& data);
+    static std::string
+    pbkdf2_sha512 (const utility::string_t& password, const std::string& salt, std::size_t length, std::size_t iteration = 1024);
 
 public:
-    static utility::string_t
-    calculateFid (const utility::string_t& hashHexEncoded);
+    static std::string
+    base64encode (const std::string& data);
 
-    static utility::string_t
-    calculateFkey (const utility::string_t& hashHexEncoded);
+    static std::string
+    base64decode (const std::string& data);
 
 public:
-    static utility::string_t
+    static std::string
+    calculateFid (const std::string& hashHexEncoded);
+
+    static std::string
+    calculateFkey (const std::string& hashHexEncoded);
+
+public:
+    static std::string
     calculateLoginPassword (const utility::string_t& login, const utility::string_t& password);
 
-    static utility::string_t
-    calculateMasterPassword (const utility::string_t& salt, const utility::string_t& password);
+    static std::string
+    calculateMasterPassword (const std::string& salt, const utility::string_t& password);
 
-    static utility::string_t
+    static std::string
     sha1File (const utility::string_t& filename);
 
 public:
@@ -74,14 +74,14 @@ public:
         data = 0, iv, salt
     };
 
-    static std::tuple<utility::string_t, utility::string_t, utility::string_t>
-    aesEncrypt (const utility::string_t& password, const utility::string_t& data);
+    static std::tuple<std::string, std::string, std::string>
+    aesEncrypt (const utility::string_t& password, const std::string& data);
 
-    static utility::string_t
-    aesDecrypt (const utility::string_t& password, const utility::string_t& saltStr, const utility::string_t& ivStr, const utility::string_t& data);
+    static std::string
+    aesDecrypt (const utility::string_t& password, const std::string& saltStr, const std::string& ivStr, const std::string& data);
 
-    static utility::string_t
-    aesEncrypt (const utility::string_t& key, const utility::string_t& iv, const utility::string_t& data);
+    static std::string
+    aesEncrypt (const std::string& key, const std::string& iv, const std::string& data);
 };
 
 template<Crypto::AesTuple n, class ... Types>

@@ -90,7 +90,7 @@ FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Nod
     auto fid = node.fileData().fid();
     std::replace(fid.begin(), fid.end(), '/', '_');
 
-    _tempFile = folder /  (U(".") + fid + U(".part"));
+    _tempFile = folder /  (U(".") + utils::str2wstr(fid) + U(".part"));
     _destFile = folder / name;
 
     _fileUri = node.fileData().fileUrl();
@@ -186,7 +186,8 @@ FileDownloader::doStart()
 
                     GIGA_DEBUG_LOG(U("downloading: ") << fileUri.to_string());
 
-                    curl.add<CURLOPT_URL>(utils::wstr2str(fileUri.to_string()).c_str());
+					auto filUriStr = utils::wstr2str(fileUri.to_string());
+                    curl.add<CURLOPT_URL>(filUriStr.c_str());
                     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
                     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
                     curl.add<CURLOPT_XFERINFODATA>(progress);
@@ -194,7 +195,8 @@ FileDownloader::doStart()
 
                     if (pos > 0)
                     {
-                        curl.add<CURLOPT_RANGE>((std::to_string(pos) + "-").c_str());
+						auto posStr = std::to_string(pos) + "-";
+                        curl.add<CURLOPT_RANGE>(posStr.c_str());
                     }
 
 #ifdef DEBUG
