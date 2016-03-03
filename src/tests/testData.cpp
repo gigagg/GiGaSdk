@@ -1,17 +1,17 @@
 #define BOOST_TEST_MODULE data
 #include <boost/test/included/unit_test.hpp>
-
 #include <giga/api/data/Node.h>
 #include <giga/api/data/User.h>
+#include <giga/utils/Utils.h>
 #include <giga/rest/JsonUnserializer.h>
-
+#include <cpprest/details/basic_types.h>
 
 using namespace boost::unit_test;
 using namespace giga;
 using namespace giga::data;
 
 BOOST_AUTO_TEST_CASE(test_data_user) {
-    auto json = U(R"({
+    auto json = utils::str2wstr(R"({
   "achievements" : 476,
   "activity" : "INACTIVE",
   "adultStatus" : 0,
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(test_data_user) {
 
 BOOST_AUTO_TEST_CASE(test_data_node)
 {
-    auto json = U(R"({
+    auto json = utils::str2wstr(R"({
     "uploadUrl" : "\/upload\/?s=561cc82833e5dfb5008b4567",
     "name" : "All my files",
     "ancestors" : [],

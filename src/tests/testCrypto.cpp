@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE crypto
 #include <boost/test/included/unit_test.hpp>
-
+#include <cpprest/details/basic_types.h>
 #include <giga/utils/Crypto.h>
 #include <giga/utils/Utils.h>
 
