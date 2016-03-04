@@ -35,6 +35,7 @@ FileTransferer::FileTransferer (FileTransferer&& other) :
                 _mut{},
                 _cts{std::move(other._cts)}
 {
+    std::cout << "MOVE !!" << std::endl;
 }
 
 void

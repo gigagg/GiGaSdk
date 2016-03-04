@@ -21,13 +21,13 @@ struct Offer {
     utility::string_t id          = {};
     utility::string_t state       = {};
     utility::string_t duration    = {};
-    int64_t storage         = 0;
-    int64_t download        = 0;
+    uint64_t storage              = 0;
+    uint64_t download             = 0;
     utility::string_t resetDownload = {};
     utility::string_t billing     = {};
-    int64_t costEUR         = 0;
-    int64_t costUSD         = 0;
-    boost::optional<int64_t> costStar = boost::none;
+    uint64_t costEUR              = 0;
+    uint64_t costUSD              = 0;
+    boost::optional<uint64_t> costStar = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

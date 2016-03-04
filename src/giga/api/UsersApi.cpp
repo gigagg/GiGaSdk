@@ -62,7 +62,7 @@ UsersApi::searchUsers (const string_t& search, const string_t& activity, const s
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::getUserById (int64_t userId)
+UsersApi::getUserById (uint64_t userId)
 {
     auto uri = client().uri (U("users"), userId);
     return client().request<User> (methods::GET, uri);
@@ -77,7 +77,7 @@ UsersApi::getUserByLogin (const string_t& login)
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUser (int64_t userId, const string_t& email, bool isValidation, const string_t& gender, const string_t& name,
+UsersApi::updateUser (uint64_t userId, const string_t& email, bool isValidation, const string_t& gender, const string_t& name,
                       const string_t& description, const string_t& birthdate, const string_t& avatar,
                       const string_t& currentPassword, const string_t& password, const string_t& clue,
                       const string_t& privateKey, const string_t& iv, const string_t& salt)
@@ -101,7 +101,7 @@ UsersApi::updateUser (int64_t userId, const string_t& email, bool isValidation, 
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUserAddTag (int64_t userId, const string_t& name)
+UsersApi::updateUserAddTag (uint64_t userId, const string_t& name)
 {
     auto uri = client().uri (U("users"), userId, U("tags"), userId);
     auto body = JsonObj{};
@@ -110,7 +110,7 @@ UsersApi::updateUserAddTag (int64_t userId, const string_t& name)
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUserRemoveTag (int64_t userId, const string_t& name)
+UsersApi::updateUserRemoveTag (uint64_t userId, const string_t& name)
 {
     auto uri = client().uri (U("users"), userId, U("tags"), userId);
     auto body = JsonObj{};

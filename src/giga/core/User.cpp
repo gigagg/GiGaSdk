@@ -49,7 +49,7 @@ User::User (std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> 
     }
 }
 
-int64_t
+uint64_t
 User::id () const
 {
     _THROW_IF_NO_USER_;
@@ -112,7 +112,7 @@ User::isSeeder () const
     return seederStatusCvrt.fromStr(_data->isSeeder);
 }
 
-int64_t
+uint64_t
 User::contactCount () const
 {
     _THROW_IF_NO_USER_;
@@ -185,7 +185,7 @@ User::ContactData::birthDate () const
     return boost::optional<system_clock::time_point>{};
 }
 
-int64_t
+uint64_t
 User::ContactData::maxContact () const
 {
     _THROW_IF_NO_USER_;
@@ -210,20 +210,8 @@ User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const string_t&
                                          Crypto::base64decode(u->rsaKeys->aesSalt),
                                          Crypto::base64decode(u->rsaKeys->aesIv),
                                          Crypto::base64decode(u->rsaKeys->privateKey));
-    auto rsa = Rsa{u->rsaKeys->publicKey, privateKey};
-    auto tmp = rsa.decrypt(Crypto::base64decode(u->nodeKey.get()));
-    if (tmp.size() == 32)
-    {
-        _nodeKeyClear = Crypto::base64encode(tmp);
-    }
-    else if (tmp.size() > 44)
-    {
-        _nodeKeyClear = Crypto::base64decode(tmp);
-    }
-    else
-    {
-        _nodeKeyClear = tmp;
-    }
+    _rsaKeys = Rsa{u->rsaKeys->publicKey, privateKey};
+    _nodeKeyClear = utils::str2wstr(_rsaKeys.decryptNodeKey(u->nodeKey.get()));
 }
 
 User::ReportedState
@@ -259,7 +247,7 @@ User::PersonalData::nextEmail () const
     BOOST_THROW_EXCEPTION(ErrorException{U("Email/nextEmail are not correctly initialized")});
 }
 
-const std::string&
+const string_t&
 User::PersonalData::nodeKeyClear () const
 {
     return _nodeKeyClear;
@@ -271,25 +259,25 @@ User::PersonalData::isEmailValidated() const
     return _data->email.is_initialized();
 }
 
-int64_t
+uint64_t
 User::PersonalData::maxStorage () const
 {
     return _data->maxStorage.get_value_or(100);
 }
 
-int64_t
+uint64_t
 User::PersonalData::standatdMaxStorage () const
 {
     return _data->standatdMaxStorage.get_value_or(100);
 }
 
-int64_t
+uint64_t
 User::PersonalData::downloaded () const
 {
     return _data->downloaded.get_value_or(0);
 }
 
-int64_t
+uint64_t
 User::PersonalData::dlAvailable () const
 {
     return _data->dlAvailable.get_value_or(0);
@@ -331,8 +319,8 @@ User::initializePersonalData (const string_t& password)
     BOOST_THROW_EXCEPTION(ErrorException{U("No private data")});
 }
 
-User::PersonalData&
-User::personalData ()
+const User::PersonalData&
+User::personalData () const
 {
     if(hasPersonalData()) {
         if (!_private.is_initialized()) {

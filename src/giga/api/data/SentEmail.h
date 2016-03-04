@@ -19,9 +19,9 @@ struct SentEmail {
     std::unique_ptr<User> fromUser = nullptr;
     boost::optional<utility::string_t> toEmail = boost::none;
     boost::optional<utility::string_t> key = boost::none;
-    boost::optional<int64_t> id = boost::none;
+    boost::optional<uint64_t> id = boost::none;
     boost::optional<bool> isAccepted = boost::none;
-    boost::optional<int64_t> creationDate = boost::none;
+    boost::optional<uint64_t> creationDate = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

@@ -20,8 +20,8 @@ namespace data {
  */
 struct Timeline {
     std::vector<std::unique_ptr<TimelineEntry>> entries = {};
-    int64_t from = 0;
-    int64_t to = 0;
+    uint64_t from = 0;
+    uint64_t to = 0;
     
     template <class Manager>
     void visit(const Manager& m) {

@@ -33,7 +33,7 @@ CurlWriter::~CurlWriter ()
     }
 }
 
-int
+size_t
 CurlWriter::write (const char * contents, size_t size) noexcept
 {
     try {
@@ -52,11 +52,15 @@ CurlWriter::write (const char * contents, size_t size) noexcept
         if (_httpCode >= 300)
         {
             _stream.write(contents, size);
-        } else {
+        }
+        else
+        {
             _file.write(contents, size);
         }
         return size;
-    } catch (...) {
+    }
+    catch (...)
+    {
         return -1;
     }
 }

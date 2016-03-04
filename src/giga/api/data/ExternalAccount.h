@@ -18,12 +18,12 @@ namespace data {
 struct ExternalAccount {
     utility::string_t externalId = {};
     utility::string_t providerName = {};
-    int64_t userId = 0;
+    uint64_t userId = 0;
     boost::optional<utility::string_t> email = boost::none;
     boost::optional<utility::string_t> fullname = boost::none;
     boost::optional<utility::string_t> profileUrl = boost::none;
-    int64_t creationDate = 0;
-    int64_t updateDate = 0;
+    uint64_t creationDate = 0;
+    uint64_t updateDate = 0;
     boost::optional<utility::string_t> avatarUrl = boost::none;
     boost::optional<utility::string_t> displayName = boost::none;
     

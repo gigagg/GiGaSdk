@@ -108,7 +108,7 @@ Node::ancestors () const
     return _data->ancestors;
 }
 
-int64_t
+uint64_t
 Node::ownerId () const
 {
     _THROW_IF_NO_NODE_;

@@ -54,14 +54,19 @@ public:
     std::chrono::system_clock::time_point
     creationDate () const;
 
-    const std::vector<int64_t>&
+    const std::vector<uint64_t>&
     userList () const;
 
     Initiator
     initiator() const;
 
+    const std::string&
+    nodeKeyClear() const;
+
 private:
     std::shared_ptr<data::UsersRelation> _data;
+    mutable std::string                  _nodeKeyClear;
+
 };
 
 } /* namespace core */

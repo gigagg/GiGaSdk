@@ -86,7 +86,7 @@ public:
     explicit User(std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r = nullptr);
 
 public:
-    int64_t
+    uint64_t
     id () const;
 
     const utility::string_t&
@@ -113,7 +113,7 @@ public:
     SeederStatus
     isSeeder () const;
 
-    int64_t
+    uint64_t
     contactCount () const;
 
     const std::vector<utility::string_t>&
@@ -151,12 +151,11 @@ public:
         const boost::optional<std::chrono::system_clock::time_point>
         birthDate() const;
 
-        int64_t
+        uint64_t
         maxContact() const;
 
         FolderNode
         node() const;
-
 
     private:
         std::shared_ptr<data::User> _data;
@@ -164,6 +163,7 @@ public:
 
     class PersonalData {
         friend User;
+        friend UserRelation;
     public:
         ~PersonalData()                              = default;
         PersonalData(PersonalData&&)                 = default;
@@ -187,19 +187,19 @@ public:
         const utility::string_t&
         nextEmail() const;
 
-        const std::string&
+        const utility::string_t&
         nodeKeyClear() const;
 
-        int64_t
+        uint64_t
         maxStorage() const;
 
-        int64_t
+        uint64_t
         standatdMaxStorage() const;
 
-        int64_t
+        uint64_t
         downloaded() const;
 
-        int64_t
+        uint64_t
         dlAvailable() const;
 
 
@@ -210,7 +210,8 @@ public:
 
     private:
         std::shared_ptr<data::User> _data;
-        std::string                 _nodeKeyClear;
+        utility::string_t           _nodeKeyClear;
+        Rsa                         _rsaKeys;
     };
 
     bool
@@ -225,8 +226,8 @@ public:
     PersonalData&
     initializePersonalData (const utility::string_t& password);
 
-    PersonalData&
-    personalData();
+    const PersonalData&
+    personalData() const;
 
     bool
     hasRelation() const;

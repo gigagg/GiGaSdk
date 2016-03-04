@@ -12,8 +12,8 @@ class RsaKeys;
 class Rsa final
 {
 public:
-    explicit
-    Rsa (const std::string& pubStr, const std::string& privStr = "");
+    explicit Rsa (const std::string& pubStr, const std::string& privStr = "");
+    explicit Rsa();
     ~Rsa();
     Rsa& operator=(const Rsa& rhs);
     Rsa(const Rsa& rhs);
@@ -26,19 +26,22 @@ public:
     std::string
     decrypt (const std::string& data) const;
 
+    std::string
+    decryptNodeKey (const std::string& data) const;
+
 private:
-    std::unique_ptr<RsaKeys>    _keys;
-    bool                        _hasPrivateKey;
+    std::unique_ptr<RsaKeys> _keys;
+    bool                     _hasPrivateKey;
 };
 
 class Crypto final
 {
 public:
     static std::string
-    pbkdf2_sha256 (const utility::string_t& password, const std::string& salt, std::size_t length, std::size_t iteration = 1024);
+    pbkdf2_sha256 (const utility::string_t& password, const std::string& salt, std::size_t length, uint64_t iteration = 1024ul);
 
     static std::string
-    pbkdf2_sha512 (const utility::string_t& password, const std::string& salt, std::size_t length, std::size_t iteration = 1024);
+    pbkdf2_sha512 (const utility::string_t& password, const std::string& salt, std::size_t length, uint64_t iteration = 1024ul);
 
 public:
     static std::string

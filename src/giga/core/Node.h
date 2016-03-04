@@ -76,7 +76,7 @@ public:
     const std::vector<std::string>&
     ancestors() const;
 
-    int64_t
+    uint64_t
     ownerId() const;
 
     std::chrono::system_clock::time_point

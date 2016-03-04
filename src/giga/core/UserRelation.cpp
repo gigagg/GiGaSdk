@@ -8,10 +8,12 @@
 #include "UserRelation.h"
 #include "../utils/EnumConvertor.h"
 #include "../api/data/UsersRelation.h"
+#include "../Application.h"
+
+#include <chrono>
 
 using std::chrono::system_clock;
 
-#include <chrono>
 namespace giga
 {
 namespace core
@@ -23,7 +25,7 @@ static const utils::EnumConvertor<core::UserRelation::Type, 5> typeCvrt =
 static const utils::EnumConvertor<core::UserRelation::Initiator, 3> initiatorCvrt =
     {U("OTHER"), U("ME"), U("NA")};
 
-static const std::vector<int64_t> emptyVector = {};
+static const std::vector<uint64_t> emptyVector = {};
 
 UserRelation::UserRelation (std::shared_ptr<data::UsersRelation> r) : _data(r)
 {
@@ -41,7 +43,7 @@ UserRelation::creationDate () const
     return system_clock::time_point(std::chrono::seconds(_data->creationDate));
 }
 
-const std::vector<int64_t>&
+const std::vector<uint64_t>&
 UserRelation::userList () const
 {
     if (_data->suggestedBy.is_initialized()) {
@@ -60,6 +62,24 @@ UserRelation::initiator () const
         return initiatorCvrt.fromStr(_data->initiator.get());
     }
     return Initiator::na;
+}
+
+const std::string&
+UserRelation::nodeKeyClear() const
+{
+    if (type() != Type::contact)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{"NodeKeyClear is only valid for Contacts"});
+    }
+    if (!_data->key.is_initialized())
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{"key should be initialized"});
+    }
+    if (_nodeKeyClear.empty())
+    {
+        _nodeKeyClear = Application::get().currentUser().personalData()._rsaKeys.decryptNodeKey(_data->key.get());
+    }
+    return _nodeKeyClear;
 }
 
 } /* namespace core */

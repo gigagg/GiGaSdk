@@ -23,7 +23,7 @@ namespace giga
 using namespace data;
 
 pplx::task<std::shared_ptr<NodeList>>
-NodesApi::searchNode (const string_t& search, const string_t& mine, const std::string& inFolder, int64_t ownerId)
+NodesApi::searchNode (const string_t& search, const string_t& mine, const std::string& inFolder, uint64_t ownerId)
 {
     auto uri = client().uri (U("nodes"));
     uri.append_query (U("search"), search);
@@ -118,7 +118,7 @@ NodesApi::getPreviewsData (const std::string& nodeId)
 }
 
 pplx::task<std::shared_ptr<Timeline>>
-NodesApi::getTimeline (const string_t& head, int64_t from, int64_t owner)
+NodesApi::getTimeline (const string_t& head, uint64_t from, uint64_t owner)
 {
     auto uri = client().uri (U("timelines"));
     uri.append_query (U("head"), head);

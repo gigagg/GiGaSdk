@@ -72,7 +72,10 @@ Downloader::start ()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             std::lock_guard<std::mutex> l(_mut);
-            _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
+            if (_downloading != nullptr)
+            {
+                _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
+            }
         }
     });
 
@@ -110,12 +113,12 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 
     if (node.type() == Node::Type::file)
     {
-        auto fdownloader = node.download(path.native(), FileDownloader::Policy::overrideNewerSize);
-        fdownloader.start();
-        auto task = fdownloader.task();
+        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, FileDownloader::Policy::overrideNewerSize);
+        fdownloader->start();
+        auto task = fdownloader->task();
         {
             std::lock_guard<std::mutex> l{_mut};
-            _downloading = std::make_shared<FileDownloader>(std::move(fdownloader));
+            _downloading = std::move(fdownloader);
             ++_dlCount;
             _progressCallback(*_downloading, _dlCount, _dlBytes);
         }

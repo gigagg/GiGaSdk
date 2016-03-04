@@ -22,11 +22,11 @@ struct TimelineEntry {
     /** Max 6 Files from this entry node list */
     std::vector<std::unique_ptr<Node>> nodes = {};
     /** The id of the user that added these nodes */
-    int64_t ownerId = 0;
-    int64_t start = 0;
-    int64_t end = 0;
-    int64_t nbFiles = 0;
-    int64_t nbFolders = 0;
+    uint64_t ownerId = 0;
+    uint64_t start = 0;
+    uint64_t end = 0;
+    uint64_t nbFiles = 0;
+    uint64_t nbFolders = 0;
     
     template <class Manager>
     void visit(const Manager& m) {

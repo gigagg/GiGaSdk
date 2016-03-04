@@ -18,7 +18,7 @@ struct UserExists {
     /** The login with the correct case */
     boost::optional<utility::string_t> login = boost::none;
     /** The user id */
-    boost::optional<int64_t> id = boost::none;
+    boost::optional<uint64_t> id = boost::none;
     /** the big avatar url */
     boost::optional<utility::string_t> avatar = boost::none;
     /** the small avatar url */

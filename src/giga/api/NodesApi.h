@@ -24,7 +24,7 @@ class NodesApi final : GigaApi
 {
 public:
     static pplx::task<std::shared_ptr<data::NodeList>>
-    searchNode (const utility::string_t& search, const utility::string_t& mine, const std::string& inFolder, int64_t ownerId);
+    searchNode (const utility::string_t& search, const utility::string_t& mine, const std::string& inFolder, uint64_t ownerId);
 
     static pplx::task<std::shared_ptr<std::vector<data::Node>>>
     searchNodeByType (const utility::string_t& search, const utility::string_t& type, uint16_t max = 50, uint32_t offset = 0);
@@ -56,7 +56,7 @@ public:
     getPreviewsData (const std::string& nodeId);
 
     static pplx::task<std::shared_ptr<data::Timeline>>
-    getTimeline (const utility::string_t& head, int64_t from, int64_t owner);
+    getTimeline (const utility::string_t& head, uint64_t from, uint64_t owner);
 };
 } // namespace giga
 

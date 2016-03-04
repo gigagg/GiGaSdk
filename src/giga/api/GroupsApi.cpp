@@ -70,14 +70,14 @@ GroupsApi::unshareNodeFromGroup (int64_t groupId, const string_t& nodeId)
 }
 
 pplx::task<std::shared_ptr<Group>>
-GroupsApi::addUserToGroup (int64_t groupId, int64_t userId)
+GroupsApi::addUserToGroup (int64_t groupId, uint64_t userId)
 {
     auto uri = client().uri (U("groups"), groupId, U("users"), userId);
     return client().request<Group> (methods::PUT, uri);
 }
 
 pplx::task<std::shared_ptr<Group>>
-GroupsApi::removeUserFromGroup (int64_t groupId, int64_t userId)
+GroupsApi::removeUserFromGroup (int64_t groupId, uint64_t userId)
 {
     auto uri = client().uri (U("groups"), groupId, U("users"), userId);
     return client().request<Group> (methods::DEL, uri);

@@ -17,9 +17,9 @@ namespace data {
 
 struct NodeList {
     /** index of the first result */
-    boost::optional<int64_t> from = boost::none;
+    boost::optional<uint64_t> from = boost::none;
     /** nb results */
-    boost::optional<int64_t> count = boost::none;
+    boost::optional<uint64_t> count = boost::none;
     std::vector<std::unique_ptr<Node>> results = {};
     
     template <class Manager>

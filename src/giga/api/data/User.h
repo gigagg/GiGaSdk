@@ -22,12 +22,12 @@ namespace data {
  * The user has private (for him only) properties, protected (available to his contacts) and public properties.
  */
 struct User {
-    int64_t id = 0;
+    uint64_t id = 0;
     utility::string_t login = {};
     /** unix timestamp in seconds */
-    int64_t creationDate = 0;
+    uint64_t creationDate = 0;
     /** unix timestamp in seconds */
-    boost::optional<int64_t> lastConnectionDate = boost::none;
+    boost::optional<uint64_t> lastConnectionDate = boost::none;
     utility::string_t activity = {};
     bool isUnlimited = {};
     boost::optional<utility::string_t> gender = boost::none;
@@ -36,8 +36,8 @@ struct User {
     boost::optional<utility::string_t> description = boost::none;
     utility::string_t avatarUrl = {};
     utility::string_t bigAvatarUrl = {};
-    int64_t contactCount = 0;
-    boost::optional<int64_t> maxContact = boost::none;
+    uint64_t contactCount = 0;
+    boost::optional<uint64_t> maxContact = boost::none;
     std::vector<utility::string_t> tags = {};
     utility::string_t isSeeder = {};
     /** True if the user is a GiGa bot */
@@ -65,21 +65,21 @@ struct User {
     /** Private. The email when not validated yet */
     boost::optional<utility::string_t> nextEmail = boost::none;
     /** Private. Value in Gio */
-    boost::optional<int64_t> maxStorage = boost::none;
+    boost::optional<uint64_t> maxStorage = boost::none;
     /** Private. Value in Gio */
-    boost::optional<int64_t> standatdMaxStorage = boost::none;
+    boost::optional<uint64_t> standatdMaxStorage = boost::none;
     /** Private. bitfield */
-    boost::optional<int64_t> achievements = boost::none;
+    boost::optional<uint64_t> achievements = boost::none;
     /** Private. Associeted facebook/gigatribe accounts */
     std::vector<std::unique_ptr<ExternalAccount>> externalAccounts = {};
     /** Private. Value in octets */
-    boost::optional<int64_t> downloaded = boost::none;
+    boost::optional<uint64_t> downloaded = boost::none;
     /** Private. */
     std::unique_ptr<Offer> offer = nullptr;
     /** Private. Value in Octets */
-    boost::optional<int64_t> dlAvailable = boost::none;
+    boost::optional<uint64_t> dlAvailable = boost::none;
     /** Private */
-    boost::optional<int64_t> starCount = boost::none;
+    boost::optional<uint64_t> starCount = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

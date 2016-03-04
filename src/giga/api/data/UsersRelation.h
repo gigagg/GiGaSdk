@@ -21,7 +21,7 @@ namespace data {
 struct UsersRelation {
     std::shared_ptr<User> user = nullptr;
     utility::string_t type = {};
-    int64_t creationDate = 0;
+    uint64_t creationDate = 0;
     /** type=CONTACT */
     boost::optional<bool> favorite = boost::none;
     /** type=CONTACT */
@@ -31,9 +31,9 @@ struct UsersRelation {
     /** type=CONTACT, OTHER|ME */
     boost::optional<utility::string_t> initiator = boost::none;
     /** type=CONTACT|INVITE, list of userId */
-    boost::optional<std::vector<int64_t> > suggestedBy = boost::none;
+    boost::optional<std::vector<uint64_t> > suggestedBy = boost::none;
     /** type=SHOULD_INVITE, list of userId */
-    boost::optional<std::vector<int64_t> > byUserId = boost::none;
+    boost::optional<std::vector<uint64_t> > byUserId = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

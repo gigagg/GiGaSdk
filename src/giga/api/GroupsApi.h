@@ -41,10 +41,10 @@ public:
     unshareNodeFromGroup (int64_t groupId, const utility::string_t& nodeId);
 
     static pplx::task<std::shared_ptr<data::Group>>
-    addUserToGroup (int64_t groupId, int64_t userId);
+    addUserToGroup (int64_t groupId, uint64_t userId);
 
     static pplx::task<std::shared_ptr<data::Group>>
-    removeUserFromGroup (int64_t groupId, int64_t userId);
+    removeUserFromGroup (int64_t groupId, uint64_t userId);
 };
 } // namespace giga
 

@@ -31,7 +31,7 @@ public:
     CurlWriter(const CurlWriter&)   = delete;
     CurlWriter(CurlWriter&&)        = delete;
 
-    int
+    size_t
     write (const char* contents, size_t size) noexcept;
 
     utility::string_t

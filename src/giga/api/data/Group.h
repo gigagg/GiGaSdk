@@ -14,12 +14,12 @@ namespace giga {
 namespace data {
 
 struct Group {
-    int64_t ownerId = 0;
+    uint64_t ownerId = 0;
     utility::string_t name = {};
-    std::vector<int64_t>  users = std::vector<int64_t>();
+    std::vector<uint64_t>  users = std::vector<uint64_t>();
     std::vector<std::unique_ptr<Node>> nodes = {};
     utility::string_t id = {};
-    int64_t creationDate = 0;
+    uint64_t creationDate = 0;
     boost::optional<bool> isAllMyContacts = boost::none;
     
     template <class Manager>

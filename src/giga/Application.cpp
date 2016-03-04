@@ -90,7 +90,7 @@ Application::currentUser()
 //
 
 core::User
-Application::getUserById (int64_t id) const
+Application::getUserById (uint64_t id) const
 {
     auto duser =  UsersApi::getUserById(id).get();
     return core::User{duser};
@@ -103,11 +103,44 @@ Application::getUserByLogin (const string_t& login) const
     return core::User{duser};
 }
 
+core::User
+Application::getContact (uint64_t id) const
+{
+    bool shouldLoadContact = true;
+    if (_contacts.size() == 0)
+    {
+        shouldLoadContact = false;
+        getContacts(); // update the _contacts cache variable
+    }
+    auto it = _contacts.find(id);
+    if (it != _contacts.end())
+    {
+        return it->second;
+    }
+
+    if (shouldLoadContact)
+    {
+        auto relation = NetworkApi::getUserRelation(_currentUser.id(), U("CONTACT"), id, U("OUT")).get();
+        if (relation->type == U("CONTACT"))
+        {
+            _contacts.emplace(id, core::User{relation->user, relation});
+            return core::User{relation->user, relation};
+        }
+    }
+    BOOST_THROW_EXCEPTION(ErrorNotFound{U("Not Found")});
+}
+
 std::vector<core::User>
 Application::getContacts () const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("CONTACT"), U("OUT")).get();
-    return toUserVect(rels);
+    auto contacts = toUserVect(rels);
+
+    _contacts.clear();
+    std::transform(contacts.begin(), contacts.end(), std::inserter(_contacts, _contacts.end()), [](const core::User& user) {
+        return std::make_pair(user.id(), user);
+    });
+    return contacts;
 }
 
 std::vector<core::User>
@@ -176,5 +209,19 @@ Application::searchNode (const string_t& search, core::Node::MediaType type) con
     return nodes;
 }
 
+
+//
+// Crypto. Be carful with these ...
+//
+
+utility::string_t
+Application::getNodeKeyClear(uint64_t userId) const
+{
+    if (userId == _currentUser.id())
+    {
+        return _currentUser.personalData().nodeKeyClear();
+    }
+    return getContact(userId).relation().nodeKeyClear();
+}
 
 } /* namespace giga */

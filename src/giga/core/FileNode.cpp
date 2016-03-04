@@ -89,7 +89,7 @@ FileNodeData::posterUrl () const
 uri
 FileNodeData::fileUrl () const
 {
-    auto nodeKey = utils::str2wstr(Application::get().currentUser().personalData().nodeKeyClear());
+    auto nodeKey = Application::get().getNodeKeyClear(n->ownerId);
     return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(nodeKey)};
 }
 

@@ -24,6 +24,9 @@ namespace data {
 struct UsersRelation;
 }
 
+/**
+ *
+ */
 class Application
 {
 public:
@@ -66,10 +69,13 @@ public:
     //
 
     core::User
-    getUserById (int64_t id) const;
+    getUserById (uint64_t id) const;
 
     core::User
     getUserByLogin (const utility::string_t& login) const;
+
+    core::User
+    getContact (uint64_t id) const;
 
     std::vector<core::User>
     getContacts () const;
@@ -99,10 +105,20 @@ public:
     std::vector<std::unique_ptr<core::Node>>
     searchNode (const utility::string_t& search, core::Node::MediaType type) const;
 
+    //
+    // Crypto. Be carful with these ...
+    //
+
+    utility::string_t
+    getNodeKeyClear(uint64_t userId) const;
+
 private:
     core::User  _currentUser;
     Config      _config;
     bool        _isInitialized = false;
+
+    // this is a cache variable
+    mutable std::unordered_map<uint64_t, core::User> _contacts;
 };
 
 } /* namespace giga */
