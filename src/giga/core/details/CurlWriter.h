@@ -28,8 +28,11 @@ class CurlWriter
 public:
     explicit CurlWriter(const boost::filesystem::path& path);
     ~CurlWriter();
-    CurlWriter(const CurlWriter&)   = delete;
-    CurlWriter(CurlWriter&&)        = delete;
+    CurlWriter()                             = delete;
+    CurlWriter(const CurlWriter&)            = delete;
+    CurlWriter(CurlWriter&&)                 = delete;
+    CurlWriter& operator=(const CurlWriter&) = delete;
+    CurlWriter& operator=(CurlWriter&&)      = delete;
 
     size_t
     write (const char* contents, size_t size) noexcept;

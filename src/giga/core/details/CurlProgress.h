@@ -35,8 +35,12 @@ public:
 
 public:
     explicit
-    CurlProgress ();
-    CurlProgress (const CurlProgress& other);
+    CurlProgress();
+    CurlProgress(const CurlProgress& rhs);
+
+    CurlProgress(CurlProgress&&)                 = delete;
+    CurlProgress& operator=(CurlProgress&&)      = delete;
+    CurlProgress& operator=(const CurlProgress&) = delete;
 
     int
     onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) noexcept;

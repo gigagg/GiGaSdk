@@ -36,6 +36,10 @@ public:
     virtual ~FileDownloader();
     FileDownloader (FileDownloader&& other);
 
+    FileDownloader(const FileDownloader&)            = delete;
+    FileDownloader& operator=(const FileDownloader&) = delete;
+    FileDownloader& operator=(FileDownloader&&)      = delete;
+
 public:
     void doStart () override;
 

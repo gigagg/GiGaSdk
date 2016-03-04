@@ -38,8 +38,11 @@ class ReadCallbackData
 {
 public:
     explicit ReadCallbackData(const string_t filename);
-
     ~ReadCallbackData();
+    ReadCallbackData(const ReadCallbackData&)            = delete;
+    ReadCallbackData(ReadCallbackData&&)                 = delete;
+    ReadCallbackData& operator=(ReadCallbackData&&)      = delete;
+    ReadCallbackData& operator=(const ReadCallbackData&) = delete;
 
     void
     setChunck(uint64_t start, uint64_t end);

@@ -43,6 +43,13 @@ public:
     ChunkUploader (web::uri_builder& uploadUrl, const utility::string_t& nodeName, const std::string& sha1,
                    const utility::string_t& filename, const utility::string_t& mime, CurlProgress* progress);
 
+    ChunkUploader()                                = delete;
+    ChunkUploader(const ChunkUploader&)            = delete;
+    ChunkUploader(ChunkUploader&&)                 = delete;
+    ChunkUploader& operator=(ChunkUploader&&)      = delete;
+    ChunkUploader& operator=(const ChunkUploader&) = delete;
+
+
     std::shared_ptr<data::Node>
     upload ();
 

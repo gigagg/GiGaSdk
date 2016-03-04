@@ -114,7 +114,7 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
 
         // Do the limit rate outside of the mutex locked zone
         // because there is waiting here.
-        auto transfered = dlnow + ulnow;
+        auto transfered = static_cast<uint64_t>(dlnow + ulnow);
         if (limitRate != _currentLimitRate)
         {
             _rateBytes = transfered;

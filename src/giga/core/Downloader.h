@@ -31,9 +31,9 @@ public:
     ~Downloader();
 
     Downloader(Downloader&&)                 = delete;
-    Downloader& operator=(Downloader&&)      = delete;
     Downloader(const Downloader&)            = delete;
     Downloader& operator=(const Downloader&) = delete;
+    Downloader& operator=(Downloader&&)      = delete;
 
     std::shared_ptr<FileDownloader>
     downloadingFile();
