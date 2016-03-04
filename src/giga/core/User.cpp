@@ -411,7 +411,7 @@ User::removeRelation ()
     NetworkApi::deleteUserRelation(user.id(), id(), _relation->type).get();
 
     // remove relation and cache.
-    this->_relation          = nullptr;
+    this->_relation  = nullptr;
     this->_protected = boost::none;
     this->_private   = boost::none;
 }

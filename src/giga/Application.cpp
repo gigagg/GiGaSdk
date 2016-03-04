@@ -19,6 +19,20 @@
 using pplx::create_task;
 using utility::string_t;
 
+namespace {
+std::vector<giga::core::User>
+toUserVect(std::shared_ptr<std::vector<std::shared_ptr<giga::data::UsersRelation>>> rels)
+{
+    auto container = std::vector<giga::core::User>{};
+    container.reserve(rels->size());
+    for(auto relation : *rels)
+    {
+        container.emplace_back(relation->user, relation);
+    }
+    return std::move(container);
+}
+}
+
 namespace giga
 {
 
@@ -56,7 +70,6 @@ Application::isInitialized() const
     return _isInitialized;
 }
 
-
 core::User&
 Application::authenticate (const string_t& login, const string_t& password)
 {
@@ -71,7 +84,6 @@ Application::currentUser()
 {
     return _currentUser;
 }
-
 
 //
 // users
@@ -89,18 +101,6 @@ Application::getUserByLogin (const string_t& login) const
 {
     auto duser =  UsersApi::getUserByLogin(login).get();
     return core::User{duser};
-}
-
-std::vector<core::User>
-toUserVect(std::shared_ptr<std::vector<std::shared_ptr<data::UsersRelation>>> rels)
-{
-    auto container = std::vector<core::User>{};
-    container.reserve(rels->size());
-    for(auto relation : *rels)
-    {
-        container.emplace_back(relation->user, relation);
-    }
-    return std::move(container);
 }
 
 std::vector<core::User>

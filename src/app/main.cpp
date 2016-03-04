@@ -243,7 +243,7 @@ int main(int argc, const char* argv[]) {
 
                 ucout << std::endl;
                 core::Downloader dl {
-                    std::shared_ptr<core::Node>(node.release()),
+                    std::move(node),
                     vm["download"].as<string_t>(),
                     [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
                         auto percent = ((double) size * 100) / (double) totalSize;
