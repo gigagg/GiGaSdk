@@ -39,6 +39,11 @@ namespace core
 class FolderNode;
 class FileNodeData;
 
+/**
+ * The class Node represents a file or a folder.
+ * It is the base class of a composite pattern, with the
+ * ```FileNode``` and ```FolderNode``` classes.
+ */
 class Node
 {
 public:
@@ -103,31 +108,72 @@ public:
     uint64_t
     size () const;
 
+    /**
+     * @brief Load the children node if needed then return them.
+     * The children nodes are stored in a local cache variable.
+     *
+     * @return The list of children nodes
+     * @throw HttpError
+     */
     virtual const std::vector<std::unique_ptr<Node>>&
-    children() const = 0;
+    getChildren() const = 0;
 
+    /**
+     * @brief Create a new FolderNode and add it to the children list.
+     * @return The new FolderNode
+     * @throw HttpError
+     */
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) = 0;
 
+    /**
+     * @brief Upload a file into this FolderNode.
+     *
+     * @param filepath the path to the file to upload
+     * @return A FileUploader object to control the upload.
+     * @throw ErrorException if this node is a FileNode.
+     * @see Uploader to upload folders.
+     */
     virtual pplx::task<std::shared_ptr<FileUploader>>
     uploadFile(const utility::string_t& filepath) = 0;
 
-    virtual void
-    loadChildren() = 0;
 
+    /**
+     * @brief Download a FileNode
+     *
+     * @param destinationPath a path to a folder where the FileNode will be downloaded
+     * @param policy what to do if the file already exists at ```destinationPath```
+     * @return A FileDownloader to control the download.
+     * @throw ErrorException if this node is a FolderNode
+     * @see Downloader to download folders.
+     */
     virtual FileDownloader
     download(const utility::string_t& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) = 0;
 
+    /**
+     * @brief Get the data associated with a FileNode
+     * @throw ErrorException if this node is a FolderNode
+     */
     virtual const FileNodeData&
     fileData() const = 0;
 
-    bool
-    shouldLoadChildren() const;
-
+    /**
+     * @brief Remove this node. Set its id to ```""```
+     * @throw HttpError
+     */
     void
     remove();
 
-    void
+    /**
+     * @brief Rename this node.
+     *
+     * The new name may be different from the name parameter (some characters may be changed to have a valid filename).
+     * @param name must not exceed 255 chars
+     * @return The new name.
+     * @throw HttpError
+     * @throw ErrorException if the name is not valid.
+     */
+    const std::string&
     rename(const utility::string_t& name);
 
 

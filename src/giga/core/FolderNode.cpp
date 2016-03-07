@@ -66,16 +66,9 @@ FolderNode::operator=(const FolderNode& rhs)
 }
 
 const std::vector<std::unique_ptr<Node>>&
-FolderNode::children() const
+FolderNode::getChildren() const
 {
-    return _children;
-}
-
-
-void
-FolderNode::loadChildren()
-{
-    if (nbChildren() > 0)
+    if (nbChildren() > 0 && _children.size() < nbChildren())
     {
         auto results = NodesApi::getChildrenNode(id()).get();
 
@@ -84,6 +77,7 @@ FolderNode::loadChildren()
             return Node::create(std::make_shared<data::Node>(data));
         });
     }
+    return _children;
 }
 
 FolderNode&

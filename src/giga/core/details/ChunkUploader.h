@@ -58,7 +58,6 @@ public:
     ChunkUploader& operator=(ChunkUploader&&)      = delete;
     ChunkUploader& operator=(const ChunkUploader&) = delete;
 
-
     std::shared_ptr<data::Node>
     upload ();
 

@@ -158,12 +158,6 @@ Node::size () const
     return _data->size;
 }
 
-bool
-Node::shouldLoadChildren() const
-{
-    return nbChildren() > 0 && children().size() < nbChildren();
-}
-
 void
 Node::remove()
 {
@@ -171,15 +165,16 @@ Node::remove()
     _data->id = "";
 }
 
-void
+const std::string&
 Node::rename(const string_t& name)
 {
-    if (!boost::filesystem::portable_name(utils::wstr2str(name)))
+    if (name == "" || name == "." || name == "..")
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Name is not valid")});
     }
-    NodesApi::renameNode(id(), name).get();
-    _data->name = name;
+    auto node = NodesApi::renameNode(id(), name).get();
+    _data->name = node->name;
+    return node->name;
 }
 
 } /* namespace core */

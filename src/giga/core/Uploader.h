@@ -31,24 +31,61 @@ namespace giga
 namespace core
 {
 
+/**
+ * Upload files and folders.
+ */
 class Uploader
 {
 public:
     typedef std::function<void(FileUploader&, uint64_t count, uint64_t bytes)> ProgressCallback;
 
 public:
+    /**
+     * @brief construct an Uploader
+     * @param parent the folder in which we want to upload data
+     * @param path the path to the file or folder we want to upload
+     * @param clb a callback function that will be called periodically to let you know of the upload progress
+     *
+     * ```clb``` will be called at least once for each file being uploaded.
+     */
     explicit Uploader(FolderNode parent, const boost::filesystem::path& path, ProgressCallback clb = [](FileUploader&, uint64_t, uint64_t){});
     ~Uploader();
 
+    /**
+     * @brief Tells if the preparation phase is finished
+     *
+     * Before uploading a file, we need to calculate its sha1.
+     * This phase is called the preparation phase.
+     */
     bool
     isPreparationFinished() const;
 
+    /**
+     * @brief Gets the uploading files.
+     *
+     * During the uploading process, the local files are scanned.
+     * The scanned files are prepared (see ```isPreparationFinished()```).
+     * When the preparation phase is finished a FileUploader object is created.
+     * This method return the list of FileUploader object already created.
+     *
+     * In this list of FileUploader, at most one is currently being uploaded,
+     * some might be finished, other might be waiting.
+     */
     std::vector<std::shared_ptr<FileUploader>>
     uploadingFiles();
 
+    /**
+     * @brief return ```uploadingFiles().size()```
+     */
     std::vector<std::shared_ptr<FileUploader>>::size_type
     uploadingFilesCount();
 
+    /**
+     * @brief start the uploading process
+     * @return a task
+     * @see https://github.com/Microsoft/cpprestsdk
+     * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task_3_01void_01_4.html
+     */
     pplx::task<void>
     start();
 

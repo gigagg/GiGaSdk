@@ -38,10 +38,7 @@ public:
 
 public:
     virtual const std::vector<std::unique_ptr<Node>>&
-    children() const override;
-
-    virtual void
-    loadChildren() override;
+    getChildren() const override;
 
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) override;
@@ -56,7 +53,8 @@ public:
     fileData() const override;
 
 private:
-    std::vector<std::unique_ptr<Node>> _children;
+    mutable std::vector<std::unique_ptr<Node>> _children; // cache
+    // TODO mutex _children
 
 };
 

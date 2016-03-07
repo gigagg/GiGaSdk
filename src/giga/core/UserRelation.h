@@ -23,6 +23,7 @@
 
 namespace giga
 {
+class Application;
 
 namespace data
 {
@@ -32,6 +33,13 @@ struct UsersRelation;
 namespace core
 {
 
+/**
+ * A UserRelation represents the relation between the currentUser and an other user.
+ * The ```UserRelation::Type``` enum tells what type of relation it is. Depending on
+ * this type, the UserRelation may have different fields set.
+ *
+ * For most usage, you will not need much more than the Type of relation.
+ */
 class UserRelation
 {
 public:
@@ -63,18 +71,33 @@ public:
     std::chrono::system_clock::time_point
     creationDate () const;
 
+    /**
+     * @brief Get a list of users ids.
+     *
+     * @return
+     * - for a ```Type::should_invite```: The list of suggested users
+     * - for a ```Type::invite```: The list of users that has suggested this invitation
+     * - for a ```Type::contact```: The list of users that has suggested this contact
+     */
     const std::vector<uint64_t>&
     userList () const;
 
+    /**
+     * @brief Tells if a contact was initiated by the currentUser or the contact.
+     */
     Initiator
     initiator() const;
+
+private:
+    friend class giga::Application; // utility::string_t Application::getNodeKeyClear(uint64_t) const;
 
     const std::string&
     nodeKeyClear() const;
 
 private:
     std::shared_ptr<data::UsersRelation> _data;
-    mutable std::string                  _nodeKeyClear;
+    mutable std::string                  _nodeKeyClear; // cache data
+    // TODO mutex the _nodeKeyClear.
 
 };
 

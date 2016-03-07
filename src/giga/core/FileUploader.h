@@ -29,6 +29,15 @@ namespace core
 class Node;
 class UploadState;
 
+/**
+ * Upload a file.
+ *
+ * REMEMBER: Before uploading a file, we need to calculate its sha1.
+ * It is a long running process, that we call the preparing phase.
+ *
+ * After the preparing phase, we test to see if the file already exists in GiGa.GG.
+ * If it does, the uploading process is skipped (we use the one already in GiGa.GG)
+ */
 class FileUploader final : public FileTransferer
 {
 public:
@@ -43,12 +52,22 @@ public:
     FileUploader (const FileUploader&)           = delete;
 
 public:
-    void
-    doStart () override;
 
+    /**
+     * @brief Gets the task managing the upload process.
+     * Make sure you have started the upload before calling this method.
+     * @see FileTransferer::start()
+     * @see https://github.com/Microsoft/cpprestsdk
+     * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task.html
+     */
     const pplx::task<std::shared_ptr<Node>>&
     task () const;
 
+    /**
+     * @brief Gets this upload progress.
+     *
+     * For now there is no means to know the progression of the preparing phase.
+     */
     FileTransferer::Progress
     progress () const;
 
@@ -61,13 +80,17 @@ public:
     uint64_t
     fileSize() const;
 
+protected:
+    void
+    doStart () override;
+
 private:
     pplx::task<std::shared_ptr<Node>> _task;
 
     utility::string_t _filename;
     utility::string_t _nodeName;
     std::string       _parentId;
-    std::string          _sha1;
+    std::string       _sha1;
     std::string       _fid;
     std::string       _fkey;
 

@@ -30,12 +30,24 @@ namespace core
 class FileDownloader;
 class Node;
 
+/**
+ * Download folders and files.
+ */
 class Downloader final
 {
 public:
     typedef std::function<void(FileDownloader&, uint64_t count, uint64_t bytes)> ProgressCallback;
 
 public:
+    /**
+     * @brief construct a Downloader
+     * @param node move here the node you want to download.
+     *             It can either be a FileNode or a FolderNode.
+     * @param path the path to a folder where you want ```node``` to be downloaded.
+     * @param clb a callback function that will be executed periodically to let you know of the download progress.
+     *
+     * ```clb``` will be called at least once for each file being downloaded.
+     */
     explicit Downloader(std::unique_ptr<Node>&& node, const boost::filesystem::path& path, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
     ~Downloader();
 
@@ -44,12 +56,29 @@ public:
     Downloader& operator=(const Downloader&) = delete;
     Downloader& operator=(Downloader&&)      = delete;
 
+    /**
+     * @brief Gets the current FileDownloader.
+     *
+     * For each file downloaded by the ```Downloader``` a ```FileDownloader``` is created.
+     * This methods return the ```FileDownloader``` for the file being currently download.
+     * It may return ```nullptr``` if there is no file downloading yet.
+     * @return The current FileDownloader or nullptr.
+     */
     std::shared_ptr<FileDownloader>
     downloadingFile();
 
+    /**
+     * @return The number of files downloaded + 1 if there is a file currently being downloaded.
+     */
     uint64_t
     downloadingFileNumber();
 
+    /**
+     * @brief start the downloads
+     * @return a task
+     * @see https://github.com/Microsoft/cpprestsdk
+     * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task_3_01void_01_4.html
+     */
     pplx::task<void>
     start();
 

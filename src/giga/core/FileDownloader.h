@@ -30,16 +30,46 @@ namespace core
 {
 class Node;
 
-
+/**
+ * Downlod a file
+ */
 class FileDownloader : public FileTransferer
 {
 public:
     enum class Policy
     {
-        override, overrideNewerSize, ignore, rename
+        /**
+         * If a file with the same name is found, override it.
+         */
+        override,
+
+        /**
+         * Override a file with the same name if:
+         *  - its size is different from the downloading one
+         *  - *or* its last modification date is older than the downloading one
+         *
+         *  Else ignore the file (no download).
+         */
+        overrideNewerSize,
+
+        /**
+         * Do not download files that already exists.
+         */
+        ignore,
+
+        /**
+         * Rename the downloading file if needed to avoid collision.
+         */
+        rename
     };
 
 public:
+    /**
+     * @brief Construct a FileDownloader
+     * @param folderDest the folder in which we want to put the downloaded node
+     * @param node the node to download
+     * @param policy what to do if a file with the same name already exists
+     */
     explicit
     FileDownloader (const boost::filesystem::path& folderDest, const Node& node, Policy policy = Policy::ignore);
     virtual ~FileDownloader();
@@ -50,19 +80,35 @@ public:
     FileDownloader& operator=(FileDownloader&&)      = delete;
 
 public:
-    void doStart () override;
 
+    /**
+     * @brief Gets the task managing the download.
+     * Make sure it has been started first (see ```FileTransferer::start()```)
+     * @see FileTransferer::start()
+     * @see https://github.com/Microsoft/cpprestsdk
+     * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task.html
+     */
     const pplx::task<boost::filesystem::path>&
     task () const;
 
+    /**
+     * During the download process, we use this temporary file
+     */
     boost::filesystem::path
     downloadingFile () const;
 
+    /**
+     * At the end of the download process, the file will be here
+     */
     boost::filesystem::path
     destinationFile () const;
 
     FileTransferer::Progress
     progress () const;
+
+protected:
+    void
+    doStart () override;
 
 private:
     pplx::task<boost::filesystem::path> _task;

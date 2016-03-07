@@ -137,10 +137,6 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("File or directory not found")});
     }
-    if (parent.shouldLoadChildren())
-    {
-        parent.loadChildren();
-    }
 
     if (is_regular_file(path))
     {
@@ -171,7 +167,7 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
             return;
         }
 
-        const auto& children = parent.children();
+        const auto& children = parent.getChildren();
         auto it = std::find_if(children.begin(), children.end(), [name](const std::unique_ptr<Node>& e){
             return e->type() == Node::Type::folder && e->name() == name;
         });

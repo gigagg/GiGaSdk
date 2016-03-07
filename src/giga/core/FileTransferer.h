@@ -29,7 +29,9 @@ class CurlProgress;
 namespace core
 {
 
-
+/**
+ * The FileTransferer can be a FileDownload or a FileUpload.
+ */
 class FileTransferer
 {
 public:
@@ -57,21 +59,38 @@ public:
     FileTransferer& operator=(FileTransferer&&)       = delete;
 
 public:
+    /**
+     * @brief Start a transfer.
+     */
     void
     start ();
 
+    /**
+     * @brief Pause the current transfer (see ```resume()```)
+     */
     void
     pause ();
 
+    /**
+     * @brief Resume the current transfer (see ```pause()```)
+     */
     void
     resume ();
 
+    /**
+     * @brief Cancel a started upload.
+     * The task managing the transfer will most probably throw an exception.
+     */
     void
     cancel ();
 
     State
     state () const;
 
+    /**
+     * @brief Limit the rate of the transfer
+     * @param rate in Byte/s
+     */
     void
     limitRate (uint64_t rate);
 

@@ -143,11 +143,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
     }
 
     // recursion
-    if (node.shouldLoadChildren())
-    {
-        node.loadChildren();
-    }
-    for(auto& child : node.children())
+    for(auto& child : node.getChildren())
     {
         downloadFile(*child, npath);
     }

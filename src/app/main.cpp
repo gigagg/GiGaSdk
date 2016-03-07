@@ -47,11 +47,7 @@ void printNodeTree(core::Node& n, string_t space = U(""))
 {
     ucout << space << n.name() << "\n";
     space += U(" ");
-    if (n.shouldLoadChildren())
-    {
-        n.loadChildren();
-    }
-    for(const auto& child : n.children())
+    for(const auto& child : n.getChildren())
     {
         printNodeTree(*child, space);
     }
@@ -212,7 +208,7 @@ int main(int argc, const char* argv[]) {
             }
             if (vm.count("ls"))
             {
-                printNodes("ls", node->children());
+                printNodes("ls", node->getChildren());
             }
             if (vm.count("mkdir"))
             {

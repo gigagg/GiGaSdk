@@ -18,6 +18,7 @@
 #include "FolderNode.h"
 #include "../Application.h"
 #include "../api/data/Node.h"
+#include "../api/data/MimeIconAssociation.h"
 #include "../utils/Utils.h"
 
 #include <cpprest/http_client.h>
@@ -65,34 +66,50 @@ FileNodeData::fid () const
     return n->fid.get();
 }
 
-int64_t
+FileNodeData::PreviewState
 FileNodeData::previewState () const
 {
-    return n->previewState.get();
+    return static_cast<PreviewState>(n->previewState.get());
 }
 
 uri
 FileNodeData::iconUrl () const
 {
-    return uri{utils::httpsPrefix(n->icon.get())};
+    if (n->icon.is_initialized())
+    {
+        return uri{utils::httpsPrefix(n->icon.get())};
+    }
+    return data::MimeIconAssociation::icon(this->mimeType(), n->name);
 }
 
 uri
 FileNodeData::squareUrl () const
 {
-    return uri{utils::httpsPrefix(n->square.get())};
+    if (n->square.is_initialized())
+    {
+        return uri{utils::httpsPrefix(n->square.get())};
+    }
+    return data::MimeIconAssociation::bigIcon(this->mimeType(), n->name);
 }
 
 uri
 FileNodeData::originalUrl () const
 {
-    return uri{utils::httpsPrefix(n->original.get())};
+    if (n->original.is_initialized())
+    {
+        return uri{utils::httpsPrefix(n->original.get())};
+    }
+    return data::MimeIconAssociation::bigIcon(this->mimeType(), n->name);
 }
 
 uri
 FileNodeData::posterUrl () const
 {
-    return uri{utils::httpsPrefix(n->poster.get())};
+    if (n->poster.is_initialized())
+    {
+        return uri{utils::httpsPrefix(n->poster.get())};
+    }
+    return data::MimeIconAssociation::bigIcon(this->mimeType(), n->name);
 }
 
 uri
@@ -129,7 +146,7 @@ FileNode::operator=(const FileNode& rhs)
 static std::vector<std::unique_ptr<Node>> emptyVector{};
 
 const std::vector<std::unique_ptr<Node>>&
-FileNode::children () const
+FileNode::getChildren () const
 {
     return emptyVector;
 }

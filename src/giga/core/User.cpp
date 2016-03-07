@@ -76,14 +76,14 @@ web::uri
 User::avatarUri () const
 {
     _THROW_IF_NO_USER_;
-    return web::uri(_data->avatarUrl);
+    return web::uri(utils::httpsPrefix(_data->avatarUrl));
 }
 
 web::uri
 User::bigAvatarUri () const
 {
     _THROW_IF_NO_USER_;
-    return web::uri(_data->bigAvatarUrl);
+    return web::uri(utils::httpsPrefix(_data->bigAvatarUrl));
 }
 
 system_clock::time_point
