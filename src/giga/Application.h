@@ -243,7 +243,7 @@ public:
 private:
     friend web::uri core::FileNodeData::fileUrl () const;
 
-    utility::string_t
+    std::string
     getNodeKeyClear(uint64_t userId) const;
 
 private:

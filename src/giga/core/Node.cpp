@@ -165,10 +165,10 @@ Node::remove()
     _data->id = "";
 }
 
-const std::string&
+const utility::string_t&
 Node::rename(const string_t& name)
 {
-    if (name == "" || name == "." || name == "..")
+    if (name == U("") || name == U(".") || name == U(".."))
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Name is not valid")});
     }

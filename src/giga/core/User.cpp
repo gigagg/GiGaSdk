@@ -220,7 +220,7 @@ User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const string_t&
                                          Crypto::base64decode(u->rsaKeys->aesIv),
                                          Crypto::base64decode(u->rsaKeys->privateKey));
     _rsaKeys = Rsa{u->rsaKeys->publicKey, privateKey};
-    _nodeKeyClear = utils::str2wstr(_rsaKeys.decryptNodeKey(u->nodeKey.get()));
+    _nodeKeyClear = _rsaKeys.decryptNodeKey(u->nodeKey.get());
 }
 
 User::ReportedState
@@ -256,7 +256,7 @@ User::PersonalData::nextEmail () const
     BOOST_THROW_EXCEPTION(ErrorException{U("Email/nextEmail are not correctly initialized")});
 }
 
-const string_t&
+const std::string&
 User::PersonalData::nodeKeyClear () const
 {
     return _nodeKeyClear;

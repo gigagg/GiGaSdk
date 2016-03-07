@@ -16,6 +16,7 @@
 
 #include "UserRelation.h"
 #include "../utils/EnumConvertor.h"
+#include "../utils/Utils.h"
 #include "../api/data/UsersRelation.h"
 #include "../Application.h"
 
@@ -78,15 +79,15 @@ UserRelation::nodeKeyClear() const
 {
     if (type() != Type::contact)
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"NodeKeyClear is only valid for Contacts"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("NodeKeyClear is only valid for Contacts")});
     }
     if (!_data->key.is_initialized())
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"key should be initialized"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("key should be initialized")});
     }
     if (_nodeKeyClear.empty())
     {
-        _nodeKeyClear = Application::get().currentUser().personalData()._rsaKeys.decryptNodeKey(_data->key.get());
+        _nodeKeyClear = Application::get().currentUser().personalData()._rsaKeys.decryptNodeKey(utils::wstr2str(_data->key.get()));
     }
     return _nodeKeyClear;
 }

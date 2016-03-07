@@ -30,7 +30,7 @@ using namespace giga;
 using namespace giga::core;
 
 BOOST_AUTO_TEST_CASE(test_core_user_simple) {
-    auto json = utils::str2wstr(R"({
+    auto json = giga::utils::str2wstr(R"({
       "activity" : "INACTIVE",
       "adultStatus" : 0,
       "avatarUrl" : "https://www.gravatar.com/avatar/e9c0238fd06779c6486e41ac18d542b3?d=wavatar&s=81&r=pg",
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_core_user_simple) {
 }
 
 BOOST_AUTO_TEST_CASE(test_core_user_protected) {
-    auto json = utils::str2wstr(R"({
+    auto json = giga::utils::str2wstr(R"({
         "id" : 1704770,
         "login" : "bot-GiGa",
         "creationDate" : 1416502505,

@@ -79,7 +79,7 @@ FileNodeData::iconUrl () const
     {
         return uri{utils::httpsPrefix(n->icon.get())};
     }
-    return data::MimeIconAssociation::icon(this->mimeType(), n->name);
+    return data::MimeIconAssociation::icon(utils::wstr2str(mimeType()), n->name);
 }
 
 uri
@@ -89,7 +89,7 @@ FileNodeData::squareUrl () const
     {
         return uri{utils::httpsPrefix(n->square.get())};
     }
-    return data::MimeIconAssociation::bigIcon(this->mimeType(), n->name);
+    return data::MimeIconAssociation::bigIcon(utils::wstr2str(mimeType()), n->name);
 }
 
 uri
@@ -99,7 +99,7 @@ FileNodeData::originalUrl () const
     {
         return uri{utils::httpsPrefix(n->original.get())};
     }
-    return data::MimeIconAssociation::bigIcon(this->mimeType(), n->name);
+    return data::MimeIconAssociation::bigIcon(utils::wstr2str(mimeType()), n->name);
 }
 
 uri
@@ -109,13 +109,13 @@ FileNodeData::posterUrl () const
     {
         return uri{utils::httpsPrefix(n->poster.get())};
     }
-    return data::MimeIconAssociation::bigIcon(this->mimeType(), n->name);
+    return data::MimeIconAssociation::bigIcon(utils::wstr2str(mimeType()), n->name);
 }
 
 uri
 FileNodeData::fileUrl () const
 {
-    auto nodeKey = Application::get().getNodeKeyClear(n->ownerId);
+    auto nodeKey = utils::str2wstr(Application::get().getNodeKeyClear(n->ownerId));
     return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(nodeKey)};
 }
 

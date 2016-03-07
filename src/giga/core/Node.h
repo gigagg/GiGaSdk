@@ -173,7 +173,7 @@ public:
      * @throw HttpError
      * @throw ErrorException if the name is not valid.
      */
-    const std::string&
+    const utility::string_t&
     rename(const utility::string_t& name);
 
 

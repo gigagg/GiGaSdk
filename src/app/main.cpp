@@ -85,7 +85,7 @@ searchNodes (const po::variables_map& vm, giga::Application& app, const char* na
 
 
 int main(int argc, const char* argv[]) {
-//    try {
+    try {
 #ifdef _UTF16_STRINGS
 #define VALUE wvalue
 #else
@@ -296,12 +296,12 @@ int main(int argc, const char* argv[]) {
             }
         }
         ucout << "DONE" << std::endl;
-//    }
-//    catch (...)
-//    {
-//        std::cerr << "Unhandled exception!" << std::endl <<
-//        boost::current_exception_diagnostic_information();
-//        return 1;
-//    }
+    }
+    catch (...)
+    {
+        std::cerr << "Unhandled exception!" << std::endl <<
+        boost::current_exception_diagnostic_information();
+        return 1;
+    }
     return 0;
 }

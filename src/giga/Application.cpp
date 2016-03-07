@@ -223,7 +223,7 @@ Application::searchNode (const string_t& search, core::Node::MediaType type) con
 // Crypto. Be carful with these ...
 //
 
-utility::string_t
+std::string
 Application::getNodeKeyClear(uint64_t userId) const
 {
     if (userId == _currentUser.id())

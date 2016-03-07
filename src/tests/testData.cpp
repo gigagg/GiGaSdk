@@ -26,7 +26,7 @@ using namespace giga;
 using namespace giga::data;
 
 BOOST_AUTO_TEST_CASE(test_data_user) {
-    auto json = utils::str2wstr(R"({
+    auto json = giga::utils::str2wstr(R"({
   "achievements" : 476,
   "activity" : "INACTIVE",
   "adultStatus" : 0,
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_data_user) {
 
 BOOST_AUTO_TEST_CASE(test_data_node)
 {
-    auto json = utils::str2wstr(R"({
+    auto json = giga::utils::str2wstr(R"({
     "uploadUrl" : "\/upload\/?s=561cc82833e5dfb5008b4567",
     "name" : "All my files",
     "ancestors" : [],
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(test_data_node)
     BOOST_CHECK(boost::none == node.parentId);
     BOOST_CHECK(boost::none == node.poster);
     BOOST_CHECK(boost::none == node.previewState);
-    BOOST_CHECK_EQUAL(6248637323, node.size);
+    BOOST_CHECK_EQUAL(6248637323ul, node.size);
     BOOST_CHECK(boost::none == node.square);
     BOOST_CHECK(boost::none == node.url);
 
