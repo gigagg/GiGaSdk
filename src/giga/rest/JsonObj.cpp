@@ -19,7 +19,7 @@ JsonObj& JsonObj::add(const string_t& name, int64_t value) {
 }
 #ifdef _UTF16_STRINGS
 JsonObj& JsonObj::add(const string_t& name, const std::wstring& value) {
-    strData.push_back(std::make_pair(name, utils::str2wstr(value)));
+    strData.push_back(std::make_pair(name, value));
     return *this;
 }
 #endif

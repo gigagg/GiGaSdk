@@ -37,7 +37,7 @@ namespace details {
     }
 #ifdef _UTF16_STRINGS
     inline void getValue(const web::json::value& value, std::wstring& ret) {
-        ret = utils::str2wstr(value.as_string());
+        ret = value.as_string();
     }
 #endif
 

@@ -35,7 +35,7 @@ namespace details {
     }
 #ifdef _UTF16_STRINGS
     inline web::json::value serialize(std::wstring& value) {
-        return  web::json::value::string(utils::str2wstr(value));
+        return  web::json::value::string(value);
     }
     inline web::json::value serialize(const wchar_t*& value) {
         return web::json::value::string(value);
