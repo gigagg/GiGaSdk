@@ -1,8 +1,17 @@
 /*
- * Node.cpp
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 4 févr. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "Node.h"
@@ -108,7 +117,7 @@ Node::ancestors () const
     return _data->ancestors;
 }
 
-int64_t
+uint64_t
 Node::ownerId () const
 {
     _THROW_IF_NO_NODE_;
@@ -149,12 +158,6 @@ Node::size () const
     return _data->size;
 }
 
-bool
-Node::shouldLoadChildren() const
-{
-    return nbChildren() > 0 && children().size() < nbChildren();
-}
-
 void
 Node::remove()
 {
@@ -162,15 +165,16 @@ Node::remove()
     _data->id = "";
 }
 
-void
+const std::string&
 Node::rename(const string_t& name)
 {
-    if (!boost::filesystem::portable_name(utils::wstr2str(name)))
+    if (name == "" || name == "." || name == "..")
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Name is not valid")});
     }
-    NodesApi::renameNode(id(), name).get();
-    _data->name = name;
+    auto node = NodesApi::renameNode(id(), name).get();
+    _data->name = node->name;
+    return node->name;
 }
 
 } /* namespace core */

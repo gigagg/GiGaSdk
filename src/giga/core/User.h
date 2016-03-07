@@ -1,8 +1,17 @@
 /*
- * User.h
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 19 janv. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef GIGA_CORE_USER_H_
@@ -19,6 +28,7 @@
 
 namespace giga
 {
+class Application;
 
 namespace data
 {
@@ -29,6 +39,9 @@ struct UsersRelation;
 namespace core
 {
 
+/**
+ * Represents a country code like "FR" or "US"
+ */
 class Country final {
 public:
     explicit
@@ -43,6 +56,9 @@ public:
     const utility::string_t code;
 };
 
+/**
+ * Represents a language code like "fr" or "en"
+ */
 struct Language final {
     explicit
     Language(const utility::string_t& code) : code(code) {}
@@ -56,6 +72,10 @@ struct Language final {
     const utility::string_t code;
 };
 
+/**
+ * @brief A user with an account on GiGa.GG.
+ * Cf: https://giga.gg/users/profile/1704781
+ */
 class User final
 {
 public:
@@ -86,7 +106,7 @@ public:
     explicit User(std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r = nullptr);
 
 public:
-    int64_t
+    uint64_t
     id () const;
 
     const utility::string_t&
@@ -110,12 +130,21 @@ public:
     bool
     isUnlimited () const;
 
+    /**
+     * The seederStatus defines if a user share some nodes to other users.
+     */
     SeederStatus
     isSeeder () const;
 
-    int64_t
+    uint64_t
     contactCount () const;
 
+    /**
+     * A user may add a list of Tags to describe is account.
+     * The tags do not include the leading '#'.
+     * You should always display them with a '#' first.
+     *
+     */
     const std::vector<utility::string_t>&
     tags () const;
 
@@ -129,6 +158,11 @@ public:
     description () const;
 
 public:
+    /**
+     * The user data restricted to its contacts.
+     * Use ```Application::getContacts()``` then
+     * ```User::contactData()```to get some ContactData
+     */
     class ContactData final {
         friend User;
     public:
@@ -151,19 +185,27 @@ public:
         const boost::optional<std::chrono::system_clock::time_point>
         birthDate() const;
 
-        int64_t
+        uint64_t
         maxContact() const;
 
+        /**
+         * The root Node, containing all the Nodes shared with the currentUser.
+         */
         FolderNode
         node() const;
-
 
     private:
         std::shared_ptr<data::User> _data;
     };
 
+    /**
+     * The currentUser personal data.
+     * Use ```Application::currentUser()``` then
+     * ```User::personalData() const```to get the currentUser PersonalData
+     */
     class PersonalData {
         friend User;
+        friend UserRelation;
     public:
         ~PersonalData()                              = default;
         PersonalData(PersonalData&&)                 = default;
@@ -187,21 +229,20 @@ public:
         const utility::string_t&
         nextEmail() const;
 
-        const std::string&
+        const utility::string_t&
         nodeKeyClear() const;
 
-        int64_t
+        uint64_t
         maxStorage() const;
 
-        int64_t
+        uint64_t
         standatdMaxStorage() const;
 
-        int64_t
+        uint64_t
         downloaded() const;
 
-        int64_t
+        uint64_t
         dlAvailable() const;
-
 
 //        ExternalAccount
 //        externalAccount() const;
@@ -210,27 +251,65 @@ public:
 
     private:
         std::shared_ptr<data::User> _data;
-        std::string                 _nodeKeyClear;
+        utility::string_t           _nodeKeyClear;
+        Rsa                         _rsaKeys;
     };
 
+    /**
+     * @return ```true``` if the user has contact data.
+     */
     bool
     hasContactData() const;
 
+    /**
+     * @brief Get the data shared by this user.
+     *
+     * Make sure this user ```hasContactData()```. <br>
+     * To get a user with contact data, you can user ```Application::getContacts()``` or ```Application::getContact()```.
+     *
+     * @return The data shared by this user.
+     * @throw ErrorException if there is no contactData.
+     */
     ContactData&
     contactData();
 
+    /**
+     * @return ```true``` if the user has personal data (this is true only for the currentUser)
+     */
     bool
     hasPersonalData() const;
 
-    PersonalData&
-    initializePersonalData (const utility::string_t& password);
+    /**
+     * @brief Get the personal data of the currentUser.
+     *
+     * Make sure this user ```hasPersonalData()```. <br>
+     * To get the currentUser uses ```Application::currentUser()```.
+     *
+     * @throw ErrorException if there is no personalData.
+     */
+    const PersonalData&
+    personalData() const;
 
-    PersonalData&
-    personalData();
-
+    /**
+     * @return ```true``` if this user has a UserRelation set.
+     */
     bool
     hasRelation() const;
 
+    /**
+     * @brief Get the UserRelation data between this user and the currentUser
+     *
+     * Make sure this user ```hasRelation() const```.<br>
+     * To get users with relational data with the currentUser, you may use one of these functions:
+     * - ```Application::getContacts()```
+     * - ```Application::getContact()```
+     * - ```Application::getInvitingUsers()```
+     * - ```Application::getInvitedUsers()```
+     * - ```Application::getSuggestedUsers()```
+     * - ```Application::getBlockedUsers()```
+     *
+     * @throw ErrorException if there is no relation.
+     */
     UserRelation
     relation() const;
 
@@ -238,13 +317,51 @@ public:
     // Setters
     //
 
-    User invite();
-    User block();
-    User acceptInvitation();
+    /**
+     * @brief Send an invitation from the currentUser to this user
+     * @return A new User with the ```relation()``` set to an invitation.
+     * @throw HttpError
+     */
+    User
+    invite();
 
-    void suggest(const User& contact);
+    /**
+     * @brief The currentUser blocks this user
+     * @return A new User with the ```relation()``` set to a block UserRelation.
+     * @throw HttpError
+     */
+    User
+    block();
 
-    void removeRelation();
+    /**
+     * @brief Accept an invitation received from this user to the currentUser
+     * @return A new User with the ```relation()``` set to a contact UserRelation (and ```contactData()``` set).
+     * @throw HttpError
+     */
+    User
+    acceptInvitation();
+
+    /**
+     * @brief Suggest ```contact``` to this user.
+     * @throw HttpError
+     * @see UserRelation
+     */
+    void
+    suggest(const User& contact);
+
+    /**
+     * @brief Remove a relation. Make sure this user ```hasRelation() const```
+     * @throw HttpError
+     * @see UserRelation
+     */
+    void
+    removeRelation();
+
+private:
+    friend class giga::Application; // core::User& Application::authenticate (const utility::string_t&, const utility::string_t&);
+
+    PersonalData&
+    initializePersonalData (const utility::string_t& password);
 
 private:
     std::shared_ptr<data::User>          _data;

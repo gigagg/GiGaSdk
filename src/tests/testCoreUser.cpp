@@ -1,22 +1,36 @@
-#include <chrono>
-
-
-using std::chrono::system_clock;
-using std::chrono::time_point;
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #define BOOST_TEST_MODULE core
 
 #include <boost/test/included/unit_test.hpp>
 #include <giga/core/User.h>
 #include <giga/api/data/User.h>
+#include <giga/utils/Utils.h>
 #include <giga/rest/JsonUnserializer.h>
+#include <cpprest/details/basic_types.h>
+#include <chrono>
 
-
+using std::chrono::system_clock;
+using std::chrono::time_point;
 using namespace boost::unit_test;
 using namespace giga;
 using namespace giga::core;
 
 BOOST_AUTO_TEST_CASE(test_core_user_simple) {
-    auto json = U(R"({
+    auto json = utils::str2wstr(R"({
       "activity" : "INACTIVE",
       "adultStatus" : 0,
       "avatarUrl" : "https://www.gravatar.com/avatar/e9c0238fd06779c6486e41ac18d542b3?d=wavatar&s=81&r=pg",
@@ -58,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_core_user_simple) {
 }
 
 BOOST_AUTO_TEST_CASE(test_core_user_protected) {
-    auto json = U(R"({
+    auto json = utils::str2wstr(R"({
         "id" : 1704770,
         "login" : "bot-GiGa",
         "creationDate" : 1416502505,

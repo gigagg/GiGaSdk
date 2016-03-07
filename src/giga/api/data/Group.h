@@ -1,5 +1,17 @@
-/**
- * @author Thomas Guyard <t.guyard@gigatribe.com>
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef GIGA_DATA_GROUP_MODEL_H_
@@ -14,12 +26,12 @@ namespace giga {
 namespace data {
 
 struct Group {
-    int64_t ownerId = 0;
+    uint64_t ownerId = 0;
     utility::string_t name = {};
-    std::vector<int64_t>  users = std::vector<int64_t>();
+    std::vector<uint64_t>  users = std::vector<uint64_t>();
     std::vector<std::unique_ptr<Node>> nodes = {};
     utility::string_t id = {};
-    int64_t creationDate = 0;
+    uint64_t creationDate = 0;
     boost::optional<bool> isAllMyContacts = boost::none;
     
     template <class Manager>

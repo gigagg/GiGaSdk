@@ -1,8 +1,17 @@
 /*
- * Crypto.cpp
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 7 janv. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifdef CRYPTOPP
@@ -150,6 +159,11 @@ Rsa::Rsa (const std::string& pubStr, const std::string& privStr) :
     }
 }
 
+Rsa::Rsa () :
+        _keys{nullptr}, _hasPrivateKey{false}
+{
+}
+
 Rsa::~Rsa() = default;
 
 Rsa& 
@@ -172,6 +186,9 @@ Rsa& Rsa::operator=(Rsa&& ) = default;
 std::string
 Rsa::encrypt (const std::string& data) const
 {
+    if (_keys == nullptr) {
+        BOOST_THROW_EXCEPTION(ErrorException(U("You cannot use a default constructed Rsa obj")));
+    }
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Encryptor encryptor(_keys->pub);
     std::string encrypted;
@@ -186,6 +203,9 @@ Rsa::encrypt (const std::string& data) const
 std::string
 Rsa::decrypt (const std::string& data) const
 {
+    if (_keys == nullptr) {
+        BOOST_THROW_EXCEPTION(ErrorException(U("You cannot use a default constructed Rsa obj")));
+    }
     if (!_hasPrivateKey) {
         BOOST_THROW_EXCEPTION(ErrorException(U("PrivateKey has not been set")));
     }
@@ -200,10 +220,28 @@ Rsa::decrypt (const std::string& data) const
     return decrypted;
 }
 
+std::string
+Rsa::decryptNodeKey (const std::string& data) const
+{
+    auto tmp = decrypt(Crypto::base64decode(data));
+    if (tmp.size() == 32)
+    {
+        return Crypto::base64encode(tmp);
+    }
+    else if (tmp.size() > 44)
+    {
+        return Crypto::base64decode(tmp);
+    }
+    else
+    {
+        return tmp;
+    }
+}
+
 
 template<typename T>
 std::string
-pbkdf2 (const string_t& spassword, const std::string& salt, std::size_t length, std::size_t iteration)
+pbkdf2 (const string_t& spassword, const std::string& salt, std::size_t length, uint64_t iteration)
 {
     auto password = wstr2str(spassword);
     auto key = std::vector<char>(length);
@@ -221,12 +259,12 @@ pbkdf2 (const string_t& spassword, const std::string& salt, std::size_t length, 
 }
 
 std::string
-Crypto::pbkdf2_sha256 (const string_t& password, const std::string& salt, std::size_t length, std::size_t iteration)
+Crypto::pbkdf2_sha256 (const string_t& password, const std::string& salt, std::size_t length, uint64_t iteration)
 {
     return pbkdf2<CryptoPP::SHA256> (password, salt, length, iteration);
 }
 std::string
-Crypto::pbkdf2_sha512 (const string_t& password, const std::string& salt, std::size_t length, std::size_t iteration)
+Crypto::pbkdf2_sha512 (const string_t& password, const std::string& salt, std::size_t length, uint64_t iteration)
 {
     return pbkdf2<CryptoPP::SHA512> (password, salt, length, iteration);
 }
@@ -264,13 +302,13 @@ Crypto::base64decode (const std::string& data)
 std::string
 Crypto::calculateFid(const std::string& hashHexEncoded) {
     auto salt = "5%;[yw\"XG2&Om#i*T$v.B2'Ae/VST4t#u$@pxsauO,H){`hUd7Xu@4q4WCc<>'ie";
-    return base64encode(pbkdf2_sha256(str2wstr(hashHexEncoded), salt, 18, 32));
+    return base64encode(pbkdf2_sha256(str2wstr(hashHexEncoded), salt, 18, 32ul));
 }
 
 std::string
 Crypto::calculateFkey(const std::string& hashHexEncoded) {
     auto salt = "={w|>6L:{Xn;HAKf^w=,fgSX}sfw)`hxopaqk.6Hg';w23\"sd+b07`LSOGqz#-)[";
-    return base64encode(pbkdf2_sha256(str2wstr(hashHexEncoded), salt, 18, 32));
+    return base64encode(pbkdf2_sha256(str2wstr(hashHexEncoded), salt, 18, 32ul));
 }
 
 std::string

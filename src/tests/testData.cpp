@@ -1,17 +1,32 @@
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #define BOOST_TEST_MODULE data
 #include <boost/test/included/unit_test.hpp>
-
 #include <giga/api/data/Node.h>
 #include <giga/api/data/User.h>
+#include <giga/utils/Utils.h>
 #include <giga/rest/JsonUnserializer.h>
-
+#include <cpprest/details/basic_types.h>
 
 using namespace boost::unit_test;
 using namespace giga;
 using namespace giga::data;
 
 BOOST_AUTO_TEST_CASE(test_data_user) {
-    auto json = U(R"({
+    auto json = utils::str2wstr(R"({
   "achievements" : 476,
   "activity" : "INACTIVE",
   "adultStatus" : 0,
@@ -78,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_data_user) {
 
 BOOST_AUTO_TEST_CASE(test_data_node)
 {
-    auto json = U(R"({
+    auto json = utils::str2wstr(R"({
     "uploadUrl" : "\/upload\/?s=561cc82833e5dfb5008b4567",
     "name" : "All my files",
     "ancestors" : [],

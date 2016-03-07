@@ -1,8 +1,17 @@
 /*
- * Node.h
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 4 févr. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef GIGA_CORE_NODE_H_
@@ -30,6 +39,11 @@ namespace core
 class FolderNode;
 class FileNodeData;
 
+/**
+ * The class Node represents a file or a folder.
+ * It is the base class of a composite pattern, with the
+ * ```FileNode``` and ```FolderNode``` classes.
+ */
 class Node
 {
 public:
@@ -76,7 +90,7 @@ public:
     const std::vector<std::string>&
     ancestors() const;
 
-    int64_t
+    uint64_t
     ownerId() const;
 
     std::chrono::system_clock::time_point
@@ -94,31 +108,72 @@ public:
     uint64_t
     size () const;
 
+    /**
+     * @brief Load the children node if needed then return them.
+     * The children nodes are stored in a local cache variable.
+     *
+     * @return The list of children nodes
+     * @throw HttpError
+     */
     virtual const std::vector<std::unique_ptr<Node>>&
-    children() const = 0;
+    getChildren() const = 0;
 
+    /**
+     * @brief Create a new FolderNode and add it to the children list.
+     * @return The new FolderNode
+     * @throw HttpError
+     */
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) = 0;
 
+    /**
+     * @brief Upload a file into this FolderNode.
+     *
+     * @param filepath the path to the file to upload
+     * @return A FileUploader object to control the upload.
+     * @throw ErrorException if this node is a FileNode.
+     * @see Uploader to upload folders.
+     */
     virtual pplx::task<std::shared_ptr<FileUploader>>
     uploadFile(const utility::string_t& filepath) = 0;
 
-    virtual void
-    loadChildren() = 0;
 
+    /**
+     * @brief Download a FileNode
+     *
+     * @param destinationPath a path to a folder where the FileNode will be downloaded
+     * @param policy what to do if the file already exists at ```destinationPath```
+     * @return A FileDownloader to control the download.
+     * @throw ErrorException if this node is a FolderNode
+     * @see Downloader to download folders.
+     */
     virtual FileDownloader
     download(const utility::string_t& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) = 0;
 
+    /**
+     * @brief Get the data associated with a FileNode
+     * @throw ErrorException if this node is a FolderNode
+     */
     virtual const FileNodeData&
     fileData() const = 0;
 
-    bool
-    shouldLoadChildren() const;
-
+    /**
+     * @brief Remove this node. Set its id to ```""```
+     * @throw HttpError
+     */
     void
     remove();
 
-    void
+    /**
+     * @brief Rename this node.
+     *
+     * The new name may be different from the name parameter (some characters may be changed to have a valid filename).
+     * @param name must not exceed 255 chars
+     * @return The new name.
+     * @throw HttpError
+     * @throw ErrorException if the name is not valid.
+     */
+    const std::string&
     rename(const utility::string_t& name);
 
 

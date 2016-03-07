@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef UTILS_CRYPTO_H_
 #define UTILS_CRYPTO_H_
 
@@ -12,8 +27,8 @@ class RsaKeys;
 class Rsa final
 {
 public:
-    explicit
-    Rsa (const std::string& pubStr, const std::string& privStr = "");
+    explicit Rsa (const std::string& pubStr, const std::string& privStr = "");
+    explicit Rsa();
     ~Rsa();
     Rsa& operator=(const Rsa& rhs);
     Rsa(const Rsa& rhs);
@@ -26,19 +41,22 @@ public:
     std::string
     decrypt (const std::string& data) const;
 
+    std::string
+    decryptNodeKey (const std::string& data) const;
+
 private:
-    std::unique_ptr<RsaKeys>    _keys;
-    bool                        _hasPrivateKey;
+    std::unique_ptr<RsaKeys> _keys;
+    bool                     _hasPrivateKey;
 };
 
 class Crypto final
 {
 public:
     static std::string
-    pbkdf2_sha256 (const utility::string_t& password, const std::string& salt, std::size_t length, std::size_t iteration = 1024);
+    pbkdf2_sha256 (const utility::string_t& password, const std::string& salt, std::size_t length, uint64_t iteration = 1024ul);
 
     static std::string
-    pbkdf2_sha512 (const utility::string_t& password, const std::string& salt, std::size_t length, std::size_t iteration = 1024);
+    pbkdf2_sha512 (const utility::string_t& password, const std::string& salt, std::size_t length, uint64_t iteration = 1024ul);
 
 public:
     static std::string

@@ -1,8 +1,17 @@
 /*
- * CurlProgress.cpp
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 17 févr. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "CurlProgress.h"
@@ -114,7 +123,7 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
 
         // Do the limit rate outside of the mutex locked zone
         // because there is waiting here.
-        auto transfered = dlnow + ulnow;
+        auto transfered = static_cast<uint64_t>(dlnow + ulnow);
         if (limitRate != _currentLimitRate)
         {
             _rateBytes = transfered;

@@ -1,5 +1,17 @@
-/**
- * @author Thomas Guyard <t.guyard@gigatribe.com>
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef GIGA_DATA_UsersRelation_MODEL_H_
@@ -21,7 +33,7 @@ namespace data {
 struct UsersRelation {
     std::shared_ptr<User> user = nullptr;
     utility::string_t type = {};
-    int64_t creationDate = 0;
+    uint64_t creationDate = 0;
     /** type=CONTACT */
     boost::optional<bool> favorite = boost::none;
     /** type=CONTACT */
@@ -31,9 +43,9 @@ struct UsersRelation {
     /** type=CONTACT, OTHER|ME */
     boost::optional<utility::string_t> initiator = boost::none;
     /** type=CONTACT|INVITE, list of userId */
-    boost::optional<std::vector<int64_t> > suggestedBy = boost::none;
+    boost::optional<std::vector<uint64_t> > suggestedBy = boost::none;
     /** type=SHOULD_INVITE, list of userId */
-    boost::optional<std::vector<int64_t> > byUserId = boost::none;
+    boost::optional<std::vector<uint64_t> > byUserId = boost::none;
     
     template <class Manager>
     void visit(const Manager& m) {

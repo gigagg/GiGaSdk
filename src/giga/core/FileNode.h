@@ -1,8 +1,17 @@
 /*
- * FileNode.h
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 4 févr. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef GIGA_CORE_FILENODE_H_
@@ -17,12 +26,20 @@ namespace giga
 {
 namespace core
 {
-
 class FolderNode;
 
+/**
+ * Store the data specific to FileNode (ie: not found in FolderNode)
+ */
 class FileNodeData final
 {
     friend class FileNode;
+
+public:
+    enum class PreviewState
+    {
+        noPreview = 0, previewNoIcon = 4, preview = 7, computing = 8, error = 16
+    };
 
 private:
     FileNodeData()                                = default;
@@ -42,21 +59,48 @@ public:
     const std::string&
     fid() const;
 
-    int64_t
+    PreviewState
     previewState() const;
 
+    /**
+     * @brief An url to a 48x48 image.
+     *
+     * If this icon is not set (see ```previewState()```)
+     * then we fall back to a generic icon (48x48)
+     */
     web::uri
     iconUrl() const;
 
+    /**
+     * @brief An url to a 185x185 image
+     *
+     * If this icon is not set (see ```previewState()```)
+     * then we fall back to a generic icon (255x255)
+     */
     web::uri
     squareUrl() const;
 
+    /**
+     * @brief An url to a small none cropped image (max size is 185x278)
+     *
+     * If this icon is not set (see ```previewState()```)
+     * then we fall back to a generic icon (255x255)
+     */
     web::uri
     originalUrl() const;
 
+    /**
+     * @brief An url to a 185x278 image
+     *
+     * If this icon is not set (see ```previewState()```)
+     * then we fall back to a generic icon (255x255)
+     */
     web::uri
     posterUrl() const;
 
+    /**
+     * @return The download url for this file.
+     */
     web::uri
     fileUrl() const;
 
@@ -78,10 +122,7 @@ public:
 
 public:
     virtual const std::vector<std::unique_ptr<Node>>&
-    children() const override;
-
-    virtual void
-    loadChildren() override {}
+    getChildren() const override;
 
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) override;

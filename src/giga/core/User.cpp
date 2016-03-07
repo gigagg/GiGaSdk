@@ -1,8 +1,17 @@
 /*
- * User.cpp
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 19 janv. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "User.h"
@@ -49,7 +58,7 @@ User::User (std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> 
     }
 }
 
-int64_t
+uint64_t
 User::id () const
 {
     _THROW_IF_NO_USER_;
@@ -67,14 +76,14 @@ web::uri
 User::avatarUri () const
 {
     _THROW_IF_NO_USER_;
-    return web::uri(_data->avatarUrl);
+    return web::uri(utils::httpsPrefix(_data->avatarUrl));
 }
 
 web::uri
 User::bigAvatarUri () const
 {
     _THROW_IF_NO_USER_;
-    return web::uri(_data->bigAvatarUrl);
+    return web::uri(utils::httpsPrefix(_data->bigAvatarUrl));
 }
 
 system_clock::time_point
@@ -112,7 +121,7 @@ User::isSeeder () const
     return seederStatusCvrt.fromStr(_data->isSeeder);
 }
 
-int64_t
+uint64_t
 User::contactCount () const
 {
     _THROW_IF_NO_USER_;
@@ -185,7 +194,7 @@ User::ContactData::birthDate () const
     return boost::optional<system_clock::time_point>{};
 }
 
-int64_t
+uint64_t
 User::ContactData::maxContact () const
 {
     _THROW_IF_NO_USER_;
@@ -210,20 +219,8 @@ User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const string_t&
                                          Crypto::base64decode(u->rsaKeys->aesSalt),
                                          Crypto::base64decode(u->rsaKeys->aesIv),
                                          Crypto::base64decode(u->rsaKeys->privateKey));
-    auto rsa = Rsa{u->rsaKeys->publicKey, privateKey};
-    auto tmp = rsa.decrypt(Crypto::base64decode(u->nodeKey.get()));
-    if (tmp.size() == 32)
-    {
-        _nodeKeyClear = Crypto::base64encode(tmp);
-    }
-    else if (tmp.size() > 44)
-    {
-        _nodeKeyClear = Crypto::base64decode(tmp);
-    }
-    else
-    {
-        _nodeKeyClear = tmp;
-    }
+    _rsaKeys = Rsa{u->rsaKeys->publicKey, privateKey};
+    _nodeKeyClear = utils::str2wstr(_rsaKeys.decryptNodeKey(u->nodeKey.get()));
 }
 
 User::ReportedState
@@ -259,7 +256,7 @@ User::PersonalData::nextEmail () const
     BOOST_THROW_EXCEPTION(ErrorException{U("Email/nextEmail are not correctly initialized")});
 }
 
-const std::string&
+const string_t&
 User::PersonalData::nodeKeyClear () const
 {
     return _nodeKeyClear;
@@ -271,25 +268,25 @@ User::PersonalData::isEmailValidated() const
     return _data->email.is_initialized();
 }
 
-int64_t
+uint64_t
 User::PersonalData::maxStorage () const
 {
     return _data->maxStorage.get_value_or(100);
 }
 
-int64_t
+uint64_t
 User::PersonalData::standatdMaxStorage () const
 {
     return _data->standatdMaxStorage.get_value_or(100);
 }
 
-int64_t
+uint64_t
 User::PersonalData::downloaded () const
 {
     return _data->downloaded.get_value_or(0);
 }
 
-int64_t
+uint64_t
 User::PersonalData::dlAvailable () const
 {
     return _data->dlAvailable.get_value_or(0);
@@ -331,8 +328,8 @@ User::initializePersonalData (const string_t& password)
     BOOST_THROW_EXCEPTION(ErrorException{U("No private data")});
 }
 
-User::PersonalData&
-User::personalData ()
+const User::PersonalData&
+User::personalData () const
 {
     if(hasPersonalData()) {
         if (!_private.is_initialized()) {
@@ -411,7 +408,7 @@ User::removeRelation ()
     NetworkApi::deleteUserRelation(user.id(), id(), _relation->type).get();
 
     // remove relation and cache.
-    this->_relation          = nullptr;
+    this->_relation  = nullptr;
     this->_protected = boost::none;
     this->_private   = boost::none;
 }

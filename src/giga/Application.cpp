@@ -1,8 +1,17 @@
 /*
- * Application.cpp
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 20 janv. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "Application.h"
@@ -18,6 +27,20 @@
 
 using pplx::create_task;
 using utility::string_t;
+
+namespace {
+std::vector<giga::core::User>
+toUserVect(std::shared_ptr<std::vector<std::shared_ptr<giga::data::UsersRelation>>> rels)
+{
+    auto container = std::vector<giga::core::User>{};
+    container.reserve(rels->size());
+    for(auto relation : *rels)
+    {
+        container.emplace_back(relation->user, relation);
+    }
+    return std::move(container);
+}
+}
 
 namespace giga
 {
@@ -56,7 +79,6 @@ Application::isInitialized() const
     return _isInitialized;
 }
 
-
 core::User&
 Application::authenticate (const string_t& login, const string_t& password)
 {
@@ -72,13 +94,12 @@ Application::currentUser()
     return _currentUser;
 }
 
-
 //
 // users
 //
 
 core::User
-Application::getUserById (int64_t id) const
+Application::getUserById (uint64_t id) const
 {
     auto duser =  UsersApi::getUserById(id).get();
     return core::User{duser};
@@ -91,23 +112,44 @@ Application::getUserByLogin (const string_t& login) const
     return core::User{duser};
 }
 
-std::vector<core::User>
-toUserVect(std::shared_ptr<std::vector<std::shared_ptr<data::UsersRelation>>> rels)
+core::User
+Application::getContact (uint64_t id) const
 {
-    auto container = std::vector<core::User>{};
-    container.reserve(rels->size());
-    for(auto relation : *rels)
+    bool shouldLoadContact = true;
+    if (_contacts.size() == 0)
     {
-        container.emplace_back(relation->user, relation);
+        shouldLoadContact = false;
+        getContacts(); // update the _contacts cache variable
     }
-    return std::move(container);
+    auto it = _contacts.find(id);
+    if (it != _contacts.end())
+    {
+        return it->second;
+    }
+
+    if (shouldLoadContact)
+    {
+        auto relation = NetworkApi::getUserRelation(_currentUser.id(), U("CONTACT"), id, U("OUT")).get();
+        if (relation->type == U("CONTACT"))
+        {
+            _contacts.emplace(id, core::User{relation->user, relation});
+            return core::User{relation->user, relation};
+        }
+    }
+    BOOST_THROW_EXCEPTION(ErrorNotFound{U("Not Found")});
 }
 
 std::vector<core::User>
 Application::getContacts () const
 {
     auto rels = NetworkApi::getUserRelation(_currentUser.id(), U("CONTACT"), U("OUT")).get();
-    return toUserVect(rels);
+    auto contacts = toUserVect(rels);
+
+    _contacts.clear();
+    std::transform(contacts.begin(), contacts.end(), std::inserter(_contacts, _contacts.end()), [](const core::User& user) {
+        return std::make_pair(user.id(), user);
+    });
+    return contacts;
 }
 
 std::vector<core::User>
@@ -176,5 +218,19 @@ Application::searchNode (const string_t& search, core::Node::MediaType type) con
     return nodes;
 }
 
+
+//
+// Crypto. Be carful with these ...
+//
+
+utility::string_t
+Application::getNodeKeyClear(uint64_t userId) const
+{
+    if (userId == _currentUser.id())
+    {
+        return _currentUser.personalData().nodeKeyClear();
+    }
+    return getContact(userId).relation().nodeKeyClear();
+}
 
 } /* namespace giga */

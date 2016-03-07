@@ -1,8 +1,17 @@
 /*
- * Downloader.cpp
+ * Copyright 2016 Gigatribe
  *
- *  Created on: 23 févr. 2016
- *      Author: thomas
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "Downloader.h"
@@ -28,8 +37,8 @@ namespace giga
 namespace core
 {
 
-Downloader::Downloader (std::shared_ptr<Node> node, const boost::filesystem::path& path, Downloader::ProgressCallback clb) :
-        _node{node},
+Downloader::Downloader (std::unique_ptr<Node>&& node, const boost::filesystem::path& path, Downloader::ProgressCallback clb) :
+        _node{std::move(node)},
         _path{path},
         _downloading{},
         _dlCount{0},
@@ -63,7 +72,6 @@ pplx::task<void>
 Downloader::start ()
 {
     auto dlTask = pplx::create_task([this]() {
-        auto g = _node;
         downloadFile(*_node, _path);
         _isFinished = true;
     });
@@ -73,7 +81,10 @@ Downloader::start ()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             std::lock_guard<std::mutex> l(_mut);
-            _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
+            if (_downloading != nullptr)
+            {
+                _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
+            }
         }
     });
 
@@ -111,12 +122,12 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 
     if (node.type() == Node::Type::file)
     {
-        auto fdownloader = node.download(path.native(), FileDownloader::Policy::overrideNewerSize);
-        fdownloader.start();
-        auto task = fdownloader.task();
+        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, FileDownloader::Policy::overrideNewerSize);
+        fdownloader->start();
+        auto task = fdownloader->task();
         {
             std::lock_guard<std::mutex> l{_mut};
-            _downloading = std::make_shared<FileDownloader>(std::move(fdownloader));
+            _downloading = std::move(fdownloader);
             ++_dlCount;
             _progressCallback(*_downloading, _dlCount, _dlBytes);
         }
@@ -132,11 +143,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
     }
 
     // recursion
-    if (node.shouldLoadChildren())
-    {
-        node.loadChildren();
-    }
-    for(auto& child : node.children())
+    for(auto& child : node.getChildren())
     {
         downloadFile(*child, npath);
     }

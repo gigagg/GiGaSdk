@@ -1,5 +1,17 @@
-/**
- * @author Thomas Guyard <t.guyard@gigatribe.com>
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef CLIENT_NODESAPI_API_H_
@@ -24,7 +36,7 @@ class NodesApi final : GigaApi
 {
 public:
     static pplx::task<std::shared_ptr<data::NodeList>>
-    searchNode (const utility::string_t& search, const utility::string_t& mine, const std::string& inFolder, int64_t ownerId);
+    searchNode (const utility::string_t& search, const utility::string_t& mine, const std::string& inFolder, uint64_t ownerId);
 
     static pplx::task<std::shared_ptr<std::vector<data::Node>>>
     searchNodeByType (const utility::string_t& search, const utility::string_t& type, uint16_t max = 50, uint32_t offset = 0);
@@ -56,7 +68,7 @@ public:
     getPreviewsData (const std::string& nodeId);
 
     static pplx::task<std::shared_ptr<data::Timeline>>
-    getTimeline (const utility::string_t& head, int64_t from, int64_t owner);
+    getTimeline (const utility::string_t& head, uint64_t from, uint64_t owner);
 };
 } // namespace giga
 

@@ -1,7 +1,17 @@
-/**
- * @file main.cpp
- * @brief the main
- * @author Thomas Guyard
+/*
+ * Copyright 2016 Gigatribe
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <cpprest/http_client.h>
@@ -37,11 +47,7 @@ void printNodeTree(core::Node& n, string_t space = U(""))
 {
     ucout << space << n.name() << "\n";
     space += U(" ");
-    if (n.shouldLoadChildren())
-    {
-        n.loadChildren();
-    }
-    for(const auto& child : n.children())
+    for(const auto& child : n.getChildren())
     {
         printNodeTree(*child, space);
     }
@@ -77,41 +83,49 @@ searchNodes (const po::variables_map& vm, giga::Application& app, const char* na
     }
 }
 
+
 int main(int argc, const char* argv[]) {
-    try {
+//    try {
+#ifdef _UTF16_STRINGS
+#define VALUE wvalue
+#else
+#define VALUE value
+#endif
         // Declare the supported options.
         po::options_description desc("Allowed options");
         desc.add_options()
         ("help,h", "produce help message")
 
-        ("login",        po::wvalue<string_t>()->required(), "Current user login")
+        ("login",        po::VALUE<string_t>()->required(), "Current user login")
 
         ("list-contact",         po::value<bool>()->implicit_value(true), "print contacts")
         ("list-received-invits", po::value<bool>()->implicit_value(true), "print received invitation")
         ("list-sent-invits",     po::value<bool>()->implicit_value(true), "print sent invitation")
         ("list-blocked",         po::value<bool>()->implicit_value(true), "print blocked users")
 
-        ("search-user",     po::wvalue<string_t>(), "search users")
-        ("search-video",    po::wvalue<string_t>(), "search video files")
-        ("search-audio",    po::wvalue<string_t>(), "search audio files")
-        ("search-other",    po::wvalue<string_t>(), "search other files")
-        ("search-document", po::wvalue<string_t>(), "search document files")
-        ("search-image",    po::wvalue<string_t>(), "search image files")
-        ("search-folder",   po::wvalue<string_t>(), "search folder files")
+        ("search-user",     po::VALUE<string_t>(), "search users")
+        ("search-video",    po::VALUE<string_t>(), "search video files")
+        ("search-audio",    po::VALUE<string_t>(), "search audio files")
+        ("search-other",    po::VALUE<string_t>(), "search other files")
+        ("search-document", po::VALUE<string_t>(), "search document files")
+        ("search-image",    po::VALUE<string_t>(), "search image files")
+        ("search-folder",   po::VALUE<string_t>(), "search folder files")
 
         ("node",    po::value<std::string>(), "select the current node by id")
         ("tree",    po::value<bool>()->implicit_value(true), "print the current node tree")
         ("ls",      po::value<bool>()->implicit_value(true), "print the current node children")
-        ("mkdir",   po::wvalue<string_t>(), "create a directory under the current node")
-        ("upload",  po::wvalue<string_t>(), "file path")
-        ("download",po::wvalue<string_t>(), "folder path")
+        ("mkdir",   po::VALUE<string_t>(), "create a directory under the current node")
+        ("upload",  po::VALUE<string_t>(), "file path")
+        ("download",po::VALUE<string_t>(), "folder path")
         ("continue",po::value<bool>()->implicit_value(false), "continue the download")
 
-        ("user",    po::value<int64_t>(), "select the current user by id")
+        ("user",    po::value<uint64_t>(), "select the current user by id")
         ("invite",  po::value<bool>()->implicit_value(true), "invite the current user")
         ("block",   po::value<bool>()->implicit_value(true), "block the current user")
         ("accept",  po::value<bool>()->implicit_value(true), "accept the current user invitation")
         ;
+
+#undef VALUE
 
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -194,7 +208,7 @@ int main(int argc, const char* argv[]) {
             }
             if (vm.count("ls"))
             {
-                printNodes("ls", node->children());
+                printNodes("ls", node->getChildren());
             }
             if (vm.count("mkdir"))
             {
@@ -243,7 +257,7 @@ int main(int argc, const char* argv[]) {
 
                 ucout << std::endl;
                 core::Downloader dl {
-                    std::shared_ptr<core::Node>(node.release()),
+                    std::move(node),
                     vm["download"].as<string_t>(),
                     [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
                         auto percent = ((double) size * 100) / (double) totalSize;
@@ -264,7 +278,7 @@ int main(int argc, const char* argv[]) {
 
         if (vm.count("user"))
         {
-            auto user = app.getUserById(vm["user"].as<int64_t>());
+            auto user = app.getUserById(vm["user"].as<uint64_t>());
             if (vm.count("invite"))
             {
                 ucout << "invite" << std::endl;
@@ -282,12 +296,12 @@ int main(int argc, const char* argv[]) {
             }
         }
         ucout << "DONE" << std::endl;
-    }
-    catch (...)
-    {
-        std::cerr << "Unhandled exception!" << std::endl <<
-        boost::current_exception_diagnostic_information();
-        return 1;
-    }
+//    }
+//    catch (...)
+//    {
+//        std::cerr << "Unhandled exception!" << std::endl <<
+//        boost::current_exception_diagnostic_information();
+//        return 1;
+//    }
     return 0;
 }

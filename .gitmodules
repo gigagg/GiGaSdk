@@ -3,7 +3,7 @@
 	url = https://github.com/JosephP91/curlcpp.git
 [submodule "vendors/cryptopp/cryptopp"]
 	path = vendors/cryptopp/crypto++
-	url = https://github.com/weidai11/cryptopp.git
+	url = https://github.com/Giga-gg/cryptopp.git
 [submodule "vendors/cpprestsdk"]
 	path = vendors/casablanca
 	url = https://github.com/Microsoft/cpprestsdk.git
