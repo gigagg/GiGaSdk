@@ -22,7 +22,7 @@ Dependancies
 Build On linux (tested on ubuntu 14.04)
 ---------------------------------------
 
-``` sh
+~~~{.sh}
 # installing dependancies
 sudo apt-get install g++ git make libboost1.54-all-dev libssl-dev cmake
 
@@ -66,7 +66,7 @@ make
 sudo make install
 
 sudo ldconfig
-```
+~~~
 
 Build with Visual Studio 2015
 -----------------------------

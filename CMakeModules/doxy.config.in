@@ -754,7 +754,7 @@ WARN_LOGFILE           =
 # directories like /usr/src/myproject. Separate the files or directories with
 # spaces.
 # Note: If this tag is empty the current directory is searched.
-INPUT = ${SRC_PATH}
+INPUT = ${SRC_PATH} ${DOC_PATH}/index.md ${DOC_PATH}/../README.md
 
 
 # This tag can be used to specify the character encoding of the source files
@@ -932,7 +932,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE = 
+USE_MDFILE_AS_MAINPAGE = ${DOC_PATH}/index.md
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing

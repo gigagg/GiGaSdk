@@ -189,8 +189,11 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     auto chunkSize = std::min(position == 0 ? 1024 : CHUNK_SIZE, _fileSize - position);
     data.setChunck(position, position + chunkSize);
 
-    auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
-    curl.add<CURLOPT_URL>(upUri.c_str());
+    {
+        auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
+        GIGA_DEBUG_LOG(upUri);
+        curl.add<CURLOPT_URL>(upUri.c_str());
+    }
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
     curl.add<CURLOPT_XFERINFODATA>(_progress);
@@ -204,25 +207,39 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     auto userId = Application::get().currentUser().id();
     curl_slist* list = nullptr;
-    auto hcontentDisposition = "Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"";
-    auto hSession            = "Session-Id: " + std::to_string(userId) + "-" + _sha1;
-    auto hcontentRange       = "Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize);
-    auto hcontentType        = "Content-Type: application/octet-stream";
-    list = curl_slist_append(list, hcontentDisposition.c_str());
-    list = curl_slist_append(list, hSession.c_str());
-    list = curl_slist_append(list, hcontentRange.c_str());
-    list = curl_slist_append(list, hcontentType);
-    list = curl_slist_append(list, "Expect: ");
-    curl.add<CURLOPT_HTTPHEADER>(list);
+    try {
+        {
+            auto hcontentDisposition = "Content-Disposition: attachment, filename=\"" + utils::wstr2str(web::uri::encode_data_string(_nodeName)) + "\"";
+            auto hSession            = "Session-Id: " + std::to_string(userId) + "-" + _sha1;
+            auto hcontentRange       = "Content-Range: bytes " + std::to_string(position) + "-" + std::to_string(chunkSize - 1 + position) + "/" + std::to_string(_fileSize);
+            auto hcontentType        = "Content-Type: application/octet-stream";
+            list = curl_slist_append(list, hcontentDisposition.c_str());
+            list = curl_slist_append(list, hSession.c_str());
+            list = curl_slist_append(list, hcontentRange.c_str());
+            list = curl_slist_append(list, hcontentType);
+            list = curl_slist_append(list, "Expect: ");
+            curl.add<CURLOPT_HTTPHEADER>(list);
+        }
 
-#ifdef DEBUG
-    curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
-#endif
+    #ifdef DEBUG
+        curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
+    #endif
 
-    curl.perform();
+        curl.perform();
+        curl_slist_free_all(list);
+    }
+    catch (...)
+    {
+        if (list != nullptr)
+        {
+            curl_slist_free_all(list);
+        }
+        throw;
+    }
 
     unsigned short httpCode;
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
+
     if (httpCode >= 300)
     {
         BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, utils::str2wstr(str.str())));

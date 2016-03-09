@@ -7,10 +7,10 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
     apt-get install -y g++ git make libboost1.54-all-dev libssl-dev cmake
 
-RUN cd /root                                            && \
+RUN cd /root                                             && \
     git clone http://gitlab.giga.gg/t.guyard/GiGaSdk.git && \
     cd GiGaSdk                                           && \
-    git submodule update --init 
+    git submodule update --init  # cacheOff
 
 WORKDIR "/root/GiGaSdk"
 

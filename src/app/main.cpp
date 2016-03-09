@@ -97,6 +97,7 @@ int main(int argc, const char* argv[]) {
         ("help,h", "produce help message")
 
         ("login",        po::VALUE<string_t>()->required(), "Current user login")
+        ("password",     po::VALUE<string_t>(), "Current user password")
 
         ("list-contact",         po::value<bool>()->implicit_value(true), "print contacts")
         ("list-received-invits", po::value<bool>()->implicit_value(true), "print received invitation")
@@ -137,14 +138,20 @@ int main(int argc, const char* argv[]) {
 
         auto& app = Application::init(
                         string_t(U("http://localhost:5001")),
-                        string_t(U("9ab7baa696ca")),
-                        string_t(U("b1af65bffd64aa1e44d2408b44b4c4d8")));
+                        string_t(U("1142f21cf897")),
+                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
 
         auto login = vm["login"].as<string_t>();
         string_t password;
         ucout << U("login: ") << login << U("\npassword ?") << std::endl;
-//        std::cin >> password;
-        password = U("gigatribe");
+        if (!vm.count("password"))
+        {
+            std::cin >> password;
+        }
+        else
+        {
+            password = vm["password"].as<string_t>();
+        }
 
         auto owner = app.authenticate(login, password);
         ucout << U("Logged as: ") << owner.login()

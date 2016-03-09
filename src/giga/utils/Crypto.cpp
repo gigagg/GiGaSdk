@@ -337,8 +337,10 @@ Crypto::sha1File (const string_t& sfilename)
             )
         )
     );
-    std::locale l{};
-    std::transform(hash.begin(), hash.end(), hash.begin(), [&l](unsigned char c) { return std::tolower(c, l); });
+    std::locale l{"C"};
+    std::transform(hash.begin(), hash.end(), hash.begin(), [&l](char c) {
+        return std::tolower(c, l);
+    });
     return hash;
 }
 

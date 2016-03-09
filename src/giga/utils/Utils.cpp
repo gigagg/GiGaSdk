@@ -69,7 +69,7 @@ wstr2str(const utility::string_t& wstr)
     std::wstring_convert<convert_typeX, wchar_t> converterX;
     return converterX.to_bytes(wstr);
 #else
-    return wstr;
+    return std::string{wstr};
 #endif
 }
 
@@ -81,7 +81,7 @@ str2wstr(const std::string& str)
     std::wstring_convert<convert_typeX, wchar_t> converterX;
     return converterX.from_bytes(str);
 #else
-    return str;
+    return std::string{str};
 #endif
 }
 
