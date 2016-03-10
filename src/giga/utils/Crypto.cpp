@@ -253,7 +253,7 @@ pbkdf2 (const string_t& spassword, const std::string& salt, std::size_t length, 
                         password.size(),
                         toByteCst(salt),
                         salt.size(),
-                        iteration);
+                        static_cast<unsigned int>(iteration));
 
     return std::string{key.begin(), key.end()};
 }
