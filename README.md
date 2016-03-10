@@ -133,8 +133,6 @@ You should only need stuff from the ```giga::core``` namespace :
 
 cf: ```#include <giga/core/User.h>```, ```#include <giga/core/Node.h>```, ```#include <giga/core/Uploader.h>```, ```#include <giga/core/Downloader.h>```
 
-### The UserRelations
-
 
 ### Concurrency
 Inside the GiGaSdk, the concurrency is done via the cpprestSdk and the ```pplx::task<T>``` class.
@@ -152,12 +150,6 @@ using utility::string_t;
 
 int main(int, char**)
 {
-    // We use string_t (from the casablanca library)
-    // string_t is a std::string on unix (for utf8 string)
-    // and std::wstring on windows (for utf16 string)
-    //
-    // the U("") macro will be resolved as l"" on windows
-
     auto& app = Application::init(
                         string_t(U("http://localhost:5001")),
                         string_t(U("1142f21cf897")),
