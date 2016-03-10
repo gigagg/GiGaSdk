@@ -23,8 +23,6 @@ Hello world
 
 ~~~{cpp}
 #include <giga/Application.h>
-#include <giga/api/GigaApi.h>
-#include <cpprest/details/basic_types.h>
 
 using giga::Application;
 using utility::string_t;

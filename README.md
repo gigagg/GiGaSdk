@@ -1,3 +1,19 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Dependancies](#dependancies)
+- [Build On linux (tested on ubuntu 14.04)](#build-on-linux-tested-on-ubuntu-1404)
+- [Build with Visual Studio 2015](#build-with-visual-studio-2015)
+- [Sdk Overview](#sdk-overview)
+  - [Intialization](#intialization)
+  - [Strings](#strings)
+  - [The main classes](#the-main-classes)
+  - [Concurrency](#concurrency)
+- [Examples](#examples)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 GiGaSdk provide an easy access to the https://giga.gg/ api.
 It includes :
 
