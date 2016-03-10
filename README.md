@@ -13,10 +13,10 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 GiGaSdk provide an easy access to the https://giga.gg/ api.
-It includes :
+It includes a c++ library and a small cli executable : ``` GiGaSdk -h ```
 
-- a c++ library for integrating giga with other apps
-- a small cli executable : ``` GiGaSdk -h ``` 
+- Reference documentation: http://gigagg.github.io/index.html
+- Examples: [here](src/examples)
 
 Overview
 --------
