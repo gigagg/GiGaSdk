@@ -152,7 +152,7 @@ int main(int argc, const char* argv[]) {
         ucout << U("login: ") << login << U("\npassword ?") << std::endl;
         if (!vm.count("password"))
         {
-            std::cin >> password;
+            ucin >> password;
         }
         else
         {
