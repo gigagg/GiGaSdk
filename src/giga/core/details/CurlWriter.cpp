@@ -70,7 +70,7 @@ CurlWriter::write (const char * contents, size_t size) noexcept
     }
     catch (...)
     {
-        return -1;
+        return static_cast<size_t>(-1);
     }
 }
 

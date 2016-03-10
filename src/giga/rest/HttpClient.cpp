@@ -27,7 +27,7 @@
 using namespace web::http;
 using namespace web::http::client;
 using namespace web::http::oauth2::experimental;
-using std::chrono::_V2::high_resolution_clock;
+using std::chrono::high_resolution_clock;
 using utility::string_t;
 
 namespace {

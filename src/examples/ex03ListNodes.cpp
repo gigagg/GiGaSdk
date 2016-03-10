@@ -8,7 +8,7 @@ void printChildrenNodes(Node& node, string_t space = U(""))
 {
     for (auto& child : node.getChildren())
     {
-        std::cout << space << child->name() << U("\n");
+        ucout << space << child->name() << U("\n");
         printChildrenNodes(*child, space + U(" "));
     }
 }
