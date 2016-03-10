@@ -1,0 +1,7 @@
+#ifndef GIGA_VERSION_H_
+#define GIGA_VERSION_H_
+
+#define GIGA_VERSION "@PROJECT_VERSION@"
+#define GIGA_BUILD   "@GIT_SHA1@"
+
+#endif

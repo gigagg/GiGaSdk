@@ -22,16 +22,16 @@ ENDIF(WITH_DEBUG_LOG)
 
 ### Specific configuration for Visual Studio
 IF(MSVC)
-	ADD_DEFINITIONS(-DNOMINMAX) 
+    ADD_DEFINITIONS(-DNOMINMAX) 
 
-	IF (CMAKE_BUILD_TYPE MATCHES "Debug")
-		SET(DEPS_PATH "${VENDORS_PATH}/VS2015/deps/Debug")
-	ELSE()
-		SET(DEPS_PATH "${VENDORS_PATH}/VS2015/deps/Release")
-	ENDIF()
-	LIST(APPEND CMAKE_PREFIX_PATH "${VENDORS_PATH}/VS2015/deps/" "${DEPS_PATH}")
-	link_directories("${DEPS_PATH}/lib")
-	link_directories("${VENDORS_PATH}/VS2015/deps/lib")
+    IF (CMAKE_BUILD_TYPE MATCHES "Debug")
+        SET(DEPS_PATH "${VENDORS_PATH}/VS2015/deps/Debug")
+    ELSE()
+        SET(DEPS_PATH "${VENDORS_PATH}/VS2015/deps/Release")
+    ENDIF()
+    LIST(APPEND CMAKE_PREFIX_PATH "${VENDORS_PATH}/VS2015/deps/" "${DEPS_PATH}")
+    link_directories("${DEPS_PATH}/lib")
+    link_directories("${VENDORS_PATH}/VS2015/deps/lib")
 ENDIF(MSVC)
 
 ### FLAGS
@@ -57,6 +57,10 @@ SET(PROJECT_MAJOR_VERSION 0)
 SET(PROJECT_MINOR_VERSION 1)
 SET(PROJECT_PATCH_VERSION 0)
 SET(PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_VERSION})
+INCLUDE(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+CONFIGURE_FILE("${CMAKE_MODULE_PATH}/version.h.in" "${SRC_PATH}/giga/version.h" IMMEDIATE @ONLY)
+
 
 SET(PROJECT_DESCRIPTION "The GiGa.GG C++ SDK")
 SET(PROJECT_LOGO "https://giga.gg/public/assets/img/avatar215.jpg")

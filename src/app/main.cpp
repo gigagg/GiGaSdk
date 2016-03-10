@@ -26,6 +26,7 @@
 #include <giga/core/Uploader.h>
 #include <giga/core/Downloader.h>
 #include <giga/utils/Utils.h>
+#include <giga/version.h>
 
 #include <iostream>
 #include <chrono>
@@ -94,7 +95,8 @@ int main(int argc, const char* argv[]) {
         // Declare the supported options.
         po::options_description desc("Allowed options");
         desc.add_options()
-        ("help,h", "produce help message")
+        ("help,h",    "produce help message")
+        ("version,v", "gets the version")
 
         ("login",        po::VALUE<string_t>()->required(), "Current user login")
         ("password",     po::VALUE<string_t>(), "Current user password")
@@ -132,6 +134,10 @@ int main(int argc, const char* argv[]) {
         po::store(po::parse_command_line(argc, argv, desc), vm);
         if (vm.count("help")) {
             std::cout << desc << "\n";
+            return 0;
+        }
+        if (vm.count("version")) {
+            std::cout << "v" << GIGA_VERSION << "\tbuild-" << GIGA_BUILD << "\n";
             return 0;
         }
         po::notify(vm);
