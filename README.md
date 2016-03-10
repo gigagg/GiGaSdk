@@ -133,6 +133,9 @@ You should only need stuff from the ```giga::core``` namespace :
 
 cf: ```#include <giga/core/User.h>```, ```#include <giga/core/Node.h>```, ```#include <giga/core/Uploader.h>```, ```#include <giga/core/Downloader.h>```
 
+### The UserRelations
+
+
 ### Concurrency
 Inside the GiGaSdk, the concurrency is done via the cpprestSdk and the ```pplx::task<T>``` class.
 

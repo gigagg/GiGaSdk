@@ -754,7 +754,7 @@ WARN_LOGFILE           =
 # directories like /usr/src/myproject. Separate the files or directories with
 # spaces.
 # Note: If this tag is empty the current directory is searched.
-INPUT = ${SRC_PATH} ${DOC_PATH}/index.md ${DOC_PATH}/../README.md
+INPUT = ${SRC_PATH} ${DOC_PATH}/index.md
 
 
 # This tag can be used to specify the character encoding of the source files
