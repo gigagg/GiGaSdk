@@ -23,105 +23,35 @@ Hello world
 
 ~~~{cpp}
 #include <giga/Application.h>
+#include <giga/api/GigaApi.h>
+#include <cpprest/details/basic_types.h>
 
 using giga::Application;
-
-// string_t is a std::wstring on Windows and a std::string on Unix
-// use the U() macro to initialize string_t : string_t a = U("str");
 using utility::string_t;
 
 int main(int, char**)
 {
+    // We use string_t (from the casablanca library)
+    // string_t is a std::string on unix (for utf8 string)
+    // and std::wstring on windows (for utf16 string)
+    //
+    // the U("") macro will be resolved as l"" on windows
+
     auto& app = Application::init(
                         string_t(U("http://localhost:5001")),
-                        string_t(U("your client_id")),
-                        string_t(U("your client_secret")));
-    
-    auto owner = app.authenticate(U("login"), U("password"));
-    
-    std::cout << "Hello " << owner.id() << std::endl;
-    
+                        string_t(U("1142f21cf897")),
+                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+
+    auto owner = app.authenticate(U("test_main"), U("password"));
+
+    ucout << U("Hello ") << owner.login() << U(" your id is ") << owner.id() << std::endl;
+
     return 0;
 }
 ~~~
 
 Compile it with ```g++ -std=c++1y main.cpp -lgigad -lboost_system -lboost_filesystem -lcrypto++ -lcpprest -lboost_regex -lcurl -lcurlcpp```
 
-
-Navigating the nodes
---------------------
-
-In the GiGa.GG api, the files and folders are represented by the ```Node``` class.
-The ```Node``` class has two inheriting classes:  ```FileNode``` and ```FolderNode```.
-  
-
-
-~~~{cpp}
-#include <giga/Application.h>
-#include <giga/core/Downloader.h>
-
-using giga::Application;
-using giga::core::Downloader;
-using utility::string_t;
-
-int main(int, char**)
-{
-    auto& app = Application::init(
-                        string_t(U("http://localhost:5001")),
-                        string_t(U("your client_id")),
-                        string_t(U("your client_secret")));
-    auto owner = app.authenticate(U("login"), U("password"));
-
-    // Get the node you want to download.
-    auto node = app.getNodeById("put a node Id here");
-    
-    // create a downloader
-    core::Downloader dl{std::move(node), "/path/to/dest/folder"};
-    
-    // Start the download and wait for it ...
-    dl.start().wait();
-    
-    std::cout << "File downloaded: " << dl.downloadingFileNumber() << std::endl;
-    return 0;
-}
-~~~
-
-
-Downloading data
-----------------
-
-To download data from GiGa.GG, you can use the ```Downloader``` class.
-For example:
-
-~~~{cpp}
-#include <giga/Application.h>
-#include <giga/core/Downloader.h>
-
-using giga::Application;
-using giga::core::Downloader;
-using utility::string_t;
-
-int main(int, char**)
-{
-    auto& app = Application::init(
-                        string_t(U("http://localhost:5001")),
-                        string_t(U("your client_id")),
-                        string_t(U("your client_secret")));
-    auto owner = app.authenticate(U("login"), U("password"));
-
-    // Get the node you want to download.
-    auto node = app.getNodeById("put a node Id here");
-    
-    // create a downloader
-    core::Downloader dl{std::move(node), "/path/to/dest/folder"};
-    
-    // Start the download and wait for it ...
-    dl.start().wait();
-    
-    std::cout << "File downloaded: " << dl.downloadingFileNumber() << std::endl;
-    return 0;
-}
-~~~
 
 
 

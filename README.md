@@ -4,7 +4,6 @@ It includes :
 - a c++ library for integrating giga with other apps
 - a small cli executable : ``` GiGaSdk -h ``` 
 
-
 Dependancies
 ------------
 
@@ -93,12 +92,65 @@ Build with Visual Studio 2015
     - ```cmake ..``` OR for a release build ```cmake .. -DCMAKE_BUILD_TYPE=Release```
     - use the generated vs project to build GiGaSdk
 
+Sdk Overview
+------------
 
+The GiGaSdk uses the GiGa.GG rest-like API, and authenticate via oauth2. You can create an 'app' at https://giga.gg/app to get your oauth2 client id and secret.
 
+### Intialization
+The Sdk entry point is the ```giga::Application``` class. You will need to init the ```Application``` with your oauth2 credentials. Then you have to log-in using your giga login/password. The SDK does not allows to create a new account. 
 
+cf: ```#include <giga/Application.h>```
 
+### Strings
+The default type of string is different on Windows and Unix. By default Windows uses std::wstring and utf16 char, Unix uses std::string and utf8 char. GiGaSdk eavily uses the [Microsoft cpprestsdk (casablanca)](https://github.com/Microsoft/cpprestsdk/). So it uses the same solution:
+- ```utility::string_t``` is a ```wstring``` on Window and a ```string``` on linux
+- the macro ```U("...")``` will resolve to ```l"..."``` on Windows
 
+cf: ```#include <cpprest/details/basic_types.h>```
 
+### The main classes
+You should only need stuff from the ```giga::core``` namespace :
+- ```giga::core::User``` represents a user. It can have ```UserRelation```s with other users (contact, invitation ...)
+- ```giga::core::Node``` represents a file or a Folder. This is a virtual class. FileNode and FolderNode inherite from it.
+- The ```giga::core::Uploader``` and ```giga::core::Downloader``` classes allows you to control upload and downloads
 
+cf: ```#include <giga/core/User.h>```, ```#include <giga/core/Node.h>```, ```#include <giga/core/Uploader.h>```, ```#include <giga/core/Downloader.h>```
 
+### Concurrency
+Inside the GiGaSdk, the concurrency is done via the cpprestSdk and the ```pplx::task<T>``` class.
+
+**The GiGaSdk is not thread-safe**
+
+Examples
+--------
+
+~~~{cpp}
+#include <giga/Application.h>
+
+using giga::Application;
+using utility::string_t;
+
+int main(int, char**)
+{
+    // We use string_t (from the casablanca library)
+    // string_t is a std::string on unix (for utf8 string)
+    // and std::wstring on windows (for utf16 string)
+    //
+    // the U("") macro will be resolved as l"" on windows
+
+    auto& app = Application::init(
+                        string_t(U("http://localhost:5001")),
+                        string_t(U("1142f21cf897")),
+                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+
+    auto owner = app.authenticate(U("test_main"), U("password"));
+
+    ucout << U("Hello ") << owner.login() << U(" your id is ") << owner.id() << std::endl;
+
+    return 0;
+}
+~~~
+
+There are more examples [here](src/examples)
 
