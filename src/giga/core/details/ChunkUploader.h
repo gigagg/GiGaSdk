@@ -17,6 +17,7 @@
 #ifndef GIGA_API_CHUNKUPLOADER_H_
 #define GIGA_API_CHUNKUPLOADER_H_
 
+#include "ChunkUploader.h"
 #include "CurlProgress.h"
 
 #include <cpprest/http_client.h>

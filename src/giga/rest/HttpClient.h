@@ -26,6 +26,8 @@
 namespace giga
 {
 
+class RefreshingState;
+
 class HttpClient final
 {
 public:
@@ -34,9 +36,11 @@ public:
 
 public:
     HttpClient ();
-    ~HttpClient () = default;
-    HttpClient (const HttpClient&) = default;
-    HttpClient (HttpClient&&) = default;
+    ~HttpClient ()                            = default;
+    HttpClient (const HttpClient&)            = delete;
+    HttpClient (HttpClient&&)                 = delete;
+    HttpClient& operator= (const HttpClient&) = delete;
+    HttpClient& operator= (HttpClient&&)      = delete;
 
 private:
     template<int unsigned short TStatus>
@@ -84,8 +88,12 @@ public:
     request (const web::http::method &mtd, web::uri_builder uri)
     {
         GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string());
-        return _http.request(mtd, uri.to_string()).then([=](web::http::http_response response) {
-            return onRequestPtr<T>(response);
+        auto uriString = uri.to_string();
+
+        return refreshToken().then([=]() {
+            return _http.request(mtd, uriString).then([=](web::http::http_response response) {
+                return onRequestPtr<T>(response);
+            });
         });
     }
 
@@ -94,10 +102,14 @@ public:
     request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
     {
         GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string());
-        auto json = web::json::value::object();
-        auto data = JSonSerializer{json}.toString(std::move(bodyData));
-        return _http.request(mtd, uri.to_string(), data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
-            return onRequestPtr<T>(response);
+        auto json      = web::json::value::object();
+        auto data      = JSonSerializer{json}.toString(std::move(bodyData));
+        auto uriString = uri.to_string();
+
+        return refreshToken().then([=]() {
+            return _http.request(mtd, uriString, data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
+                return onRequestPtr<T>(response);
+            });
         });
     }
 
@@ -145,8 +157,12 @@ public:
     const web::http::client::http_client&
     http () const;
 
+    pplx::task<void>
+    refreshToken();
+
 private:
-    web::http::client::http_client _http;
+    web::http::client::http_client   _http;
+    std::shared_ptr<RefreshingState> _rstate;
 };
 
 }  // namespace giga

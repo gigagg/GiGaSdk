@@ -170,7 +170,7 @@ FileDownloader::doStart()
     }
     else
     {
-        _task = pplx::create_task([tempFile, fileUri, progress, fileSize]() {
+        _task = GigaApi::refreshToken().then([tempFile, fileUri, progress, fileSize]() {
             try {
                 details::CurlWriter writer{tempFile};
 

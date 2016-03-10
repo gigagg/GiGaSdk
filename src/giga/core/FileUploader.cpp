@@ -102,7 +102,7 @@ FileUploader::doStart ()
     auto cts        = _cts;
     auto progress   = _progress.get();
 
-    _task = create_task([=] {
+    _task = GigaApi::refreshToken().then([=] {
         try {
 
             //

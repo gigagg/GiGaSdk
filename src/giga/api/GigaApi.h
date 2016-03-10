@@ -24,6 +24,7 @@
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
 #include <memory>
+#include <mutex>
 
 namespace giga {
 
@@ -34,19 +35,29 @@ struct User;
 class GigaApi
 {
 public:
-    GigaApi() = default;
+    GigaApi()               = default;
     GigaApi(const GigaApi&) = default;
-    GigaApi(GigaApi&&) = default;
-    virtual ~GigaApi() = default;
+    GigaApi(GigaApi&&)      = default;
+    virtual ~GigaApi()      = default;
 
 public:
-    static pplx::task<std::shared_ptr<data::User>> authenticate(const utility::string_t& login, const utility::string_t& password);
+    static pplx::task<std::shared_ptr<data::User>>
+    authenticate(const utility::string_t& login, const utility::string_t& password);
 
-    static data::User& getCurrentUser();
-    static std::shared_ptr<web::http::oauth2::experimental::oauth2_config> getOAuthConfig();
+    static data::User&
+    getCurrentUser();
+
+    static std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
+    getOAuthConfig();
+
+    static pplx::task<void>
+    refreshToken();
 
 protected:
-    static HttpClient& client();
+    static HttpClient&
+    client();
+
+protected:
     static std::shared_ptr<data::User> currentUser;
 };
 

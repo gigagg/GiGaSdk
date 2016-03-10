@@ -16,6 +16,7 @@
 #include "HttpClient.h"
 #include <cpprest/http_client.h>
 #include <boost/regex.hpp>
+#include <chrono>
 
 #include "Empty.h"
 #include "JsonObj.h"
@@ -26,6 +27,7 @@
 using namespace web::http;
 using namespace web::http::client;
 using namespace web::http::oauth2::experimental;
+using std::chrono::_V2::high_resolution_clock;
 using utility::string_t;
 
 namespace {
@@ -43,8 +45,16 @@ web::http::client::http_client_config getConfig() {
 namespace giga
 {
 
+class RefreshingState
+{
+public:
+    bool                              isRefreshing  = false;
+    high_resolution_clock::time_point tokenExpireAt = {};
+    std::mutex                        mut           = {};
+};
+
 HttpClient::HttpClient () :
-        _http (Application::config().apiHost(), getConfig())
+        _http (Application::config().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()}
 {
 }
 
@@ -123,6 +133,7 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     auto config = getConfig();
     config.set_oauth2(m_oauth2_config);
     _http = {Application::config().apiHost(), config};
+    _rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{3600};
 }
 
 void
@@ -170,6 +181,35 @@ HttpClient::http () const
     return _http;
 }
 
+pplx::task<void>
+HttpClient::refreshToken()
+{
+    bool shouldRefresh = false;
+    {
+        std::lock_guard<std::mutex> l{_rstate->mut};
+        shouldRefresh = !_rstate->isRefreshing
+                            && _http.client_config().oauth2() != nullptr
+                            && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{600}); // gets 600s to do the refresh
+        _rstate->isRefreshing = shouldRefresh || _rstate->isRefreshing;
+    }
 
+    if (shouldRefresh)
+    {
+        GIGA_DEBUG_LOG("-- Refreshing access token");
+        try {
+            auto rstate = _rstate;
+            return _http.client_config().oauth2()->token_from_refresh().then([rstate](){
+                rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{3600};
+                rstate->mut.unlock();
+            });
+        }
+        catch (...)
+        {
+            _rstate->mut.unlock();
+            throw;
+        }
+    }
+    return pplx::create_task([](){});
+}
 }
 

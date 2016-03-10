@@ -30,6 +30,7 @@ using utility::string_t;
 namespace giga
 {
 
+// static init
 std::shared_ptr<data::User> GigaApi::currentUser{};
 
 HttpClient&
@@ -72,6 +73,12 @@ std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
 GigaApi::getOAuthConfig()
 {
     return client().http().client_config().oauth2();
+}
+
+pplx::task<void>
+GigaApi::refreshToken()
+{
+    return client().refreshToken();
 }
 
 } // namespace giga
