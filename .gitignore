@@ -29,3 +29,4 @@ vendors/VS2015/**
 !vendors/VS2015/packages.config
 
 src/giga/version.h
+src/tests/path.h

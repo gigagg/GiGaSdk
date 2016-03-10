@@ -1,0 +1,6 @@
+#ifndef GIGA_PATH_H_
+#define GIGA_PATH_H_
+
+#define GIGA_ROOT "@CMAKE_SOURCE_DIR@"
+
+#endif

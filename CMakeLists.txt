@@ -120,6 +120,7 @@ endif( CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS )
 INCLUDE("CPackInstalls/release/CPackConfig.cmake")
 END_PKG()
 
+CONFIGURE_FILE("${CMAKE_MODULE_PATH}/path.h.in" "${CMAKE_SOURCE_DIR}/src/tests/path.h" IMMEDIATE @ONLY)
 INCLUDE(CTest)
 IF(BUILD_TESTING)
   INCLUDE("CTestConfig.txt")
