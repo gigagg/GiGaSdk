@@ -142,8 +142,8 @@ public:
      * @brief Call the GiGa API to get all the currentUser contacts
      *
      * - To get the contact specific information, use ```core::User::relation() const```.
-     * - To get the informations restricted to its contacts, use ```core::User::contactData() const```.
-     *   This will include the root ```core::Node``` shared with the currentUser (see ```core::User::User::ContactData::node() const```).
+     * - To get the informations restricted to its contacts, use ```core::User::contactData()```.
+     *   This will include the root ```core::Node``` shared with the currentUser (see ```core::User::ContactData::node() const```).
      *
      * To get a new contact you need to accept other user invitation, or send invitations and then get accepted. <br>
      * You can remove a contact by using: ```core::User::removeRelation()```
