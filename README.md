@@ -2,6 +2,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
+- [Welcome!](#welcome)
+- [Getting Started](#getting-started)
 - [Overview](#overview)
   - [Hello world](#hello-world)
   - [Concurrency](#concurrency)
@@ -12,11 +14,26 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-GiGaSdk provide an easy access to the https://giga.gg/ api.
+
+Welcome!
+--------
+
+The GiGaSdk provide an easy access to the https://giga.gg/ api.
 It includes a c++ library and a small cli executable : ``` GiGaSdk -h ```
 
-- Reference documentation: http://gigagg.github.io/index.html
-- Examples: [here](src/examples)
+
+Getting Started
+---------------
+
+Are you new to the GiGaSdk ? To get going, we recommend you start by playing around on https://giga.gg
+The more you know about the web app GiGa.GG, the easier it will be to use the GiGaSdk.
+
+Most of the documentation is :
+
+- this file you are reading :)
+- the reference documentation: http://gigagg.github.io/index.html
+- some examples: [here](src/examples)
+- the main file: [here](src/app/main.cpp)
 
 Overview
 --------
