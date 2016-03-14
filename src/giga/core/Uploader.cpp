@@ -53,10 +53,6 @@ Uploader::Uploader(FolderNode parent, const path& path, ProgressCallback clb):
 
 Uploader::~Uploader()
 {
-    if (_isStarted)
-    {
-        _mainTask.wait();
-    }
 }
 
 bool
@@ -140,7 +136,7 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
 
     if (is_regular_file(path))
     {
-        if (_preparingList.size() < 4)
+        if (_preparingList.size() < 1)
         {
             _preparingList.emplace_back(parent.uploadFile(path.native()));
         }
