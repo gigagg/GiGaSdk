@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <boost/asio/ssl.hpp>
+#include <boost/chrono.hpp>
 
 #ifdef CRYPTOPP
 #include "cryptopp/integer.h"
@@ -26,6 +28,7 @@
 #include "cryptopp/files.h"
 #include "cryptopp/base64.h"
 #include "cryptopp/rsa.h"
+#include "cryptopp/hex.h"
 #else
 #include "crypto++/integer.h"
 #include "crypto++/osrng.h"
@@ -38,6 +41,7 @@
 #include "crypto++/modes.h"
 #include "crypto++/pwdbased.h"
 #include "crypto++/base64.h"
+#include "crypto++/hex.h"
 #endif
 
 #include "Crypto.h"
@@ -47,6 +51,7 @@
 
 #include <cpprest/details/basic_types.h>
 #include <algorithm>
+#include <openssl/sha.h>
 
 using CryptoPP::Exception;
 using CryptoPP::StringSink;
@@ -67,8 +72,8 @@ using CryptoPP::Integer;
 using CryptoPP::InvertibleRSAFunction;
 using CryptoPP::PK_DecryptorFilter;
 using CryptoPP::PK_EncryptorFilter;
-using CryptoPP::PKCS5_PBKDF2_HMAC;
 using CryptoPP::Redirector;
+using CryptoPP::HexEncoder;
 using CryptoPP::RSAES_OAEP_SHA_Decryptor;
 using CryptoPP::RSAES_OAEP_SHA_Encryptor;
 using CryptoPP::RSAES_PKCS1v15_Decryptor;
@@ -245,7 +250,7 @@ pbkdf2 (const string_t& spassword, const std::string& salt, std::size_t length, 
 {
     auto password = wstr2str(spassword);
     auto key = std::vector<char>(length);
-    PKCS5_PBKDF2_HMAC<T> passToKey;
+    CryptoPP::PKCS5_PBKDF2_HMAC<T> passToKey;
     passToKey.DeriveKey(toByte(key),
                         key.size(),
                         '\0',
@@ -323,24 +328,45 @@ Crypto::calculateMasterPassword(const std::string& salt, const string_t& passwor
     return base64encode(pbkdf2_sha256(password, salt, 16));
 }
 
+static constexpr uint32_t BUF_SIZE = 8192;
+
 std::string
 Crypto::sha1File (const string_t& sfilename)
 {
-    CryptoPP::SHA1 sha1;
-    auto hash = std::string{};
-    auto filename = wstr2str(sfilename);
+	std::ifstream is (sfilename.c_str(), std::ifstream::binary);
+	if (!is) {
+		BOOST_THROW_EXCEPTION(ErrorException{"Cannot open file"});
+	}
+	auto buffer = std::unique_ptr<char[]>(new char[BUF_SIZE]);
 
-    CryptoPP::FileSource(filename.c_str(), true,
-        new CryptoPP::HashFilter(sha1,
-            new CryptoPP::HexEncoder(
-                new CryptoPP::StringSink(hash)
-            )
-        )
-    );
-    std::locale l{"C"};
-    std::transform(hash.begin(), hash.end(), hash.begin(), [&l](char c) {
-        return std::tolower(c, l);
-    });
+	SHA_CTX ctx;
+	SHA1_Init(&ctx);
+	do {
+		is.read (buffer.get(), BUF_SIZE);
+		auto read = is.gcount();
+		if (read > 0)
+		{
+			SHA1_Update(&ctx, buffer.get(), read);
+		}
+
+	} while ((is.rdstate() & std::ifstream::eofbit) == 0);
+	is.close();
+
+	unsigned char hashBuf[SHA_DIGEST_LENGTH];
+	SHA1_Final(hashBuf, &ctx);
+
+    std::string hash;
+    StringSource ss(hashBuf, SHA_DIGEST_LENGTH, true,
+        new HexEncoder(
+            new StringSink(hash)
+        ) // HexEncoder
+    ); // StringSource
+
+	std::locale l{"C"};
+	std::transform(hash.begin(), hash.end(), hash.begin(), [&l](char c) {
+		return std::tolower(c, l);
+	});
+
     return hash;
 }
 

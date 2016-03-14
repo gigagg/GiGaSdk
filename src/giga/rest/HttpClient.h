@@ -101,10 +101,10 @@ public:
     pplx::task<std::shared_ptr<T>>
     request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
     {
-        GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string());
         auto json      = web::json::value::object();
         auto data      = JSonSerializer{json}.toString(std::move(bodyData));
         auto uriString = uri.to_string();
+        GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string() << U(" ") << data);
 
         return refreshToken().then([=]() {
             return _http.request(mtd, uriString, data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
