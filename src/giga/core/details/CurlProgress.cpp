@@ -23,7 +23,6 @@
 #include <chrono>
 #include <thread>
 
-using curl::curl_easy_exception;
 using namespace std::chrono;
 
 namespace giga
