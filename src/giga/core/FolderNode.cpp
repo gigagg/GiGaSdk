@@ -107,10 +107,12 @@ FolderNode::uploadFile(const string_t& filepath)
     return create_task([=]() {
         auto sha1 = Crypto::sha1File(filepath);
         auto fkey = Crypto::calculateFkey(sha1);
+        auto fid = Crypto::calculateFid(sha1);
         auto decodedNodeKey = Crypto::base64decode(nodeKeyClear);
         auto fkeyEnc = Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey);
 
-        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), Crypto::calculateFid(sha1), Crypto::base64encode(fkeyEnc));
+
+        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc));
     });
 }
 
