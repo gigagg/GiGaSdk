@@ -65,8 +65,6 @@ public:
 
     /**
      * @brief Gets this upload progress.
-     *
-     * For now there is no means to know the progression of the preparing phase.
      */
     FileTransferer::Progress
     progress () const;

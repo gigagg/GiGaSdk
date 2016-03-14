@@ -76,6 +76,9 @@ public:
     void
     setCurl (curl::curl_easy& curl);
 
+    bool
+    isPaused () const;
+
 private:
     mutable std::mutex  _mut;
     Item                _item;

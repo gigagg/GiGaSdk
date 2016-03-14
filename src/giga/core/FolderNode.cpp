@@ -24,6 +24,7 @@
 #include <pplx/pplxtasks.h>
 #include <algorithm>
 
+#include "Sha1Calculator.h"
 using pplx::create_task;
 using utility::string_t;
 
@@ -91,7 +92,7 @@ FolderNode::addChildFolder(const string_t& name)
 
 namespace fs = boost::filesystem;
 
-pplx::task<std::shared_ptr<FileUploader>>
+Node::UploadingFile
 FolderNode::uploadFile(const string_t& filepath)
 {
     auto path = fs::path{filepath};
@@ -104,16 +105,19 @@ FolderNode::uploadFile(const string_t& filepath)
     auto nodeName = path.filename().native();
     auto nodeKeyClear = Application::get().currentUser().personalData().nodeKeyClear();
 
-    return create_task([=]() {
-        auto sha1 = Crypto::sha1File(filepath);
+    auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(filepath)};
+    calculator->start();
+
+    auto task = calculator->task().then([=](std::string sha1){
         auto fkey = Crypto::calculateFkey(sha1);
         auto fid = Crypto::calculateFid(sha1);
         auto decodedNodeKey = Crypto::base64decode(nodeKeyClear);
         auto fkeyEnc = Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey);
 
-
         return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc));
     });
+
+    return UploadingFile{new std::pair<std::unique_ptr<Sha1Calculator>, pplx::task<std::shared_ptr<FileUploader>>>{std::move(calculator), std::move(task)}};
 }
 
 FileDownloader

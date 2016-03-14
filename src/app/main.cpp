@@ -235,23 +235,17 @@ int main(int argc, const char* argv[]) {
                 {
                     BOOST_THROW_EXCEPTION(ErrorException{ U("Node must be a folder")});
                 }
-                auto currentNodeName = string_t{};
                 core::Uploader uploader {
                     *static_cast<core::FolderNode*>(node.get()),
                     vm["upload"].as<string_t>(),
-                    [&currentNodeName](core::FileUploader& fd, uint64_t count, uint64_t) {
-                        if (currentNodeName != fd.nodeName())
-                        {
-                            currentNodeName = fd.nodeName();
-                            ucout << std::endl;
-                        }
-                        else
-                        {
-                            (ucout << "                                                      \r").flush();
-                        }
+                    [](core::FileUploader& fd, uint64_t count, uint64_t) {
                         ucout << count << " "
                                   << std::setprecision(3) << fd.progress().percent() << "% - "
-                                  << fd.nodeName();
+                                  << fd.nodeName() << std::endl;
+                    },
+                    [](core::Sha1Calculator& sh) {
+                        ucout << "preparing: " << std::setprecision(3) << sh.progress().percent() << "% - "
+                                << sh.fileName() << std::endl;
                     }
                 };
                 uploader.start().get();

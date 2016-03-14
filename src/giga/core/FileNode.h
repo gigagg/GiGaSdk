@@ -127,7 +127,7 @@ public:
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) override;
 
-    virtual pplx::task<std::shared_ptr<FileUploader>>
+    virtual UploadingFile
     uploadFile(const utility::string_t& filepath) override;
 
     virtual FileDownloader

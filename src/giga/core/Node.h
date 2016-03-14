@@ -20,10 +20,12 @@
 #include "FileUploader.h"
 #include "FileDownloader.h"
 #include "../utils/EnumConvertor.h"
+#include "Sha1Calculator.h"
 
 #include <cpprest/details/basic_types.h>
 #include <chrono>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace giga
@@ -126,6 +128,13 @@ public:
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) = 0;
 
+    typedef std::unique_ptr<
+                std::pair<
+                    std::unique_ptr<Sha1Calculator>,
+                    pplx::task<std::shared_ptr<FileUploader>>
+                >
+             > UploadingFile;
+
     /**
      * @brief Upload a file into this FolderNode.
      *
@@ -134,8 +143,9 @@ public:
      * @throw ErrorException if this node is a FileNode.
      * @see Uploader to upload folders.
      */
-    virtual pplx::task<std::shared_ptr<FileUploader>>
+    virtual UploadingFile
     uploadFile(const utility::string_t& filepath) = 0;
+
 
 
     /**

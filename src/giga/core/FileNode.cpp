@@ -157,7 +157,7 @@ FileNode::addChildFolder(const string_t&)
     BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
 }
 
-pplx::task<std::shared_ptr<FileUploader>>
+Node::UploadingFile
 FileNode::uploadFile(const string_t&)
 {
     BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});

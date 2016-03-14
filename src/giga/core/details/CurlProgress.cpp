@@ -80,7 +80,6 @@ CurlProgress::setLimitRate (uint64_t rate)
     _limitRate = rate;
 }
 
-
 void
 CurlProgress::cancel ()
 {
@@ -93,6 +92,13 @@ CurlProgress::setCurl (curl::curl_easy& curl)
 {
     std::lock_guard<std::mutex> l(_mut);
     _curl = &curl;
+}
+
+bool
+CurlProgress::isPaused () const
+{
+    std::lock_guard<std::mutex> l(_mut);
+    return _pause;
 }
 
 int
@@ -109,7 +115,7 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
             _item.ultotal = static_cast<uint64_t>(ultotal + _upPostion);
             _item.ulnow   = static_cast<uint64_t>(ulnow + _upPostion);
 
-            if (_pause != _isPaused)
+            if (_pause != _isPaused && _curl != nullptr)
             {
                 _curl->pause(_pause ? CURLPAUSE_ALL : CURLPAUSE_CONT);
                 _isPaused = _pause;

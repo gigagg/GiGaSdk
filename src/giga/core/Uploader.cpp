@@ -34,10 +34,10 @@ namespace giga
 namespace core
 {
 
-Uploader::Uploader(FolderNode parent, const path& path, ProgressCallback clb):
+Uploader::Uploader(FolderNode parent, const path& path, ProgressUpload clbUp, ProgressPreparation clbPrep):
     _parent{std::move(parent)},
     _path{path},
-    _preparingList{},
+    _preparing{nullptr},
     _uploading{pplx::create_task([]() -> std::shared_ptr<Node> {return nullptr;})},
     _mainTask{},
     _isStarted{false},
@@ -47,7 +47,8 @@ Uploader::Uploader(FolderNode parent, const path& path, ProgressCallback clb):
     _upBytes{0},
     _upCount{0},
     _isFinished{false},
-    _progressCallback{clb}
+    _progressUp{clbUp},
+    _progressPrep{clbPrep}
 {
 }
 
@@ -82,15 +83,15 @@ Uploader::start()
     auto upTask = pplx::create_task([this]() {
         scanFilesAddUploads(_parent, _path);
 
-        while (_preparingList.size() > 0)
+        if (_preparing != nullptr)
         {
-            auto ready = pplx::when_any(_preparingList.begin(), _preparingList.end()).get();
-            _uploading = _uploading.then(startNextUpload(ready.first));
+            auto fileUploader = _preparing->second.get();
+            _uploading = _uploading.then(startNextUpload(fileUploader));
             {
                 std::lock_guard<std::mutex> l{_mut};
-                _readyList.emplace_back(std::move(ready.first));
+                _readyList.emplace_back(fileUploader);
             }
-            _preparingList.erase(_preparingList.begin() + ready.second);
+            _preparing = nullptr;
         }
         return _uploading;
     }).then([this](pplx::task<std::shared_ptr<Node>> _uploading) {
@@ -113,7 +114,11 @@ Uploader::start()
             });
             if (result != _readyList.end())
             {
-                _progressCallback(**result, _upCount, _upBytes + result->get()->progress().transfered);
+                _progressUp(**result, _upCount, _upBytes + result->get()->progress().transfered);
+            }
+            if (_preparing != nullptr)
+            {
+                _progressPrep(*_preparing->first);
             }
         }
     });
@@ -136,20 +141,31 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
 
     if (is_regular_file(path))
     {
-        if (_preparingList.size() < 1)
+        bool preparing = false;
         {
-            _preparingList.emplace_back(parent.uploadFile(path.native()));
+            std::lock_guard<std::mutex> l{_mut};
+            preparing = _preparing != nullptr;
+        }
+        if (!preparing)
+        {
+            auto preparing = parent.uploadFile(path.native());
+            {
+                std::lock_guard<std::mutex> l{_mut};
+                _preparing = std::move(preparing);
+                _progressPrep(*_preparing->first);
+            }
         }
         else
         {
-            auto clb = _progressCallback;
-            auto ready = pplx::when_any(_preparingList.begin(), _preparingList.end()).get();
-            _uploading = _uploading.then(startNextUpload(ready.first));
-            _preparingList[ready.second] = parent.uploadFile(path.native());
+            auto fileUploader = _preparing->second.get();
+            _uploading = _uploading.then(startNextUpload(fileUploader));
+            auto preparing = parent.uploadFile(path.native());
 
             {
                 std::lock_guard<std::mutex> l{_mut};
-                _readyList.emplace_back(ready.first);
+                _readyList.emplace_back(std::move(fileUploader));
+                _preparing = std::move(preparing);
+                _progressPrep(*_preparing->first);
             }
         }
     }
@@ -193,7 +209,7 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
 std::function<std::shared_ptr<Node> (std::shared_ptr<Node> n)>
 Uploader::startNextUpload(std::shared_ptr<giga::core::FileUploader> next)
 {
-    auto clb      = _progressCallback;
+    auto clb      = _progressUp;
     auto& upByte  = _upBytes;
     auto& upCount = _upCount;
     auto& mut     = _mut;

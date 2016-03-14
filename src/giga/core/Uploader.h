@@ -17,14 +17,14 @@
 #ifndef GIGA_CORE_UPLOADER_H_
 #define GIGA_CORE_UPLOADER_H_
 
+#include "FolderNode.h"
+
 #include <boost/filesystem.hpp>
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
 #include <utility>
 #include <vector>
-
-#include "FolderNode.h"
 
 namespace giga
 {
@@ -37,19 +37,28 @@ namespace core
 class Uploader
 {
 public:
-    typedef std::function<void(FileUploader&, uint64_t count, uint64_t bytes)> ProgressCallback;
+    typedef std::function<void(FileUploader&, uint64_t count, uint64_t bytes)> ProgressUpload;
+    typedef std::function<void(Sha1Calculator&)> ProgressPreparation;
 
 public:
     /**
      * @brief construct an Uploader
      * @param parent the folder in which we want to upload data
      * @param path the path to the file or folder we want to upload
-     * @param clb a callback function that will be called periodically to let you know of the upload progress
+     * @param clbUp a callback function that will be called periodically to let you know of the upload progress
+     * @param clbPrep a callback function that will be called periodically to let you know of the preparation progress (sha1)
      *
      * ```clb``` will be called at least once for each file being uploaded.
      */
-    explicit Uploader(FolderNode parent, const boost::filesystem::path& path, ProgressCallback clb = [](FileUploader&, uint64_t, uint64_t){});
+    explicit Uploader(FolderNode parent, const boost::filesystem::path& path,
+                      ProgressUpload clbUp = [](FileUploader&, uint64_t, uint64_t){},
+                      ProgressPreparation clbPrep = [](Sha1Calculator&){});
     ~Uploader();
+
+    Uploader(Uploader&&)                 = delete;
+    Uploader(const Uploader&)            = delete;
+    Uploader& operator=(const Uploader&) = delete;
+    Uploader& operator=(Uploader&&)      = delete;
 
     /**
      * @brief Tells if the preparation phase is finished
@@ -98,12 +107,11 @@ private:
 
 
 private:
-    typedef pplx::task<std::shared_ptr<FileUploader>> PreparingEntry;
     typedef std::shared_ptr<FileUploader> ReadyEntry;
 
     FolderNode                        _parent;
     boost::filesystem::path           _path;
-    std::vector<PreparingEntry>       _preparingList;
+    Node::UploadingFile               _preparing;
     pplx::task<std::shared_ptr<Node>> _uploading;
     pplx::task<void>                  _mainTask;
     bool                              _isStarted;
@@ -115,7 +123,8 @@ private:
     uint64_t                          _upBytes;
     uint64_t                          _upCount;
     std::atomic<bool>                 _isFinished;
-    ProgressCallback                  _progressCallback;
+    ProgressUpload                    _progressUp;
+    ProgressPreparation               _progressPrep;
 };
 
 } /* namespace core */
