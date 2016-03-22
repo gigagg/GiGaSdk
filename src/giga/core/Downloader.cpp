@@ -19,9 +19,11 @@
 #include "FolderNode.h"
 #include "../utils/Utils.h"
 #include "../rest/HttpErrors.h"
+#include "../utils/make_unique.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <string>
 #include <memory>
 #include <mutex>
@@ -37,9 +39,8 @@ namespace giga
 namespace core
 {
 
-Downloader::Downloader (std::unique_ptr<Node>&& node, const boost::filesystem::path& path, Downloader::ProgressCallback clb) :
-        _node{std::move(node)},
-        _path{path},
+Downloader::Downloader (Downloader::ProgressCallback clb) :
+        _isStarted{false},
         _downloading{},
         _dlCount{0},
         _dlBytes{0},
@@ -52,6 +53,17 @@ Downloader::Downloader (std::unique_ptr<Node>&& node, const boost::filesystem::p
 
 Downloader::~Downloader ()
 {
+    if (_isStarted)
+    {
+        try
+        {
+            join();
+        }
+        catch (...)
+        {
+            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+        }
+    }
 }
 
 std::shared_ptr<FileDownloader>
@@ -68,11 +80,15 @@ Downloader::downloadingFileNumber ()
     return _dlCount;
 }
 
-pplx::task<void>
+void
 Downloader::start ()
 {
     auto dlTask = pplx::create_task([this]() {
-        downloadFile(*_node, _path);
+        std::unique_ptr<QueueElement> element = nullptr;
+        for(_queue.wait_dequeue(element); element != nullptr; _queue.wait_dequeue(element))
+        {
+            downloadFile(*element->first, element->second);
+        }
         _isFinished = true;
     });
 
@@ -90,7 +106,24 @@ Downloader::start ()
 
     auto tasks = {dlTask, progressTask};
     _mainTask =  pplx::when_all(tasks.begin(), tasks.end());
-    return _mainTask;
+    _isStarted = true;
+}
+
+void
+Downloader::join()
+{
+    if (_isStarted)
+    {
+        _queue.enqueue(nullptr);
+        _mainTask.wait();
+        _isStarted = false;
+    }
+}
+
+void
+Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::path& path)
+{
+    _queue.enqueue(giga::make_unique<QueueElement>(std::make_pair(std::move(node), path)));
 }
 
 void
@@ -124,17 +157,24 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
     {
         auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, FileDownloader::Policy::overrideNewerSize);
         fdownloader->start();
-        auto task = fdownloader->task();
-        {
-            std::lock_guard<std::mutex> l{_mut};
-            _downloading = std::move(fdownloader);
-            ++_dlCount;
-            _progressCallback(*_downloading, _dlCount, _dlBytes);
+        try {
+            auto task = fdownloader->task();
+            {
+                std::lock_guard<std::mutex> l{_mut};
+                _downloading = std::move(fdownloader);
+                ++_dlCount;
+                _progressCallback(*_downloading, _dlCount, _dlBytes);
+            }
+            task.wait();
+            {
+                std::lock_guard<std::mutex> l{_mut};
+                _dlBytes += node.size();
+            }
         }
-        task.wait();
+        catch (...)
         {
-            std::lock_guard<std::mutex> l{_mut};
-            _dlBytes += node.size();
+            fdownloader->setError(boost::current_exception_diagnostic_information());
+            _progressCallback(*_downloading, _dlCount, _dlBytes);
         }
     }
     else if (!npathExists)

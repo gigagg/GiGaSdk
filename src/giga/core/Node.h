@@ -73,6 +73,9 @@ public:
     static std::unique_ptr<Node>
     create(std::shared_ptr<data::Node> n);
 
+    static std::unique_ptr<Node>
+    create(const Node& n);
+
 protected:
     explicit Node(std::shared_ptr<data::Node> n);
 

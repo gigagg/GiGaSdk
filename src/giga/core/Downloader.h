@@ -22,6 +22,7 @@
 #include <string>
 #include <memory>
 
+#include "../utils/readerwriterqueue.h"
 namespace giga
 {
 namespace core
@@ -41,20 +42,28 @@ public:
 public:
     /**
      * @brief construct a Downloader
-     * @param node move here the node you want to download.
-     *             It can either be a FileNode or a FolderNode.
-     * @param path the path to a folder where you want ```node``` to be downloaded.
      * @param clb a callback function that will be executed periodically to let you know of the download progress.
      *
      * ```clb``` will be called at least once for each file being downloaded.
      */
-    explicit Downloader(std::unique_ptr<Node>&& node, const boost::filesystem::path& path, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
+    explicit Downloader(ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
     ~Downloader();
 
     Downloader(Downloader&&)                 = delete;
     Downloader(const Downloader&)            = delete;
     Downloader& operator=(const Downloader&) = delete;
     Downloader& operator=(Downloader&&)      = delete;
+
+public:
+    /**
+     * @brief add a file or folder to the list of download
+     *
+     * @param node move here the node you want to download.
+     *             It can either be a ```FileNode``` or a ```FolderNode```.
+     * @param path the path to a folder where you want ```node``` to be downloaded.
+     */
+    void
+    addDownload(std::unique_ptr<Node>&& node, const boost::filesystem::path& path);
 
     /**
      * @brief Gets the current FileDownloader.
@@ -74,19 +83,27 @@ public:
     downloadingFileNumber();
 
     /**
-     * @brief start the downloads
-     * @return a task
-     * @see https://github.com/Microsoft/cpprestsdk
-     * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task_3_01void_01_4.html
+     * @brief start the uploading process
      */
-    pplx::task<void>
+    void
     start();
+
+    /**
+     * @brief wait for the uploading process to finish
+     */
+    void
+    join();
 
 private:
     void
     downloadFile (Node& node, const boost::filesystem::path& path);
 
 private:
+    typedef std::pair<std::unique_ptr<Node>, const boost::filesystem::path> QueueElement;
+    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<QueueElement>> Queue;
+
+    Queue                           _queue;
+    bool                            _isStarted;
     std::unique_ptr<Node>           _node;
     boost::filesystem::path         _path;
     std::shared_ptr<FileDownloader> _downloading;

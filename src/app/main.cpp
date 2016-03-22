@@ -236,8 +236,6 @@ int main(int argc, const char* argv[]) {
                     BOOST_THROW_EXCEPTION(ErrorException{ U("Node must be a folder")});
                 }
                 core::Uploader uploader {
-                    *static_cast<core::FolderNode*>(node.get()),
-                    vm["upload"].as<string_t>(),
                     [](core::FileUploader& fd, uint64_t count, uint64_t) {
                         ucout << count << " "
                                   << std::setprecision(3) << fd.progress().percent() << "% - "
@@ -248,7 +246,9 @@ int main(int argc, const char* argv[]) {
                                 << sh.fileName() << std::endl;
                     }
                 };
-                uploader.start().get();
+                uploader.addUpload(*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<string_t>());
+                uploader.start();
+                uploader.join();
 
                 auto uploads = uploader.uploadingFiles();
                 std::vector<std::shared_ptr<core::Node>> arr(uploads.size());
@@ -264,8 +264,6 @@ int main(int argc, const char* argv[]) {
 
                 ucout << std::endl;
                 core::Downloader dl {
-                    std::move(node),
-                    vm["download"].as<string_t>(),
                     [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
                         auto percent = ((double) size * 100) / (double) totalSize;
                         (ucout << "                                                      \r").flush();
@@ -274,7 +272,9 @@ int main(int argc, const char* argv[]) {
                                   << fd.destinationFile().filename().native();
                     }
                 };
-                dl.start().wait();
+                dl.addDownload(std::move(node), vm["download"].as<string_t>());
+                dl.start();
+                dl.join();
                 ucout << "\nFile downloaded: " << dl.downloadingFileNumber() << std::endl;
             }
         }

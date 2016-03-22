@@ -17,6 +17,7 @@
 #ifndef GIGA_CORE_FILETRANSFERER_H_
 #define GIGA_CORE_FILETRANSFERER_H_
 
+#include <cpprest/details/basic_types.h>
 #include <pplx/pplxtasks.h>
 #include <mutex>
 
@@ -36,7 +37,7 @@ class FileTransferer
 {
 public:
     enum class State {
-        pending, started, paused, canceled
+        pending, started, paused, canceled, error
     };
     struct Progress
     {
@@ -84,6 +85,9 @@ public:
     void
     cancel ();
 
+    void
+    setError (const std::string& error);
+
     State
     state () const;
 
@@ -102,6 +106,7 @@ protected:
     std::unique_ptr<details::CurlProgress> _progress;
     mutable std::mutex                     _mut;
     pplx::cancellation_token_source        _cts;
+    utility::string_t                      _error;
 };
 
 } /* namespace core */

@@ -191,11 +191,12 @@ public:
         /**
          * The root Node, containing all the Nodes shared with the currentUser.
          */
-        FolderNode
+        const FolderNode&
         node() const;
 
     private:
         std::shared_ptr<data::User> _data;
+        FolderNode                  _root;
     };
 
     /**

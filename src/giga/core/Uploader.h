@@ -18,6 +18,7 @@
 #define GIGA_CORE_UPLOADER_H_
 
 #include "FolderNode.h"
+#include "../utils/readerwriterqueue.h"
 
 #include <boost/filesystem.hpp>
 #include <pplx/pplxtasks.h>
@@ -33,6 +34,10 @@ namespace core
 
 /**
  * Upload files and folders.
+ *
+ * Start the upload process with the ```Uploader::start()``` method.
+ * Uses ```Uploader::addUpload()``` to add file/folder to upload.
+ * Terminate the uploading process using the ```Uploader::join()``` method.
  */
 class Uploader
 {
@@ -43,15 +48,13 @@ public:
 public:
     /**
      * @brief construct an Uploader
-     * @param parent the folder in which we want to upload data
-     * @param path the path to the file or folder we want to upload
+     *
      * @param clbUp a callback function that will be called periodically to let you know of the upload progress
      * @param clbPrep a callback function that will be called periodically to let you know of the preparation progress (sha1)
      *
      * ```clb``` will be called at least once for each file being uploaded.
      */
-    explicit Uploader(FolderNode parent, const boost::filesystem::path& path,
-                      ProgressUpload clbUp = [](FileUploader&, uint64_t, uint64_t){},
+    explicit Uploader(ProgressUpload clbUp = [](FileUploader&, uint64_t, uint64_t){},
                       ProgressPreparation clbPrep = [](Sha1Calculator&){});
     ~Uploader();
 
@@ -59,6 +62,17 @@ public:
     Uploader(const Uploader&)            = delete;
     Uploader& operator=(const Uploader&) = delete;
     Uploader& operator=(Uploader&&)      = delete;
+
+public:
+
+    /**
+     * @brief add a file or folder to the list of uploads
+     *
+     * @param parent the folder in which we want to upload data
+     * @param path the path to the file or folder we want to upload
+     */
+    void
+    addUpload(FolderNode parent, const boost::filesystem::path& path);
 
     /**
      * @brief Tells if the preparation phase is finished
@@ -91,12 +105,15 @@ public:
 
     /**
      * @brief start the uploading process
-     * @return a task
-     * @see https://github.com/Microsoft/cpprestsdk
-     * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task_3_01void_01_4.html
      */
-    pplx::task<void>
+    void
     start();
+
+    /**
+     * @brief wait for the uploading process to finish
+     */
+    void
+    join();
 
 private:
     void
@@ -108,9 +125,10 @@ private:
 
 private:
     typedef std::shared_ptr<FileUploader> ReadyEntry;
+    typedef std::pair<FolderNode, boost::filesystem::path> QueueElement;
+    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<QueueElement>> Queue;
 
-    FolderNode                        _parent;
-    boost::filesystem::path           _path;
+    Queue                             _queue;
     Node::UploadingFile               _preparing;
     pplx::task<std::shared_ptr<Node>> _uploading;
     pplx::task<void>                  _mainTask;

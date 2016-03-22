@@ -36,8 +36,10 @@ BOOST_AUTO_TEST_CASE(test_upload_file) {
                         string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
     auto owner = app.authenticate(U("test_main"), U("password"));
     auto uploadFolder = owner.contactData().node();
-    Uploader uploader{uploadFolder, boost::filesystem::path{U(GIGA_ROOT)} / U("src/tests/files")};
-    uploader.start().wait();
+    Uploader uploader{};
+    uploader.addUpload(uploadFolder, boost::filesystem::path{U(GIGA_ROOT)} / U("src/tests/files"));
+    uploader.start();
+    uploader.join();
 
     // TODO: make some assert ...
 }

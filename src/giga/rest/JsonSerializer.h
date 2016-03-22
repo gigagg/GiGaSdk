@@ -33,6 +33,9 @@ namespace details {
     inline web::json::value serialize(int64_t& value) {
         return web::json::value::number(value);
     }
+    inline web::json::value serialize(uint64_t& value) {
+        return web::json::value::number(value);
+    }
     inline web::json::value serialize(bool& value) {
         return web::json::value::boolean(value);
     }

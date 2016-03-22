@@ -24,8 +24,10 @@ int main(int, char**)
     // WARNING :
     // We will upload the content of the current folder
     // make sure it contains data you want to upload !
-    Uploader uploader{uploadFolder, path{U("./src")}};
-    uploader.start().wait();
+    Uploader uploader{};
+    uploader.addUpload(uploadFolder, path{U("./src")});
+    uploader.start();
+    uploader.join();
 
     return 0;
 }

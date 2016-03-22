@@ -16,6 +16,7 @@
 
 #include "FileTransferer.h"
 #include "../rest/HttpErrors.h"
+#include "../utils/Utils.h"
 #include "details/CurlProgress.h"
 
 namespace giga
@@ -91,6 +92,14 @@ FileTransferer::cancel ()
     _state = State::canceled;
     _progress->cancel();
     _cts.cancel();
+}
+
+void
+FileTransferer::setError (const std::string& error)
+{
+    std::lock_guard<std::mutex> l{_mut};
+    _error = utils::str2wstr(error);
+    _state = State::error;
 }
 
 FileTransferer::State

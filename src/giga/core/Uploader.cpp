@@ -17,9 +17,11 @@
 #include "Uploader.h"
 
 #include "../rest/HttpErrors.h"
+#include "../utils/make_unique.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range_core.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
@@ -28,15 +30,15 @@
 #include <vector>
 
 using boost::filesystem::path;
+using moodycamel::BlockingReaderWriterQueue;
+using utility::details::make_unique;
 
 namespace giga
 {
 namespace core
 {
 
-Uploader::Uploader(FolderNode parent, const path& path, ProgressUpload clbUp, ProgressPreparation clbPrep):
-    _parent{std::move(parent)},
-    _path{path},
+Uploader::Uploader(ProgressUpload clbUp, ProgressPreparation clbPrep):
     _preparing{nullptr},
     _uploading{pplx::create_task([]() -> std::shared_ptr<Node> {return nullptr;})},
     _mainTask{},
@@ -54,6 +56,23 @@ Uploader::Uploader(FolderNode parent, const path& path, ProgressUpload clbUp, Pr
 
 Uploader::~Uploader()
 {
+    if (_isStarted)
+    {
+        try
+        {
+            join();
+        }
+        catch (...)
+        {
+            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+        }
+    }
+}
+
+void
+Uploader::addUpload (FolderNode parent, const boost::filesystem::path& path)
+{
+    _queue.enqueue(giga::make_unique<QueueElement>(std::make_pair(parent, path)));
 }
 
 bool
@@ -77,21 +96,26 @@ Uploader::uploadingFilesCount()
     return _readyList.size();
 }
 
-pplx::task<void>
+void
 Uploader::start()
 {
     auto upTask = pplx::create_task([this]() {
-        scanFilesAddUploads(_parent, _path);
+        std::unique_ptr<QueueElement> element = nullptr;
 
-        if (_preparing != nullptr)
+        for(_queue.wait_dequeue(element); element != nullptr; _queue.wait_dequeue(element))
         {
-            auto fileUploader = _preparing->second.get();
-            _uploading = _uploading.then(startNextUpload(fileUploader));
+            scanFilesAddUploads(element->first, element->second);
+
+            if (_preparing != nullptr)
             {
-                std::lock_guard<std::mutex> l{_mut};
-                _readyList.emplace_back(fileUploader);
+                auto fileUploader = _preparing->second.get();
+                _uploading = _uploading.then(startNextUpload(fileUploader));
+                {
+                    std::lock_guard<std::mutex> l{_mut};
+                    _readyList.emplace_back(fileUploader);
+                }
+                _preparing = nullptr;
             }
-            _preparing = nullptr;
         }
         return _uploading;
     }).then([this](pplx::task<std::shared_ptr<Node>> _uploading) {
@@ -125,9 +149,18 @@ Uploader::start()
 
     auto tasks = {upTask, progressTask};
     _mainTask =  pplx::when_all(tasks.begin(), tasks.end());
-
     _isStarted = true;
-    return _mainTask;
+}
+
+void
+Uploader::join()
+{
+    if (_isStarted)
+    {
+        _queue.enqueue(nullptr);
+        _mainTask.wait();
+        _isStarted = false;
+    }
 }
 
 void
@@ -206,6 +239,22 @@ Uploader::scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path
     }
 }
 
+void
+callCallback (std::mutex& mut, uint64_t& upByte, uint64_t& upCount,
+              std::shared_ptr<Node> n, Uploader::ProgressUpload clb,
+              std::shared_ptr<giga::core::FileUploader> next)
+{
+    std::lock_guard<std::mutex> l{mut};
+    if (n != nullptr) {
+        upByte += n->size();
+        clb(*next, ++upCount, upByte);
+    }
+    else
+    {
+        clb(*next, ++upCount, 0);
+    }
+}
+
 std::function<std::shared_ptr<Node> (std::shared_ptr<Node> n)>
 Uploader::startNextUpload(std::shared_ptr<giga::core::FileUploader> next)
 {
@@ -213,23 +262,22 @@ Uploader::startNextUpload(std::shared_ptr<giga::core::FileUploader> next)
     auto& upByte  = _upBytes;
     auto& upCount = _upCount;
     auto& mut     = _mut;
-    return [next, clb, &upByte, &mut, &upCount] (std::shared_ptr<Node> n) {
-        next->start();
-        {
-            std::lock_guard<std::mutex> l{mut};
-            if (n != nullptr) {
-                upByte += n->size();
-                clb(*next, ++upCount, upByte);
-            }
-            else
-            {
-                clb(*next, ++upCount, 0);
-            }
+    return [next, clb, &upByte, &mut, &upCount] (std::shared_ptr<Node> n) -> std::shared_ptr<giga::core::Node> {
+        try {
+            next->start();
+            callCallback(mut, upByte, upCount, n, clb, next);
+            return next->task().get();
         }
-        return next->task().get();
+        catch (...)
+        {
+            next->setError(boost::current_exception_diagnostic_information());
+            callCallback(mut, upByte, upCount, n, clb, next);
+            return nullptr;
+        }
     };
 }
 
 
 }/* namespace core */
 } /* namespace giga */
+

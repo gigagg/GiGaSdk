@@ -5,14 +5,14 @@
  *      Author: thomas
  */
 
+#include "crypto++/filters.h"
+#include "crypto++/hex.h"
+
 #include "Sha1Calculator.h"
 
 #include "details/CurlProgress.h"
 #include "../rest/HttpErrors.h"
 #include "../utils/Utils.h"
-
-#include "crypto++/filters.h"
-#include "crypto++/hex.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>

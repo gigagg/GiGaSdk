@@ -149,7 +149,8 @@ User::language () const
     return Language{_data->language.get_value_or(U("en"))};
 }
 
-User::ContactData::ContactData (std::shared_ptr<data::User> u) : _data{u}
+User::ContactData::ContactData (std::shared_ptr<data::User> u) :
+        _data{u}, _root{_data->node}
 {
 }
 
@@ -201,11 +202,11 @@ User::ContactData::maxContact () const
     return _data->maxContact.get_value_or(200);
 }
 
-FolderNode
+const FolderNode&
 User::ContactData::node () const
 {
     _THROW_IF_NO_USER_;
-    return FolderNode{_data->node};
+    return _root;
 }
 
 User::PersonalData::PersonalData (std::shared_ptr<data::User> u, const string_t& password) : _data{u}

@@ -57,6 +57,19 @@ Node::create (std::shared_ptr<data::Node> n)
     BOOST_THROW_EXCEPTION(ErrorException{U("unreachable")});
 }
 
+std::unique_ptr<Node>
+Node::create (const Node& node)
+{
+    switch (typeCvrt.fromStr(node._data->type)) {
+        case Type::file:
+            return std::unique_ptr<Node>{new FileNode{node._data}};
+        case Type::folder:
+        case Type::root:
+            return std::unique_ptr<Node>{new FolderNode{node._data}};
+    }
+    BOOST_THROW_EXCEPTION(ErrorException{U("unreachable")});
+}
+
 Node::Node (std::shared_ptr<data::Node> n)  :
 _data(n)
 {
@@ -100,6 +113,7 @@ const string_t&
 Node::name () const
 {
     _THROW_IF_NO_NODE_;
+    std::cout << _data->name << std::endl;
     return _data->name;
 }
 

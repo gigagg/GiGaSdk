@@ -22,10 +22,12 @@ int main(int, char**)
     auto ebook = app.getNodeById("56deee4b35e5df98038b4587");
 
     // create the downloader
-    Downloader downloader{std::move(ebook), path{U("./")}};
+    Downloader downloader{};
+    downloader.addDownload(std::move(ebook), path{U("./")});
 
     // start the download and wait for it to finish
-    downloader.start().wait();
+    downloader.start();
+    downloader.join();
 
     return 0;
 }
