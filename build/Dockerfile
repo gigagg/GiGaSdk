@@ -8,9 +8,9 @@ RUN apt-get update && \
     apt-get install -y g++ git make libboost1.54-all-dev libssl-dev cmake
 
 RUN cd /root                                             && \
-    git clone http://gitlab.giga.gg/t.guyard/GiGaSdk.git && \
+    git clone https://github.com/gigagg/GiGaSdk.git      && \
     cd GiGaSdk                                           && \
-    git submodule update --init  # cacheOff
+    git submodule update --init
 
 WORKDIR "/root/GiGaSdk"
 
