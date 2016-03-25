@@ -131,6 +131,14 @@ public:
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) = 0;
 
+    /**
+     * @brief Create a new FolderNode (Do not add it to the local children list)
+     * @return The new FolderNode
+     * @throw HttpError
+     */
+    virtual FolderNode
+    createChildFolder(const utility::string_t& name) const = 0;
+
     typedef std::unique_ptr<
                 std::pair<
                     std::unique_ptr<Sha1Calculator>,
@@ -148,8 +156,6 @@ public:
      */
     virtual UploadingFile
     uploadFile(const utility::string_t& filepath) = 0;
-
-
 
     /**
      * @brief Download a FileNode

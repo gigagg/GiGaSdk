@@ -225,7 +225,7 @@ int main(int argc, const char* argv[]) {
             }
             if (vm.count("mkdir"))
             {
-                auto dir = node->addChildFolder(vm["mkdir"].as<string_t>());
+                auto dir = node->createChildFolder(vm["mkdir"].as<string_t>());
                 auto arr = std::array<core::Node*, 1>{&dir};
                 printNodes("mkdir", arr);
             }

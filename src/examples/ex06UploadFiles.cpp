@@ -4,6 +4,8 @@
 
 using giga::Application;
 using giga::core::Uploader;
+using giga::core::Node;
+using giga::core::FolderNode;
 using boost::filesystem::path;
 
 using utility::string_t;
@@ -19,7 +21,7 @@ int main(int, char**)
 
 
     // Create a FolderNode named "upload" where we will upload some files
-    auto uploadFolder = owner.contactData().node().addChildFolder(U("upload"));
+    auto uploadFolder = owner.contactData().node().createChildFolder(U("upload"));
 
     // WARNING :
     // We will upload the content of the current folder

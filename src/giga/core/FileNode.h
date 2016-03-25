@@ -127,6 +127,9 @@ public:
     virtual FolderNode&
     addChildFolder(const utility::string_t& name) override;
 
+    virtual FolderNode
+    createChildFolder(const utility::string_t& name) const override;
+
     virtual UploadingFile
     uploadFile(const utility::string_t& filepath) override;
 

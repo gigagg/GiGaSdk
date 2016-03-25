@@ -90,6 +90,13 @@ FolderNode::addChildFolder(const string_t& name)
     return static_cast<FolderNode&>(*_children.back());
 }
 
+FolderNode
+FolderNode::createChildFolder(const utility::string_t& name) const
+{
+    auto result = NodesApi::addFolderNode(name, id()).get();
+    return FolderNode{std::make_shared<data::Node>(*result->data.release())};
+}
+
 namespace fs = boost::filesystem;
 
 Node::UploadingFile

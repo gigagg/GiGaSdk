@@ -157,6 +157,12 @@ FileNode::addChildFolder(const string_t&)
     BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
 }
 
+FolderNode
+FileNode::createChildFolder(const utility::string_t&) const
+{
+    BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
+}
+
 Node::UploadingFile
 FileNode::uploadFile(const string_t&)
 {
