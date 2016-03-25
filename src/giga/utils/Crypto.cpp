@@ -335,7 +335,7 @@ Crypto::sha1File (const string_t& sfilename)
 {
 	std::ifstream is (sfilename.c_str(), std::ifstream::binary);
 	if (!is) {
-		BOOST_THROW_EXCEPTION(ErrorException{"Cannot open file"});
+		BOOST_THROW_EXCEPTION(ErrorException{U("Cannot open file")});
 	}
 	auto buffer = std::unique_ptr<char[]>(new char[BUF_SIZE]);
 
@@ -346,7 +346,7 @@ Crypto::sha1File (const string_t& sfilename)
 		auto read = is.gcount();
 		if (read > 0)
 		{
-			SHA1_Update(&ctx, buffer.get(), read);
+			SHA1_Update(&ctx, buffer.get(), static_cast<std::size_t>(read));
 		}
 
 	} while ((is.rdstate() & std::ifstream::eofbit) == 0);

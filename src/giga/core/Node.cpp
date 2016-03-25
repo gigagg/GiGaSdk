@@ -113,7 +113,6 @@ const string_t&
 Node::name () const
 {
     _THROW_IF_NO_NODE_;
-    std::cout << _data->name << std::endl;
     return _data->name;
 }
 
