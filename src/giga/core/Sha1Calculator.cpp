@@ -36,7 +36,7 @@ static constexpr uint32_t BUF_SIZE = 8192;
 
 Sha1Calculator::Sha1Calculator(const utility::string_t& filename):
         FileTransferer{},
-        _filename{utils::wstr2str(filename)},
+        _filename{filename},
         _task{},
         _is{filename.c_str(), std::ifstream::binary},
         _buf{std::unique_ptr<char[]>(new char[BUF_SIZE])},
@@ -44,7 +44,7 @@ Sha1Calculator::Sha1Calculator(const utility::string_t& filename):
 {
     if (!_is)
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"Cannot open file"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("Cannot open file")});
     }
 }
 
@@ -92,13 +92,13 @@ Sha1Calculator::doStart ()
             if ((_is.rdstate() & std::ifstream::eofbit) == 0 &&
                 (_is.rdstate() & std::ifstream::failbit) != 0)
             {
-                BOOST_THROW_EXCEPTION(ErrorException{"Error reading file"});
+                BOOST_THROW_EXCEPTION(ErrorException{U("Error reading file")});
             }
 
             auto read = _is.gcount();
             if (read > 0)
             {
-                SHA1_Update(&ctx, _buf.get(), read);
+                SHA1_Update(&ctx, _buf.get(), static_cast<std::size_t>(read));
                 processed += read;
                 count += 1;
             }
@@ -108,7 +108,7 @@ Sha1Calculator::doStart ()
                 auto result = _progress->onCallback(0, 0, _fileSize, processed);
                 if (result == CURLE_ABORTED_BY_CALLBACK)
                 {
-                    BOOST_THROW_EXCEPTION(ErrorException{"Calculation canceled"});
+                    BOOST_THROW_EXCEPTION(ErrorException{U("Calculation canceled")});
                 }
                 while (_progress->isPaused())
                 {
