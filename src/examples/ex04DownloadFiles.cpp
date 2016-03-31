@@ -2,6 +2,7 @@
 #include <giga/core/Downloader.h>
 #include <cpprest/details/basic_types.h>
 
+using giga::Config;
 using giga::Application;
 using giga::core::Downloader;
 using boost::filesystem::path;
@@ -10,10 +11,11 @@ using utility::string_t;
 
 int main(int, char**)
 {
-    auto& app = Application::init(
-                        string_t(U("http://localhost:5001")),
-                        string_t(U("1142f21cf897")),
-                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+    Config::init(string_t(U("http://localhost:5001")),
+                    string_t(U("1142f21cf897")),
+                    string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+
+    Application app;
     auto owner = app.authenticate(U("test_main"), U("password"));
     ucout << U("Hello ") << owner.login() << U(" your id is ") << owner.id() << std::endl;
 
@@ -22,7 +24,7 @@ int main(int, char**)
     auto ebook = app.getNodeById("56deee4b35e5df98038b4587");
 
     // create the downloader
-    Downloader downloader{};
+    Downloader downloader{app};
     downloader.addDownload(std::move(ebook), path{U("./")});
 
     // start the download and wait for it to finish

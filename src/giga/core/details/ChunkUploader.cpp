@@ -124,14 +124,15 @@ namespace details
 {
 
 ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const std::string& sha1, const string_t& filename,
-                              const string_t& mime, details::CurlProgress* progress) :
-               _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), GigaApi::getOAuthConfig()->token().access_token()).to_uri()},
+                              const string_t& mime, details::CurlProgress* progress, const Application& app) :
+               _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), app.api().getOAuthConfig()->token().access_token()).to_uri()},
                _nodeName{nodeName},
                _sha1{sha1},
                _filename{filename},
                _mime{mime},
                _fileSize{file_size(filename)},
-               _progress{progress}
+               _progress{progress},
+               _app(&app)
 {
 }
 
@@ -191,12 +192,12 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     {
         auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
-        GIGA_DEBUG_LOG(upUri);
+        GIGA_DEBUG_LOG(_uploadUrl.to_uri().to_string());
         curl.add<CURLOPT_URL>(upUri.c_str());
     }
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
-    curl.add<CURLOPT_XFERINFODATA>(_progress);
+    curl.add<CURLOPT_PROGRESSDATA>(_progress);
     curl.add<CURLOPT_NOPROGRESS>(0L);
 
     curl.add<CURLOPT_POST>(1L);
@@ -205,7 +206,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     curl.add<CURLOPT_READFUNCTION>(&readCallback);
     curl.add<CURLOPT_READDATA>(&data);
 
-    auto userId = Application::get().currentUser().id();
+    auto userId = _app->currentUser().id();
     curl_slist* list = nullptr;
     try {
         {

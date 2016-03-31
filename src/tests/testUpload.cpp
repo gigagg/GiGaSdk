@@ -30,13 +30,13 @@ using namespace giga;
 using namespace giga::core;
 
 BOOST_AUTO_TEST_CASE(test_upload_file) {
-    auto& app = Application::init(
-                        string_t(U("http://localhost:5001")),
-                        string_t(U("1142f21cf897")),
-                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+    Config::init(string_t(U("http://localhost:5001")),
+                 string_t(U("1142f21cf897")),
+                 string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+    Application app;
     auto owner = app.authenticate(U("test_main"), U("password"));
     auto uploadFolder = owner.contactData().node();
-    Uploader uploader{};
+    Uploader uploader{app};
     uploader.addUpload(uploadFolder, boost::filesystem::path{U(GIGA_ROOT)} / U("src/tests/files"));
     uploader.start();
     uploader.join();

@@ -131,14 +131,6 @@ struct User {
         GIGA_MANAGE(m, dlAvailable);
         GIGA_MANAGE(m, starCount);
     }
-
-//    ~User() {
-//        std::cout << U("DELETE USER") << std::endl;
-//    };
-//    User () = default;
-//    User (const User&) = default;
-//    User (User&&) = default;
-//    User& operator= (User&&) = default;
 };
 
 } /* namespace data */

@@ -54,7 +54,7 @@ public:
 };
 
 HttpClient::HttpClient () :
-        _http (Application::config().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()}
+        _http (Config::get().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()}
 {
 }
 
@@ -75,7 +75,7 @@ struct Redirect {
 void
 HttpClient::authenticate (const string_t& login, const string_t& password)
 {
-    const auto& conf = Application::get().config();
+    const auto& conf = Config::get();
     oauth2_config m_oauth2_config(conf.appId(), conf.appKey(), conf.appOauthAuthorizationEndpoint(),
                                   conf.appOauthTokenEndpoint(), conf.appRedirectUri());
 
@@ -100,7 +100,7 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
         onRequest<Empty>(response);
         auto headers = response.headers();
 
-        const auto& conf = Application::get().config();
+        const auto& conf = Config::get();
         auto body = JsonObj{};
         body.add(U("oauth"), string_t(U("true")));
         body.add(U("response_type"), string_t(U("code")));
@@ -132,7 +132,7 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     // regenerate client, with the oauth2 config.
     auto config = getConfig();
     config.set_oauth2(m_oauth2_config);
-    _http = {Application::config().apiHost(), config};
+    _http = {Config::get().apiHost(), config};
     _rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{3600};
 }
 

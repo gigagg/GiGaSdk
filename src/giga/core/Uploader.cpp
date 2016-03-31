@@ -38,9 +38,10 @@ namespace giga
 namespace core
 {
 
-Uploader::Uploader(ProgressUpload clbUp, ProgressPreparation clbPrep):
+Uploader::Uploader(const Application& app, ProgressUpload clbUp, ProgressPreparation clbPrep):
     _preparing{nullptr},
     _uploading{pplx::create_task([]() -> std::shared_ptr<Node> {return nullptr;})},
+    _cancelTokenSrc{},
     _mainTask{},
     _isStarted{false},
     _mut{},
@@ -50,7 +51,8 @@ Uploader::Uploader(ProgressUpload clbUp, ProgressPreparation clbPrep):
     _upCount{0},
     _isFinished{false},
     _progressUp{clbUp},
-    _progressPrep{clbPrep}
+    _progressPrep{clbPrep},
+    _app(&app)
 {
 }
 
@@ -118,14 +120,14 @@ Uploader::start()
             }
         }
         return _uploading;
-    }).then([this](pplx::task<std::shared_ptr<Node>> _uploading) {
+    }, _cancelTokenSrc.get_token()).then([this](pplx::task<std::shared_ptr<Node>> _uploading) {
         {
             std::lock_guard<std::mutex> l{_mut};
             _isPreparationFinished = true;
         }
         _uploading.get();
         _isFinished = true;
-    });
+    }, _cancelTokenSrc.get_token());
 
     auto progressTask = pplx::create_task([this]() {
         while(!_isFinished)
@@ -160,6 +162,19 @@ Uploader::join()
         _queue.enqueue(nullptr);
         _mainTask.wait();
         _isStarted = false;
+    }
+}
+
+void
+Uploader::kill()
+{
+    if (_isStarted)
+    {
+        std::unique_ptr<QueueElement> element = nullptr;
+        while(_queue.try_dequeue(element)){}
+        _queue.enqueue(nullptr);
+        _cancelTokenSrc.cancel();
+        join();
     }
 }
 

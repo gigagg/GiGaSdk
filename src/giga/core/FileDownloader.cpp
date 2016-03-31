@@ -19,6 +19,7 @@
 #include "FileNode.h"
 #include "details/CurlWriter.h"
 #include "details/CurlProgress.h"
+#include "../Application.h"
 #include "../api/GigaApi.h"
 #include "../rest/HttpErrors.h"
 #include "../utils/Utils.h"
@@ -68,9 +69,10 @@ namespace giga
 namespace core
 {
 
-FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, Policy policy) :
+FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, const Application& app, Policy policy) :
         FileTransferer{}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
-        _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy}
+        _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy},
+        _app(&app)
 {
     if (!is_directory(folder))
     {
@@ -124,7 +126,8 @@ FileDownloader::FileDownloader (FileDownloader&& other) :
                 _fileSize{other._fileSize},
                 _startAt{other._startAt},
                 _lastUpdateDate{other._lastUpdateDate},
-                _policy{other._policy}
+                _policy{other._policy},
+                _app{_app}
 {
 }
 
@@ -152,7 +155,7 @@ FileDownloader::doStart()
     auto progress = _progress.get();
 
     uri_builder b{_fileUri};
-    b.append_query(U("access_token"), GigaApi::getOAuthConfig()->token().access_token());
+    b.append_query(U("access_token"), _app->api().getOAuthConfig()->token().access_token());
     auto fileUri = b.to_uri();
 
     auto ignore = false;
@@ -170,7 +173,7 @@ FileDownloader::doStart()
     }
     else
     {
-        _task = GigaApi::refreshToken().then([tempFile, fileUri, progress, fileSize]() {
+        _task = _app->api().refreshToken().then([tempFile, fileUri, progress, fileSize]() {
             try {
                 details::CurlWriter writer{tempFile};
 

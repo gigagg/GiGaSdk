@@ -142,10 +142,10 @@ int main(int argc, const char* argv[]) {
         }
         po::notify(vm);
 
-        auto& app = Application::init(
-                        string_t(U("http://localhost:5001")),
-                        string_t(U("1142f21cf897")),
-                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+        Config::init(string_t(U("http://localhost:5001")),
+                     string_t(U("1142f21cf897")),
+                     string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+        Application app;
 
         auto login = vm["login"].as<string_t>();
         string_t password;
@@ -236,6 +236,7 @@ int main(int argc, const char* argv[]) {
                     BOOST_THROW_EXCEPTION(ErrorException{ U("Node must be a folder")});
                 }
                 core::Uploader uploader {
+                    app,
                     [](core::FileUploader& fd, uint64_t count, uint64_t) {
                         ucout << count << " "
                                   << std::setprecision(3) << fd.progress().percent() << "% - "
@@ -264,6 +265,7 @@ int main(int argc, const char* argv[]) {
 
                 ucout << std::endl;
                 core::Downloader dl {
+                    app,
                     [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
                         auto percent = ((double) size * 100) / (double) totalSize;
                         (ucout << "                                                      \r").flush();

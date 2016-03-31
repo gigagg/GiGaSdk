@@ -17,7 +17,6 @@
 #include "User.h"
 #include "../Application.h"
 #include "../api/data/User.h"
-#include "../api/NetworkApi.h"
 #include "../api/data/UsersRelation.h"
 #include "../utils/Crypto.h"
 #include "../utils/EnumConvertor.h"
@@ -49,13 +48,31 @@ namespace core
 
 #define _THROW_IF_NO_USER_ if (_data == nullptr) { BOOST_THROW_EXCEPTION(ErrorException{U("User is not set")}); } do {} while(0)
 
-User::User (std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r) :
-        _data{u}, _relation{r},_private{}, _protected{}, _publicKey{}
+User::User (std::shared_ptr<data::User> u, const Application& app, std::shared_ptr<data::UsersRelation> r) :
+        _data{u}, _relation{r},_private{}, _protected{}, _publicKey{}, _app(&app)
 {
     _THROW_IF_NO_USER_;
     if (u != nullptr && u->publicKey.is_initialized()) {
         _publicKey = boost::make_optional(Rsa(u->publicKey.get()));
     }
+}
+
+User&
+User::operator=(const User& rhs)
+{
+    this->_data     = rhs._data;
+    this->_relation = rhs._relation;
+    this->_app      = rhs._app;
+    return *this;
+}
+
+User&
+User::operator=(User&& rhs) noexcept
+{
+    this->_data     = std::move(rhs._data);
+    this->_relation = std::move(rhs._relation);
+    this->_app      = rhs._app;
+    return *this;
 }
 
 uint64_t
@@ -149,8 +166,8 @@ User::language () const
     return Language{_data->language.get_value_or(U("en"))};
 }
 
-User::ContactData::ContactData (std::shared_ptr<data::User> u) :
-        _data{u}, _root{_data->node}
+User::ContactData::ContactData (std::shared_ptr<data::User> u, const Application &app) :
+        _data{u}, _root{_data->node, app}
 {
 }
 
@@ -302,9 +319,15 @@ User::hasContactData () const
 User::ContactData&
 User::contactData ()
 {
-    if(hasContactData()) {
-        if (!_protected.is_initialized()) {
-            _protected = boost::make_optional(ContactData{_data});
+    if(hasContactData())
+    {
+        if (!_protected.is_initialized())
+        {
+            if (_app == nullptr)
+            {
+                BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+            }
+            _protected = boost::make_optional(ContactData{_data, *_app});
         }
         return _protected.get();
     }
@@ -364,25 +387,36 @@ User::invite ()
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("PublicKey is needed")});
     }
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
     // TODO: groupIds ...
-    auto& user = Application::get().currentUser();
+    auto& user = _app->currentUser();
     auto key = Crypto::base64encode(_publicKey.get().encrypt(user.personalData().nodeKeyClear()));
-    auto r = NetworkApi::createUserRelation(user.id(), id(), U("INVITE"), U("UNKNOWN"), key).get();
-    return User{r->user, r};
+    auto r = _app->api().network.createUserRelation(user.id(), id(), U("INVITE"), U("UNKNOWN"), key).get();
+    return User{r->user, *_app, r};
 }
 
 User
 User::block ()
 {
-    auto& app = Application::get();
-    auto r =  NetworkApi::createUserRelation(app.currentUser().id(), id(), U("BLOCK"), U(""), "").get();
-    return User{r->user, r};
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    auto r =  _app->api().network.createUserRelation(_app->currentUser().id(), id(), U("BLOCK"), U(""), "").get();
+    return User{r->user, *_app, r};
 }
 
 void
 User::suggest (const User& contact)
 {
-    auto r = NetworkApi::createUserRelation(id(), contact.id(), U("SHOULD_INVITE"), U(""), "").get();
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    auto r = _app->api().network.createUserRelation(id(), contact.id(), U("SHOULD_INVITE"), U(""), "").get();
 }
 
 User
@@ -392,10 +426,14 @@ User::acceptInvitation ()
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("PublicKey is needed")});
     }
-    auto& user = Application::get().currentUser();
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    auto& user = _app->currentUser();
     auto key = Crypto::base64encode(_publicKey.get().encrypt(user._private.get().nodeKeyClear()));
-    auto r = NetworkApi::createUserRelation(user.id(), id(), U("CONTACT"), U(""), key).get();
-    return User{r->user, r};
+    auto r = _app->api().network.createUserRelation(user.id(), id(), U("CONTACT"), U(""), key).get();
+    return User{r->user, *_app, r};
 }
 
 void
@@ -405,8 +443,12 @@ User::removeRelation ()
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("No relation to remove")});
     }
-    auto& user = Application::get().currentUser();
-    NetworkApi::deleteUserRelation(user.id(), id(), _relation->type).get();
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    auto& user = _app->currentUser();
+    _app->api().network.deleteUserRelation(user.id(), id(), _relation->type).get();
 
     // remove relation and cache.
     this->_relation  = nullptr;

@@ -26,6 +26,8 @@
 
 namespace giga
 {
+class Application;
+
 namespace core
 {
 class Node;
@@ -71,7 +73,7 @@ public:
      * @param policy what to do if a file with the same name already exists
      */
     explicit
-    FileDownloader (const boost::filesystem::path& folderDest, const Node& node, Policy policy = Policy::ignore);
+    FileDownloader (const boost::filesystem::path& folderDest, const Node& node, const Application& app, Policy policy = Policy::ignore);
     virtual ~FileDownloader();
     FileDownloader (FileDownloader&& other);
 
@@ -119,7 +121,8 @@ private:
     uint64_t                 _fileSize;
     uint64_t                 _startAt;
     std::chrono::system_clock::time_point _lastUpdateDate;
-    Policy                  _policy;
+    Policy                   _policy;
+    const Application*       _app;
 };
 
 } /* namespace core */

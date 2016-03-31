@@ -36,11 +36,11 @@ public:
 
 public:
     HttpClient ();
-    ~HttpClient ()                            = default;
-    HttpClient (const HttpClient&)            = delete;
-    HttpClient (HttpClient&&)                 = delete;
-    HttpClient& operator= (const HttpClient&) = delete;
-    HttpClient& operator= (HttpClient&&)      = delete;
+    ~HttpClient ()                              = default;
+    HttpClient (const HttpClient&)              = delete;
+    HttpClient (HttpClient&&)                   = delete;
+    HttpClient& operator= (const HttpClient&)   = delete;
+    HttpClient& operator= (HttpClient&&)        = delete;
 
 private:
     template<int unsigned short TStatus>
@@ -61,7 +61,7 @@ public:
 
     template<typename T>
     web::uri_builder
-    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = U(""))
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = U("")) const
     {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
@@ -75,7 +75,7 @@ public:
 
     template<typename T, typename U>
     web::uri_builder
-    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource, const U& subId)
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource, const U& subId) const
     {
         utility::ostringstream_t ss;
         ss.imbue(std::locale::classic());
@@ -115,14 +115,14 @@ public:
 
     template<typename T>
     std::shared_ptr<T>
-    onRequestPtr (web::http::http_response response)
+    onRequestPtr (web::http::http_response response) const
     {
         return onRequest<std::shared_ptr<T>>(response);
     }
 
     template<typename T>
     T
-    onRequest (web::http::http_response response)
+    onRequest (web::http::http_response response) const
     {
         auto headers = response.headers();
         auto ctype = headers.find(U("Content-Type"));

@@ -42,8 +42,8 @@ public:
     };
 
 private:
-    FileNodeData()                                = default;
-    explicit FileNodeData(std::shared_ptr<data::Node> n);
+    FileNodeData()                                = delete;
+    explicit FileNodeData(std::shared_ptr<data::Node> n, const Application& app);
 
 public:
     ~FileNodeData()                               = default;
@@ -106,6 +106,7 @@ public:
 
 private:
     std::shared_ptr<data::Node> n;
+    const Application*          _app;
 };
 
 class FileNode final : public Node
@@ -116,7 +117,7 @@ public:
     FileNode(FileNode&&)              = default;
     FileNode& operator=(FileNode&&)   = default;
 
-    explicit FileNode(std::shared_ptr<data::Node> n);
+    explicit FileNode(std::shared_ptr<data::Node> n, const Application& app);
     FileNode(const FileNode&);
     FileNode& operator=(const FileNode&);
 

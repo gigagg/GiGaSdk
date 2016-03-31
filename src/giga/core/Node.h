@@ -30,6 +30,7 @@
 
 namespace giga
 {
+class Application;
 
 namespace data
 {
@@ -71,13 +72,13 @@ public:
     Node& operator=(const Node& rhs);
 
     static std::unique_ptr<Node>
-    create(std::shared_ptr<data::Node> n);
+    create(std::shared_ptr<data::Node> n, const Application& app);
 
     static std::unique_ptr<Node>
-    create(const Node& n);
+    create(const Node& node);
 
 protected:
-    explicit Node(std::shared_ptr<data::Node> n);
+    explicit Node(std::shared_ptr<data::Node> n, const Application& app);
 
 public:
     const std::string&
@@ -198,6 +199,7 @@ public:
 
 protected:
     std::shared_ptr<data::Node> _data;
+    const Application*          _app;
 };
 
 } /* namespace core */

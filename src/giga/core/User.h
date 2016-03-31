@@ -100,10 +100,10 @@ public:
     ~User()                       = default;
     User(User&&)                  = default;
     User(const User&)             = default;
-    User& operator=(const User&)  = default;
-    User& operator=(User&&)       = default;
+    User& operator=(const User&);
+    User& operator=(User&& rhs) noexcept;
 
-    explicit User(std::shared_ptr<data::User> u, std::shared_ptr<data::UsersRelation> r = nullptr);
+    explicit User(std::shared_ptr<data::User> u, const Application& app, std::shared_ptr<data::UsersRelation> r = nullptr);
 
 public:
     uint64_t
@@ -173,7 +173,7 @@ public:
         ContactData& operator=(ContactData&&)      = default;
 
     private:
-        explicit ContactData(std::shared_ptr<data::User> u);
+        explicit ContactData(std::shared_ptr<data::User> u, const Application& app);
 
     public:
         UserGender
@@ -370,6 +370,7 @@ private:
     boost::optional<PersonalData>        _private;
     boost::optional<ContactData>         _protected;
     boost::optional<giga::Rsa>           _publicKey;
+    const Application*                   _app = nullptr;
 };
 
 } /* namespace core */

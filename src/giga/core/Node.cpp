@@ -17,13 +17,14 @@
 #include "Node.h"
 #include "FileNode.h"
 #include "FolderNode.h"
+#include "../Application.h"
 #include "../api/data/Node.h"
-#include "../api/NodesApi.h"
 #include "../rest/HttpErrors.h"
 #include "../utils/EnumConvertor.h"
 #include "../utils/Utils.h"
 
 #include <boost/filesystem.hpp>
+#include <giga/Application.h>
 #include <chrono>
 #include <string>
 
@@ -45,14 +46,14 @@ namespace core
 {
 
 std::unique_ptr<Node>
-Node::create (std::shared_ptr<data::Node> n)
+Node::create (std::shared_ptr<data::Node> n, const Application& app)
 {
     switch (typeCvrt.fromStr(n->type)) {
         case Type::file:
-            return std::unique_ptr<Node>{new FileNode{n}};
+            return std::unique_ptr<Node>{new FileNode{n, app}};
         case Type::folder:
         case Type::root:
-            return std::unique_ptr<Node>{new FolderNode{n}};
+            return std::unique_ptr<Node>{new FolderNode{n, app}};
     }
     BOOST_THROW_EXCEPTION(ErrorException{U("unreachable")});
 }
@@ -60,29 +61,34 @@ Node::create (std::shared_ptr<data::Node> n)
 std::unique_ptr<Node>
 Node::create (const Node& node)
 {
+    if (node._app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
     switch (typeCvrt.fromStr(node._data->type)) {
         case Type::file:
-            return std::unique_ptr<Node>{new FileNode{node._data}};
+            return std::unique_ptr<Node>{new FileNode{node._data, *node._app}};
         case Type::folder:
         case Type::root:
-            return std::unique_ptr<Node>{new FolderNode{node._data}};
+            return std::unique_ptr<Node>{new FolderNode{node._data, *node._app}};
     }
     BOOST_THROW_EXCEPTION(ErrorException{U("unreachable")});
 }
 
-Node::Node (std::shared_ptr<data::Node> n)  :
-_data(n)
+Node::Node (std::shared_ptr<data::Node> n, const Application& app)  :
+        _data{n}, _app(&app)
 {
     _THROW_IF_NO_NODE_;
 }
 
 Node::Node(const Node& rhs) :
-        _data(nullptr)
+        _data(nullptr), _app(rhs._app)
 {
     if (rhs._data != nullptr)
     {
         _data = std::make_shared<data::Node>(*rhs._data);
     }
+    _app = rhs._app;
 }
 
 Node&
@@ -92,6 +98,7 @@ Node::operator=(const Node& rhs)
     {
         _data = std::make_shared<data::Node>(*rhs._data);
     }
+    _app = rhs._app;
     return *this;
 }
 
@@ -174,7 +181,11 @@ Node::size () const
 void
 Node::remove()
 {
-    NodesApi::deleteNode(id()).get();
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    _app->api().nodes.deleteNode(id()).get();
     _data->id = "";
 }
 
@@ -185,7 +196,11 @@ Node::rename(const string_t& name)
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Name is not valid")});
     }
-    auto node = NodesApi::renameNode(id(), name).get();
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    auto node = _app->api().nodes.renameNode(id(), name).get();
     _data->name = node->name;
     return node->name;
 }

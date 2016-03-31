@@ -41,8 +41,8 @@ namespace core
         BOOST_THROW_EXCEPTION(ErrorException{U(#name " is not initialized")});    \
     } do {} while(0)                                        \
 
-FileNodeData::FileNodeData(std::shared_ptr<data::Node> n) :
-        n{n}
+FileNodeData::FileNodeData(std::shared_ptr<data::Node> n, const Application& app) :
+        n{n}, _app(&app)
 {
     THROW_IF_NOT_INITIALIZED(url);
     THROW_IF_NOT_INITIALIZED(mimeType); // application/octet-stream
@@ -115,7 +115,11 @@ FileNodeData::posterUrl () const
 uri
 FileNodeData::fileUrl () const
 {
-    auto nodeKey = utils::str2wstr(Application::get().getNodeKeyClear(n->ownerId));
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    auto nodeKey = utils::str2wstr(_app->getNodeKeyClear(n->ownerId));
     return uri{utils::httpsPrefix(n->url.get()) + web::uri::encode_data_string(nodeKey)};
 }
 
@@ -124,13 +128,13 @@ FileNodeData::fileUrl () const
 //
 
 
-FileNode::FileNode (std::shared_ptr<data::Node> n) :
-        Node(n), _fileData(n)
+FileNode::FileNode (std::shared_ptr<data::Node> n, const Application& app) :
+        Node(n, app), _fileData(n, app)
 {
 }
 
 FileNode::FileNode(const FileNode& rhs) :
-        Node(rhs), _fileData{rhs._data}
+        Node(rhs), _fileData{rhs._data, *rhs._app}
 {
 }
 
@@ -138,7 +142,7 @@ FileNode&
 FileNode::operator=(const FileNode& rhs)
 {
     Node::operator =(rhs);
-    _fileData = FileNodeData{rhs._data};
+    _fileData = FileNodeData{rhs._data, *rhs._app};
     return *this;
 }
 
@@ -172,7 +176,11 @@ FileNode::uploadFile(const string_t&)
 FileDownloader
 FileNode::download(const string_t& destinationPath, FileDownloader::Policy policy)
 {
-    return FileDownloader{destinationPath, *this, policy};
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+    return FileDownloader{destinationPath, *this, *_app, policy};
 }
 
 const FileNodeData&

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "UsersApi.h"
+#include "GigaApi.h"
 #include "data/User.h"
 #include "data/UserExists.h"
 #include "../utils/Crypto.h"
@@ -30,37 +30,37 @@ namespace giga
 using namespace data;
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::getCurrentUser ()
+GigaApi::UsersApi::getCurrentUser () const
 {
-    auto uri = client().uri (U("me"));
-    return client().request<User> (methods::GET, uri);
+    auto uri = api.client.uri (U("me"));
+    return api.client.request<User> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<std::vector<string_t>>>
-UsersApi::searchTag (const string_t& name)
+GigaApi::UsersApi::searchTag (const string_t& name) const
 {
-    auto uri = client().uri (U("tags"));
+    auto uri = api.client.uri (U("tags"));
     uri.append_query (U("name"), name);
-    return client().request<std::vector<string_t>> (methods::GET, uri);
+    return api.client.request<std::vector<string_t>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<UserExists>>
-UsersApi::userExists (const string_t& login, const string_t& email /* = U("")*/)
+GigaApi::UsersApi::userExists (const string_t& login, const string_t& email /* = U("")*/) const
 {
-    auto uri = client().uri (U("userexists"));
+    auto uri = api.client.uri (U("userexists"));
     if (!login.empty()) {
         uri.append_query (U("login"), login);
     }
     if (!email.empty()) {
         uri.append_query (U("email"), email);
     }
-    return client().request<UserExists> (methods::GET, uri);
+    return api.client.request<UserExists> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::User>>>>
-UsersApi::searchUsers (const string_t& search, const string_t& activity, const string_t& isSeeder)
+GigaApi::UsersApi::searchUsers (const string_t& search, const string_t& activity, const string_t& isSeeder) const
 {
-    auto uri = client().uri (U("users"));
+    auto uri = api.client.uri (U("users"));
     uri.append_query (U("search"), search);
     if (activity != U(""))
     {
@@ -70,31 +70,31 @@ UsersApi::searchUsers (const string_t& search, const string_t& activity, const s
     {
         uri.append_query (U("isSeeder"), isSeeder);
     }
-    return client().request<std::vector<std::shared_ptr<data::User>>> (methods::GET, uri);
+    return api.client.request<std::vector<std::shared_ptr<data::User>>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::getUserById (uint64_t userId)
+GigaApi::UsersApi::getUserById (uint64_t userId) const
 {
-    auto uri = client().uri (U("users"), userId);
-    return client().request<User> (methods::GET, uri);
+    auto uri = api.client.uri (U("users"), userId);
+    return api.client.request<User> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::getUserByLogin (const string_t& login)
+GigaApi::UsersApi::getUserByLogin (const string_t& login) const
 {
-    auto uri = client().uri (U("users"));
+    auto uri = api.client.uri (U("users"));
     uri.append_query(U("login"), login);
-    return client().request<User> (methods::GET, uri);
+    return api.client.request<User> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUser (uint64_t userId, const string_t& email, bool isValidation, const string_t& gender, const string_t& name,
+GigaApi::UsersApi::updateUser (uint64_t userId, const string_t& email, bool isValidation, const string_t& gender, const string_t& name,
                       const string_t& description, const string_t& birthdate, const string_t& avatar,
                       const string_t& currentPassword, const string_t& password, const string_t& clue,
-                      const string_t& privateKey, const string_t& iv, const string_t& salt)
+                      const string_t& privateKey, const string_t& iv, const string_t& salt) const
 {
-    auto uri = client().uri (U("users"), userId);
+    auto uri = api.client.uri (U("users"), userId);
     auto body = JsonObj{};
     body.add (U("email"), email);
     body.add (U("isValidation"), isValidation);
@@ -109,25 +109,25 @@ UsersApi::updateUser (uint64_t userId, const string_t& email, bool isValidation,
     body.add (U("privateKey"), privateKey);
     body.add (U("iv"), iv);
     body.add (U("salt"), salt);
-    return client().request<User> (methods::POST, uri, std::move(body));
+    return api.client.request<User> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUserAddTag (uint64_t userId, const string_t& name)
+GigaApi::UsersApi::updateUserAddTag (uint64_t userId, const string_t& name) const
 {
-    auto uri = client().uri (U("users"), userId, U("tags"), userId);
+    auto uri = api.client.uri (U("users"), userId, U("tags"), userId);
     auto body = JsonObj{};
     body.add (U("name"), name);
-    return client().request<User> (methods::POST, uri, std::move(body));
+    return api.client.request<User> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<User>>
-UsersApi::updateUserRemoveTag (uint64_t userId, const string_t& name)
+GigaApi::UsersApi::updateUserRemoveTag (uint64_t userId, const string_t& name) const
 {
-    auto uri = client().uri (U("users"), userId, U("tags"), userId);
+    auto uri = api.client.uri (U("users"), userId, U("tags"), userId);
     auto body = JsonObj{};
     body.add (U("name"), name);
-    return client().request<User> (methods::DEL, uri, std::move(body));
+    return api.client.request<User> (methods::DEL, uri, std::move(body));
 }
 
 } // namespace giga

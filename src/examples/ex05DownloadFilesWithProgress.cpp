@@ -2,6 +2,7 @@
 #include <giga/core/Downloader.h>
 #include <iomanip>
 
+using giga::Config;
 using giga::Application;
 using giga::core::Downloader;
 using giga::core::FileDownloader;
@@ -11,10 +12,11 @@ using utility::string_t;
 
 int main(int, char**)
 {
-    auto& app = Application::init(
-                        string_t(U("http://localhost:5001")),
-                        string_t(U("1142f21cf897")),
-                        string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+    Config::init(string_t(U("http://localhost:5001")),
+                    string_t(U("1142f21cf897")),
+                    string_t(U("65934eaddb0b233dddc3e85f941bc27e")));
+
+    Application app;
     auto owner = app.authenticate(U("test_main"), U("password"));
     ucout << U("Hello ") << owner.login() << U(" your id is ") << owner.id() << std::endl;
 
@@ -37,7 +39,7 @@ int main(int, char**)
                   << fileDownloader.destinationFile().filename().native();
     };
 
-    Downloader downloader{progress};
+    Downloader downloader{app, progress};
     downloader.addDownload(std::move(comics), path{U("./")});
     downloader.start();
     downloader.join();

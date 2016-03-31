@@ -22,7 +22,6 @@
 #include "../api/data/Node.h"
 #include "../api/data/DataNode.h"
 #include "../api/data/User.h"
-#include "../api/NodesApi.h"
 #include "../utils/Crypto.h"
 #include "../utils/Utils.h"
 
@@ -76,7 +75,8 @@ namespace core
 {
 
 FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const std::string& parentId,
-                            const std::string& sha1, const std::string& fid, const std::string& fkey) :
+                            const std::string& sha1, const std::string& fid, const std::string& fkey,
+                            const Application& app) :
         FileTransferer{},
         _task{},
         _filename{filename},
@@ -85,7 +85,8 @@ FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, 
         _sha1{sha1},
         _fid{fid},
         _fkey{fkey},
-        _fileSize{boost::filesystem::file_size(filename)}
+        _fileSize{boost::filesystem::file_size(filename)},
+        _app(&app)
 {
 }
 
@@ -98,18 +99,20 @@ FileUploader::doStart ()
     auto sha1       = _sha1;
     auto fid        = _fid;
     auto fkey       = _fkey;
-    auto nodeKeyCl  = Application::get().currentUser().personalData().nodeKeyClear();
+    auto nodeKeyCl  = _app->currentUser().personalData().nodeKeyClear();
     auto cts        = _cts;
     auto progress   = _progress.get();
+    auto app        = _app;
 
-    _task = GigaApi::refreshToken().then([=] {
+
+    _task = _app->api().refreshToken().then([=] {
         try {
 
             //
             // Test if the file is on giga (and add it if possible)
             //
 
-            auto res = NodesApi::addNode(nodeName, U("file"), parentId, fkey, fid).get();
+            auto res = app->api().nodes.addNode(nodeName, U("file"), parentId, fkey, fid).get();
             return std::shared_ptr<data::Node>{std::move(res->data)};
         } catch (const ErrorNotFound& e) {
 
@@ -120,7 +123,7 @@ FileUploader::doStart ()
             if (e.getJson().has_field(U("uploadUrl"))) {
                 auto uploadUrl = e.getJson().at(U("uploadUrl")).as_string();
                 auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(utils::str2wstr(nodeKeyCl))});
-                ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress};
+                ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress, *app};
                 return ch.upload();
             }
             throw;
@@ -137,7 +140,7 @@ FileUploader::doStart ()
             throw;
         }
     }).then([=] (std::shared_ptr<data::Node> n) {
-        return std::shared_ptr<Node>(Node::create(n).release());
+        return std::shared_ptr<Node>(Node::create(n, *app).release());
     });
 }
 

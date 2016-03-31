@@ -18,7 +18,6 @@
 #include "../Application.h"
 #include "../api/data/Node.h"
 #include "../api/data/DataNode.h"
-#include "../api/NodesApi.h"
 
 #include <boost/filesystem.hpp>
 #include <pplx/pplxtasks.h>
@@ -31,11 +30,11 @@ using utility::string_t;
 namespace {
 
 void
-regenerateChildren(std::vector<std::unique_ptr<giga::core::Node>>& chld, std::shared_ptr<giga::data::Node> n)
+regenerateChildren(std::vector<std::unique_ptr<giga::core::Node>>& chld, std::shared_ptr<giga::data::Node> n, const giga::Application* app)
 {
     chld.resize(n->nodes.size());
-    std::transform (n->nodes.begin(), n->nodes.end(), chld.begin(), [](const std::shared_ptr<giga::data::Node>& data) {
-        return giga::core::Node::create(data);
+    std::transform (n->nodes.begin(), n->nodes.end(), chld.begin(), [app](const std::shared_ptr<giga::data::Node>& data) {
+        return giga::core::Node::create(data, *app);
     });
 }
 
@@ -46,23 +45,23 @@ namespace giga
 namespace core
 {
 
-FolderNode::FolderNode (std::shared_ptr<data::Node> n) :
-        Node(n), _children{}
+FolderNode::FolderNode (std::shared_ptr<data::Node> n, const Application& app) :
+        Node(n, app), _children{}
 {
-    regenerateChildren(_children, n);
+    regenerateChildren(_children, n, _app);
 }
 
 FolderNode::FolderNode(const FolderNode& rhs) :
         Node(rhs), _children{}
 {
-    regenerateChildren(_children, rhs._data);
+    regenerateChildren(_children, rhs._data, _app);
 }
 
 FolderNode&
 FolderNode::operator=(const FolderNode& rhs)
 {
     Node::operator=(rhs);
-    regenerateChildren(_children, rhs._data);
+    regenerateChildren(_children, rhs._data, _app);
     return *this;
 }
 
@@ -71,11 +70,16 @@ FolderNode::getChildren() const
 {
     if (nbChildren() > 0 && _children.size() < nbChildren())
     {
-        auto results = NodesApi::getChildrenNode(id()).get();
+        if (_app == nullptr)
+        {
+            BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+        }
 
+        auto results = _app->api().nodes.getChildrenNode(id()).get();
+        auto app = _app;
         _children.resize(results->size());
-        std::transform (results->begin(), results->end(), _children.begin(), [](const data::Node& data) {
-            return Node::create(std::make_shared<data::Node>(data));
+        std::transform (results->begin(), results->end(), _children.begin(), [app](const data::Node& data) {
+            return Node::create(std::make_shared<data::Node>(data), *app);
         });
     }
     return _children;
@@ -84,8 +88,13 @@ FolderNode::getChildren() const
 FolderNode&
 FolderNode::addChildFolder(const string_t& name)
 {
-    auto result = NodesApi::addFolderNode(name, id()).get();
-    _children.push_back(Node::create(std::make_shared<data::Node>(*result->data.release())));
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+
+    auto result = _app->api().nodes.addFolderNode(name, id()).get();
+    _children.push_back(Node::create(std::make_shared<data::Node>(*result->data.release()), *_app));
     _data->nbChildren += 1;
     return static_cast<FolderNode&>(*_children.back());
 }
@@ -93,8 +102,13 @@ FolderNode::addChildFolder(const string_t& name)
 FolderNode
 FolderNode::createChildFolder(const utility::string_t& name) const
 {
-    auto result = NodesApi::addFolderNode(name, id()).get();
-    return FolderNode{std::make_shared<data::Node>(*result->data.release())};
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+
+    auto result = _app->api().nodes.addFolderNode(name, id()).get();
+    return FolderNode{std::make_shared<data::Node>(*result->data.release()), *_app};
 }
 
 namespace fs = boost::filesystem;
@@ -102,6 +116,11 @@ namespace fs = boost::filesystem;
 Node::UploadingFile
 FolderNode::uploadFile(const string_t& filepath)
 {
+    if (_app == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
+    }
+
     auto path = fs::path{filepath};
     if (!fs::exists(path) || !fs::is_regular_file(path))
     {
@@ -110,18 +129,19 @@ FolderNode::uploadFile(const string_t& filepath)
 
     auto parentId = this->id();
     auto nodeName = path.filename().native();
-    auto nodeKeyClear = Application::get().currentUser().personalData().nodeKeyClear();
+    auto nodeKeyClear = _app->currentUser().personalData().nodeKeyClear();
 
     auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(filepath)};
     calculator->start();
 
-    auto task = calculator->task().then([=](std::string sha1){
+    auto app = _app;
+    auto task = calculator->task().then([=](std::string sha1) {
         auto fkey = Crypto::calculateFkey(sha1);
         auto fid = Crypto::calculateFid(sha1);
         auto decodedNodeKey = Crypto::base64decode(nodeKeyClear);
         auto fkeyEnc = Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey);
 
-        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc));
+        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc), *app);
     });
 
     return UploadingFile{new std::pair<std::unique_ptr<Sha1Calculator>, pplx::task<std::shared_ptr<FileUploader>>>{std::move(calculator), std::move(task)}};

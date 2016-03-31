@@ -17,6 +17,7 @@
 #include "Downloader.h"
 #include "Node.h"
 #include "FolderNode.h"
+#include "../Application.h"
 #include "../utils/Utils.h"
 #include "../rest/HttpErrors.h"
 #include "../utils/make_unique.h"
@@ -39,7 +40,7 @@ namespace giga
 namespace core
 {
 
-Downloader::Downloader (Downloader::ProgressCallback clb) :
+Downloader::Downloader (const Application& app, Downloader::ProgressCallback clb) :
         _isStarted{false},
         _downloading{},
         _dlCount{0},
@@ -47,7 +48,8 @@ Downloader::Downloader (Downloader::ProgressCallback clb) :
         _mainTask{},
         _isFinished{false},
         _mut{},
-        _progressCallback{clb}
+        _progressCallback{clb},
+        _app{&app}
 {
 }
 
@@ -155,7 +157,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 
     if (node.type() == Node::Type::file)
     {
-        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, FileDownloader::Policy::overrideNewerSize);
+        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, *_app, FileDownloader::Policy::overrideNewerSize);
         fdownloader->start();
         try {
             auto task = fdownloader->task();

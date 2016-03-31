@@ -15,7 +15,6 @@
  */
 
 #include "GigaApi.h"
-#include "UsersApi.h"
 #include "data/User.h"
 #include "data/UserExists.h"
 #include "../utils/Crypto.h"
@@ -30,27 +29,22 @@ using utility::string_t;
 namespace giga
 {
 
-// static init
-std::shared_ptr<data::User> GigaApi::currentUser{};
-
-HttpClient&
-GigaApi::client()
-{
-    static HttpClient cl{};
-    return cl;
-}
+GigaApi::GigaApi():
+        groups{*this}, network{*this}, nodes{*this}, users{*this},
+        client{}, currentUser{nullptr}
+{}
 
 task<std::shared_ptr<User>>
 GigaApi::authenticate (const string_t& login, const string_t& password)
 {
     return create_task([=]
     {
-        auto exists = UsersApi::userExists(login).get();
+        auto exists = users.userExists(login).get();
         if (exists->login.is_initialized())
         {
             auto realLogin = exists->login.get();
-            client().authenticate(realLogin, utils::str2wstr(Crypto::calculateLoginPassword(realLogin, password)));
-            currentUser = UsersApi::getCurrentUser().get();
+            client.authenticate(realLogin, utils::str2wstr(Crypto::calculateLoginPassword(realLogin, password)));
+            currentUser = users.getCurrentUser().get();
             return currentUser;
         }
         else
@@ -69,16 +63,16 @@ GigaApi::getCurrentUser()
     BOOST_THROW_EXCEPTION(ErrorException(U("You must authenticate before using getCurrentUser")));
 }
 
-std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
-GigaApi::getOAuthConfig()
+const std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
+GigaApi::getOAuthConfig() const
 {
-    return client().http().client_config().oauth2();
+    return client.http().client_config().oauth2();
 }
 
 pplx::task<void>
-GigaApi::refreshToken()
+GigaApi::refreshToken() const
 {
-    return client().refreshToken();
+    return client.refreshToken();
 }
 
 } // namespace giga

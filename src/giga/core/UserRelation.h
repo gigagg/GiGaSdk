@@ -32,6 +32,7 @@ struct UsersRelation;
 
 namespace core
 {
+class User;
 
 /**
  * A UserRelation represents the relation between the currentUser and an other user.
@@ -92,7 +93,7 @@ private:
     friend class giga::Application; // utility::string_t Application::getNodeKeyClear(uint64_t) const;
 
     const std::string&
-    nodeKeyClear() const;
+    nodeKeyClear(const User& currentUser) const;
 
 private:
     std::shared_ptr<data::UsersRelation> _data;

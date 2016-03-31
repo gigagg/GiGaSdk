@@ -25,6 +25,7 @@
 #include "../utils/readerwriterqueue.h"
 namespace giga
 {
+class Application;
 namespace core
 {
 
@@ -46,7 +47,7 @@ public:
      *
      * ```clb``` will be called at least once for each file being downloaded.
      */
-    explicit Downloader(ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
+    explicit Downloader(const Application& app, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
     ~Downloader();
 
     Downloader(Downloader&&)                 = delete;
@@ -113,6 +114,7 @@ private:
     std::atomic<bool>               _isFinished;
     mutable std::mutex              _mut;
     ProgressCallback                _progressCallback;
+    const Application*              _app;
 };
 
 } /* namespace core */

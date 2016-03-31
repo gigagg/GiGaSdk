@@ -17,16 +17,19 @@
 #ifndef GIGA_CORE_APPLICATION_H_
 #define GIGA_CORE_APPLICATION_H_
 
+#include <boost/optional.hpp>
 #include "core/User.h"
 #include "core/Node.h"
 #include "core/FileNode.h"
 #include "Config.h"
+#include "api/GigaApi.h"
 
 #include <cpprest/http_client.h>
 #include <cpprest/details/basic_types.h>
 #include <mutex>
-#include <unordered_map>
+#include <memory>
 #include <vector>
+#include <unordered_map>
 
 namespace giga
 {
@@ -36,54 +39,20 @@ struct UsersRelation;
 }
 
 /**
- * The Application class is the singleton that manage initialization and access to the GiGa API.
- * <ul>
- *  <li>It initialize the GiGaSdk</li>
- *  <li>It holds the configuration</li>
- *  <li>It's the starter point for accessing the GiGa API.</li>
- * </ul>
+ * The Application class is the entry point to access the GiGa API.
+ * The Application must be authenticated (once and only once). @see authenticate (const utility::string_t& login, const utility::string_t& password)
  */
 class Application
 {
 public:
+    Application(const Application&)            = delete;
+    Application& operator=(const Application&) = delete;
+    Application(Application &&)                = delete;
+    Application& operator=(Application &&)     = delete;
 
-    /**
-     * @brief Initialize the GiGaSdk
-     *
-     * Create an apps at https://giga.gg/app to get an appId, and appKey. <br>
-     * After initializing the app, you should log-in using the authenticate() method.
-     * @see Application::authenticate()
-     */
-    static Application&
-    init(utility::string_t&& appRedirectUri, utility::string_t&& appId, utility::string_t&& appKey, utility::string_t&& appScope =
-            U("basic network groups files basic:write network:write groups:write files:write"));
-
-    static Application&
-    get();
-
-    static Config&
-    config ();
-
-private:
-    explicit Application()                  = default;
-    Application(Application const&)         = delete;
-    void operator=(Application const&)      = delete;
-
-    static Application&
-    instance ()
-    {
-        static Application _instance {};
-        return _instance;
-    }
+    explicit Application();
 
 public:
-
-    /**
-     * @return true if the init() method has been called
-     */
-    bool
-    isInitialized() const;
-
     /**
      * @brief Authenticate a user by it's login/password.
      * @return The current user.
@@ -95,8 +64,14 @@ public:
     /**
      * @return The currently logged user (when you called ```authenticate(const utility::string_t&, const utility::string_t&)```).
      */
+    const core::User&
+    currentUser() const;
+
+    /**
+     * @return The currently logged user (when you called ```authenticate(const utility::string_t&, const utility::string_t&)```).
+     */
     core::User&
-    currentUser();
+    mutableCurrentUser();
 
     //
     // Users
@@ -237,6 +212,14 @@ public:
     std::vector<std::unique_ptr<core::Node>>
     searchNode (const utility::string_t& search, core::Node::MediaType type) const;
 
+
+public:
+    const GigaApi&
+    api() const;
+
+    GigaApi&
+    mutableApi();
+
     //
     // Crypto. Be careful with these ...
     //
@@ -248,9 +231,8 @@ private:
     getNodeKeyClear(uint64_t userId) const;
 
 private:
-    core::User  _currentUser;
-    Config      _config;
-    bool        _isInitialized = false;
+    GigaApi                      _api;
+    std::unique_ptr<core::User>  _currentUser;
 
     // this is a cache variable
     // TODO protect by mutex.

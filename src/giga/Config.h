@@ -26,14 +26,32 @@ class Application;
 class Config final
 {
 public:
+
+    /**
+     * @brief Initialize the GiGaSdk configuration
+     *
+     * Create an apps at https://giga.gg/app to get an appId, and appKey. <br>
+     */
+    static Config&
+    init(utility::string_t&& appRedirectUri, utility::string_t&& appId, utility::string_t&& appKey, utility::string_t&& appScope =
+            U("basic network groups files basic:write network:write groups:write files:write"));
+
+    static Config&
+    get();
+
+public:
     Config(Config const&)         = delete;
     void operator=(Config const&) = delete;
-
 private:
-    friend class Application;
-
     explicit
     Config() = default;
+
+    static Config&
+    instance ()
+    {
+        static Config instance{};
+        return instance;
+    }
 
 public:
     inline const utility::string_t& appRedirectUri() const {return _appRedirectUri;}
@@ -56,6 +74,24 @@ private:
     const utility::string_t _oauthTokenEndpoint         = U("https://giga.gg/oauth/token");
     const utility::string_t _apiHost                    = U("https://giga.gg");
 };
+
+inline Config&
+Config::init (utility::string_t&& appRedirectUri, utility::string_t&& appId, utility::string_t&& appKey,
+              utility::string_t&& appScope)
+{
+    auto& config = Config::instance();
+    config._appRedirectUri = std::move(appRedirectUri);
+    config._appId          = std::move(appId);
+    config._appKey         = std::move(appKey);
+    config._appScope       = std::move(appScope);
+    return config;
+}
+
+inline Config&
+Config::get ()
+{
+    return Config::instance();
+}
 
 } /* namespace giga */
 

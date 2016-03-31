@@ -34,7 +34,7 @@ public:
 
     FolderNode& operator=(const FolderNode&);
     FolderNode(const FolderNode& other);
-    explicit FolderNode(std::shared_ptr<data::Node> n);
+    explicit FolderNode(std::shared_ptr<data::Node> n, const Application& app);
 
 public:
     virtual const std::vector<std::unique_ptr<Node>>&

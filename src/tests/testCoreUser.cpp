@@ -16,6 +16,7 @@
 #define BOOST_TEST_MODULE core
 
 #include <boost/test/included/unit_test.hpp>
+#include <giga/Application.h>
 #include <giga/core/User.h>
 #include <giga/api/data/User.h>
 #include <giga/utils/Utils.h>
@@ -52,7 +53,8 @@ BOOST_AUTO_TEST_CASE(test_core_user_simple) {
     })");
 
     auto dataUser = std::make_shared<data::User>(JSonUnserializer::fromString<data::User>(json));
-    auto user = User{dataUser};
+    Application app;
+    auto user = User{dataUser, app};
 
     BOOST_CHECK_EQUAL(1, user.id());
     BOOST_CHECK(User::Activity::inactive == user.activity());
@@ -109,7 +111,8 @@ BOOST_AUTO_TEST_CASE(test_core_user_protected) {
       })");
 
     auto dataUser = std::make_shared<data::User>(JSonUnserializer::fromString<data::User>(json));
-    auto user = User{dataUser};
+    Application app;
+    auto user = User{dataUser, app};
 
     BOOST_CHECK_EQUAL(1704770, user.id());
     BOOST_CHECK(User::Activity::very_active == user.activity());

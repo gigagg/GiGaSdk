@@ -36,6 +36,8 @@ class curl_easy;
 
 namespace giga
 {
+class Application;
+
 namespace data
 {
 struct Node;
@@ -51,7 +53,8 @@ public:
 
     explicit
     ChunkUploader (web::uri_builder& uploadUrl, const utility::string_t& nodeName, const std::string& sha1,
-                   const utility::string_t& filename, const utility::string_t& mime, CurlProgress* progress);
+                   const utility::string_t& filename, const utility::string_t& mime, CurlProgress* progress,
+                   const Application& app);
 
     ChunkUploader()                                = delete;
     ChunkUploader(const ChunkUploader&)            = delete;
@@ -74,6 +77,7 @@ private:
     const utility::string_t _mime;
     uint64_t                _fileSize;
     CurlProgress*           _progress;
+    const Application*      _app;
 };
 
 } /* namespace details */

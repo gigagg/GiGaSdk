@@ -15,10 +15,10 @@
  */
 
 #include "UserRelation.h"
+#include "User.h"
 #include "../utils/EnumConvertor.h"
 #include "../utils/Utils.h"
 #include "../api/data/UsersRelation.h"
-#include "../Application.h"
 
 #include <chrono>
 
@@ -75,7 +75,7 @@ UserRelation::initiator () const
 }
 
 const std::string&
-UserRelation::nodeKeyClear() const
+UserRelation::nodeKeyClear(const User& currentUser) const
 {
     if (type() != Type::contact)
     {
@@ -87,7 +87,7 @@ UserRelation::nodeKeyClear() const
     }
     if (_nodeKeyClear.empty())
     {
-        _nodeKeyClear = Application::get().currentUser().personalData()._rsaKeys.decryptNodeKey(utils::wstr2str(_data->key.get()));
+        _nodeKeyClear = currentUser.personalData()._rsaKeys.decryptNodeKey(utils::wstr2str(_data->key.get()));
     }
     return _nodeKeyClear;
 }

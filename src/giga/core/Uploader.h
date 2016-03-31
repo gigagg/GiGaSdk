@@ -29,6 +29,8 @@
 
 namespace giga
 {
+class Application;
+
 namespace core
 {
 
@@ -54,7 +56,8 @@ public:
      *
      * ```clb``` will be called at least once for each file being uploaded.
      */
-    explicit Uploader(ProgressUpload clbUp = [](FileUploader&, uint64_t, uint64_t){},
+    explicit Uploader(const Application& app,
+                      ProgressUpload clbUp = [](FileUploader&, uint64_t, uint64_t){},
                       ProgressPreparation clbPrep = [](Sha1Calculator&){});
     ~Uploader();
 
@@ -115,6 +118,12 @@ public:
     void
     join();
 
+    /**
+     * @brief cancel the current upload; Clear the queue; stop the process.
+     */
+    void
+    kill();
+
 private:
     void
     scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path& path);
@@ -131,6 +140,7 @@ private:
     Queue                             _queue;
     Node::UploadingFile               _preparing;
     pplx::task<std::shared_ptr<Node>> _uploading;
+    pplx::cancellation_token_source   _cancelTokenSrc;
     pplx::task<void>                  _mainTask;
     bool                              _isStarted;
 
@@ -143,6 +153,7 @@ private:
     std::atomic<bool>                 _isFinished;
     ProgressUpload                    _progressUp;
     ProgressPreparation               _progressPrep;
+    const Application*                _app;
 };
 
 } /* namespace core */

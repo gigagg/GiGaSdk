@@ -24,6 +24,8 @@
 
 namespace giga
 {
+class Application;
+
 namespace core
 {
 class Node;
@@ -43,7 +45,7 @@ class FileUploader final : public FileTransferer
 public:
     explicit
     FileUploader (const utility::string_t& filename, const utility::string_t& nodeName, const std::string& parentId,
-                  const std::string& sha1, const std::string& fid, const std::string& fkey);
+                  const std::string& sha1, const std::string& fid, const std::string& fkey, const Application& app);
     ~FileUploader ()                             = default;
 
     FileUploader ()                              = delete;
@@ -85,14 +87,15 @@ protected:
 private:
     pplx::task<std::shared_ptr<Node>> _task;
 
-    utility::string_t _filename;
-    utility::string_t _nodeName;
-    std::string       _parentId;
-    std::string       _sha1;
-    std::string       _fid;
-    std::string       _fkey;
+    utility::string_t  _filename;
+    utility::string_t  _nodeName;
+    std::string        _parentId;
+    std::string        _sha1;
+    std::string        _fid;
+    std::string        _fkey;
 
-    uint64_t _fileSize;
+    uint64_t           _fileSize;
+    const Application* _app;
 };
 
 } /* namespace api */
