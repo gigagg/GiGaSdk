@@ -168,7 +168,7 @@ FileNode::createChildFolder(const utility::string_t&) const
 }
 
 Node::UploadingFile
-FileNode::uploadFile(const string_t&)
+FileNode::uploadFile(const utility::string_t&, pplx::cancellation_token_source)
 {
     BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
 }
@@ -180,7 +180,7 @@ FileNode::download(const string_t& destinationPath, FileDownloader::Policy polic
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
     }
-    return FileDownloader{destinationPath, *this, *_app, policy};
+    return FileDownloader{destinationPath, *this, *_app, pplx::cancellation_token_source{}, policy};
 }
 
 const FileNodeData&

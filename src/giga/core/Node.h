@@ -156,7 +156,7 @@ public:
      * @see Uploader to upload folders.
      */
     virtual UploadingFile
-    uploadFile(const utility::string_t& filepath) = 0;
+    uploadFile(const utility::string_t& filepath, pplx::cancellation_token_source cts = pplx::cancellation_token_source{}) = 0;
 
     /**
      * @brief Download a FileNode

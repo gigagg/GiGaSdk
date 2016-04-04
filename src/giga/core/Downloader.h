@@ -17,12 +17,14 @@
 #ifndef GIGA_CORE_DOWNLOADER_H_
 #define GIGA_CORE_DOWNLOADER_H_
 
+#include "FileTransferer.h"
+#include "../utils/readerwriterqueue.h"
+
 #include <boost/filesystem.hpp>
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
 
-#include "../utils/readerwriterqueue.h"
 namespace giga
 {
 class Application;
@@ -84,16 +86,47 @@ public:
     downloadingFileNumber();
 
     /**
-     * @brief start the uploading process
+     * @brief Start the uploading process
      */
     void
     start();
 
     /**
-     * @brief wait for the uploading process to finish
+     * @brief Wit for the uploading process to finish
      */
     void
     join();
+
+    /**
+     * @brief Cancel the current download; Clear the queue; stop the process.
+     */
+    void
+    kill();
+
+    /**
+     * @brief Limit the current download rate
+     * @param rate the download rate in Octet/s. Uses 0 for no limit.
+     */
+    void
+    limitRate(uint64_t rate);
+
+    /**
+     * @brief Pause the current download. Uses ```resume()``` to restart.
+     */
+    void
+    pause();
+
+    /**
+     * @brief Resume a previously ```pause()```d download.
+     */
+    void
+    resume();
+
+    /**
+     * @brief Gets the current download state
+     */
+    FileTransferer::State
+    state();
 
 private:
     void
@@ -115,6 +148,8 @@ private:
     mutable std::mutex              _mut;
     ProgressCallback                _progressCallback;
     const Application*              _app;
+    pplx::cancellation_token_source _cts;
+    uint64_t                        _rate;
 };
 
 } /* namespace core */

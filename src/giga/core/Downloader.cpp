@@ -49,7 +49,8 @@ Downloader::Downloader (const Application& app, Downloader::ProgressCallback clb
         _isFinished{false},
         _mut{},
         _progressCallback{clb},
-        _app{&app}
+        _app{&app},
+        _rate{0}
 {
 }
 
@@ -92,7 +93,7 @@ Downloader::start ()
             downloadFile(*element->first, element->second);
         }
         _isFinished = true;
-    });
+    }, _cts.get_token());
 
     auto progressTask = pplx::create_task([this]() {
         while(!_isFinished)
@@ -104,7 +105,7 @@ Downloader::start ()
                 _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
             }
         }
-    });
+    }, _cts.get_token());
 
     auto tasks = {dlTask, progressTask};
     _mainTask =  pplx::when_all(tasks.begin(), tasks.end());
@@ -123,6 +124,57 @@ Downloader::join()
 }
 
 void
+Downloader::kill()
+{
+    if (_isStarted)
+    {
+        std::unique_ptr<QueueElement> element = nullptr;
+        while(_queue.try_dequeue(element)){}
+        _queue.enqueue(nullptr);
+        _cts.cancel();
+        join();
+    }
+}
+
+void
+Downloader::limitRate(uint64_t rate)
+{
+    _rate = rate;
+    if (_downloading != nullptr)
+    {
+        _downloading->limitRate(rate);
+    }
+}
+
+void
+Downloader::pause()
+{
+    if (_downloading != nullptr)
+    {
+        _downloading->pause();
+    }
+}
+
+void
+Downloader::resume()
+{
+    if (_downloading != nullptr)
+    {
+        _downloading->resume();
+    }
+}
+
+FileTransferer::State
+Downloader::state()
+{
+    if (_downloading != nullptr)
+    {
+        return _downloading->state();
+    }
+    return FileTransferer::State::pending;
+}
+
+void
 Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::path& path)
 {
     _queue.enqueue(giga::make_unique<QueueElement>(std::make_pair(std::move(node), path)));
@@ -134,6 +186,10 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
     if (!is_directory(path))
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("path should be a directory")});
+    }
+    if (_cts.get_token().is_canceled())
+    {
+        return;
     }
 
     auto name = utils::cleanUpFilename(node.name());
@@ -157,8 +213,9 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 
     if (node.type() == Node::Type::file)
     {
-        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, *_app, FileDownloader::Policy::overrideNewerSize);
+        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, *_app, _cts, FileDownloader::Policy::overrideNewerSize);
         fdownloader->start();
+        fdownloader->limitRate(_rate);
         try {
             auto task = fdownloader->task();
             {

@@ -19,6 +19,10 @@
 #include "../utils/Utils.h"
 #include "details/CurlProgress.h"
 
+#include <pplx/pplxtasks.h>
+
+using pplx::cancellation_token;
+
 namespace giga
 {
 namespace core
@@ -30,8 +34,8 @@ FileTransferer::Progress::percent() const
     return ((double) (transfered * 100)) / (double) size;
 }
 
-FileTransferer::FileTransferer () :
-        _state{State::pending}, _progress{new details::CurlProgress{}}, _mut{}, _cts{}
+FileTransferer::FileTransferer (pplx::cancellation_token_source cts) :
+        _state{State::pending}, _progress{new details::CurlProgress{cts.get_token()}}, _mut{}, _cts{cts}
 {
 }
 
@@ -90,7 +94,6 @@ FileTransferer::cancel ()
         BOOST_THROW_EXCEPTION(ErrorException{U("Resume is valid only in 'paused' and 'started' state")});
     }
     _state = State::canceled;
-    _progress->cancel();
     _cts.cancel();
 }
 

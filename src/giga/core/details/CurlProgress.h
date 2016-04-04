@@ -20,6 +20,7 @@
 #include <chrono>
 #include <mutex>
 #include <curl/curlbuild.h>
+#include <pplx/pplxtasks.h>
 
 namespace curl
 {
@@ -44,7 +45,7 @@ public:
 
 public:
     explicit
-    CurlProgress();
+    CurlProgress(pplx::cancellation_token token);
     CurlProgress(const CurlProgress& rhs);
 
     CurlProgress(CurlProgress&&)                 = delete;
@@ -71,21 +72,18 @@ public:
     setLimitRate (uint64_t rate);
 
     void
-    cancel ();
-
-    void
     setCurl (curl::curl_easy& curl);
 
     bool
     isPaused () const;
 
 private:
-    mutable std::mutex  _mut;
-    Item                _item;
-    bool                _cancel;
-    bool                _pause;
-    bool                _isPaused;
-    curl::curl_easy*    _curl;
+    mutable std::mutex       _mut;
+    Item                     _item;
+    pplx::cancellation_token _cancelToken;
+    bool                     _pause;
+    bool                     _isPaused;
+    curl::curl_easy*         _curl;
 
     typedef std::chrono::high_resolution_clock::time_point Time;
     uint64_t   _limitRate;

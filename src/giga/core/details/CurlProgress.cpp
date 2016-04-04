@@ -30,8 +30,8 @@ namespace giga
 namespace details
 {
 
-CurlProgress::CurlProgress () :
-        _mut{}, _item{0ul, 0ul, 0ul, 0ul}, _cancel{false}, _pause{false}, _isPaused{false}, _curl{nullptr},
+CurlProgress::CurlProgress (pplx::cancellation_token token) :
+        _mut{}, _item{0ul, 0ul, 0ul, 0ul}, _cancelToken{token}, _pause{false}, _isPaused{false}, _curl{nullptr},
         _limitRate{0ul}, _currentLimitRate{0ul}, _rateTime{}, _rateBytes{0ul}, _bucket{0ul}, _upPostion{0ul}
 {
 }
@@ -39,7 +39,7 @@ CurlProgress::CurlProgress () :
 CurlProgress::CurlProgress (const CurlProgress& other) :
         _mut{},
         _item{other._item.dltotal, other._item.dlnow, other._item.ultotal, other._item.ulnow},
-        _cancel{other._cancel},
+        _cancelToken{other._cancelToken},
         _pause{other._pause},
         _isPaused{other._isPaused},
         _curl{other._curl},
@@ -81,13 +81,6 @@ CurlProgress::setLimitRate (uint64_t rate)
 }
 
 void
-CurlProgress::cancel ()
-{
-    std::lock_guard<std::mutex> l(_mut);
-    _cancel = true;
-}
-
-void
 CurlProgress::setCurl (curl::curl_easy& curl)
 {
     std::lock_guard<std::mutex> l(_mut);
@@ -120,7 +113,7 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
                 _curl->pause(_pause ? CURLPAUSE_ALL : CURLPAUSE_CONT);
                 _isPaused = _pause;
             }
-            if (_cancel)
+            if (_cancelToken.is_canceled())
             {
                 return CURLE_ABORTED_BY_CALLBACK;
             }

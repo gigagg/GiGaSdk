@@ -70,10 +70,13 @@ public:
      * @brief Construct a FileDownloader
      * @param folderDest the folder in which we want to put the downloaded node
      * @param node the node to download
+     * @param app the authenticated application
+     * @param cts a cancel token to use for canceling the download task
      * @param policy what to do if a file with the same name already exists
      */
     explicit
-    FileDownloader (const boost::filesystem::path& folderDest, const Node& node, const Application& app, Policy policy = Policy::ignore);
+    FileDownloader (const boost::filesystem::path& folderDest, const Node& node, const Application& app,
+                    pplx::cancellation_token_source cts = pplx::cancellation_token_source{}, Policy policy = Policy::ignore);
     virtual ~FileDownloader();
     FileDownloader (FileDownloader&& other);
 

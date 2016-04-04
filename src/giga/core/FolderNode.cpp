@@ -114,7 +114,7 @@ FolderNode::createChildFolder(const utility::string_t& name) const
 namespace fs = boost::filesystem;
 
 Node::UploadingFile
-FolderNode::uploadFile(const string_t& filepath)
+FolderNode::uploadFile(const string_t& filepath, pplx::cancellation_token_source cts)
 {
     if (_app == nullptr)
     {
@@ -131,7 +131,7 @@ FolderNode::uploadFile(const string_t& filepath)
     auto nodeName = path.filename().native();
     auto nodeKeyClear = _app->currentUser().personalData().nodeKeyClear();
 
-    auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(filepath)};
+    auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(filepath, cts)};
     calculator->start();
 
     auto app = _app;
@@ -141,7 +141,7 @@ FolderNode::uploadFile(const string_t& filepath)
         auto decodedNodeKey = Crypto::base64decode(nodeKeyClear);
         auto fkeyEnc = Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey);
 
-        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc), *app);
+        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc), *app, cts);
     });
 
     return UploadingFile{new std::pair<std::unique_ptr<Sha1Calculator>, pplx::task<std::shared_ptr<FileUploader>>>{std::move(calculator), std::move(task)}};

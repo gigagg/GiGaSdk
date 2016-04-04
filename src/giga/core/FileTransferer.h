@@ -50,7 +50,7 @@ public:
 
 public:
     explicit
-    FileTransferer ();
+    FileTransferer (pplx::cancellation_token_source cts);
 
     virtual ~FileTransferer();
     FileTransferer (FileTransferer&& other);

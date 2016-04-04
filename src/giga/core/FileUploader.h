@@ -45,7 +45,8 @@ class FileUploader final : public FileTransferer
 public:
     explicit
     FileUploader (const utility::string_t& filename, const utility::string_t& nodeName, const std::string& parentId,
-                  const std::string& sha1, const std::string& fid, const std::string& fkey, const Application& app);
+                  const std::string& sha1, const std::string& fid, const std::string& fkey, const Application& app,
+                  pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
     ~FileUploader ()                             = default;
 
     FileUploader ()                              = delete;

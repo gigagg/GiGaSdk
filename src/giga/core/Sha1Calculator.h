@@ -24,7 +24,7 @@ class Sha1Calculator : public FileTransferer
 {
 public:
     explicit
-    Sha1Calculator(const utility::string_t& filename);
+    Sha1Calculator(const utility::string_t& filename, pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
     ~Sha1Calculator();
 
     Sha1Calculator ()                                = delete;

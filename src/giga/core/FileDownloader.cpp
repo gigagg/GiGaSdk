@@ -69,8 +69,8 @@ namespace giga
 namespace core
 {
 
-FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, const Application& app, Policy policy) :
-        FileTransferer{}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
+FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, const Application& app, pplx::cancellation_token_source cts, Policy policy) :
+        FileTransferer{cts}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
         _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy},
         _app(&app)
 {
@@ -169,7 +169,7 @@ FileDownloader::doStart()
     {
         _task = pplx::create_task([destFile]() {
             return destFile;
-        });
+        }, _cts.get_token());
     }
     else
     {

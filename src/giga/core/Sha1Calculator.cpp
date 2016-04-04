@@ -34,8 +34,8 @@ namespace core
 
 static constexpr uint32_t BUF_SIZE = 8192;
 
-Sha1Calculator::Sha1Calculator(const utility::string_t& filename):
-        FileTransferer{},
+Sha1Calculator::Sha1Calculator(const utility::string_t& filename, pplx::cancellation_token_source cts):
+        FileTransferer{cts},
         _filename{filename},
         _task{},
         _is{filename.c_str(), std::ifstream::binary},

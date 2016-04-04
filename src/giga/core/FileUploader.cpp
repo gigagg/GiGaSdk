@@ -76,8 +76,8 @@ namespace core
 
 FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const std::string& parentId,
                             const std::string& sha1, const std::string& fid, const std::string& fkey,
-                            const Application& app) :
-        FileTransferer{},
+                            const Application& app, pplx::cancellation_token_source cts) :
+        FileTransferer{cts},
         _task{},
         _filename{filename},
         _nodeName{nodeName},
@@ -139,9 +139,9 @@ FileUploader::doStart ()
             }
             throw;
         }
-    }).then([=] (std::shared_ptr<data::Node> n) {
+    }, _cts.get_token()).then([=] (std::shared_ptr<data::Node> n) {
         return std::shared_ptr<Node>(Node::create(n, *app).release());
-    });
+    }, _cts.get_token());
 }
 
 const pplx::task<std::shared_ptr<Node>>&

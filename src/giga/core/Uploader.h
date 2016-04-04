@@ -75,7 +75,10 @@ public:
      * @param path the path to the file or folder we want to upload
      */
     void
-    addUpload(FolderNode parent, const boost::filesystem::path& path);
+    addUpload(FolderNode parent, boost::filesystem::path&& path);
+
+    void
+    addUploads(FolderNode parent, std::vector<boost::filesystem::path>&& pathes);
 
     /**
      * @brief Tells if the preparation phase is finished
@@ -124,6 +127,31 @@ public:
     void
     kill();
 
+    /**
+     * @brief Limit the current upload rate
+     * @param rate the upload rate in Octet/s. Uses 0 for no limit.
+     */
+    void
+    limitRate(uint64_t rate);
+
+    /**
+     * @brief Pause the current upload. Uses ```resume()``` to restart.
+     */
+    void
+    pause();
+
+    /**
+     * @brief Resume a previously ```pause()```d upload.
+     */
+    void
+    resume();
+
+    /**
+     * @brief Gets the current upload state
+     */
+    FileTransferer::State
+    state();
+
 private:
     void
     scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path& path);
@@ -134,13 +162,13 @@ private:
 
 private:
     typedef std::shared_ptr<FileUploader> ReadyEntry;
-    typedef std::pair<FolderNode, boost::filesystem::path> QueueElement;
+    typedef std::pair<FolderNode, std::vector<boost::filesystem::path>> QueueElement;
     typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<QueueElement>> Queue;
 
     Queue                             _queue;
     Node::UploadingFile               _preparing;
     pplx::task<std::shared_ptr<Node>> _uploading;
-    pplx::cancellation_token_source   _cancelTokenSrc;
+    pplx::cancellation_token_source   _cts;
     pplx::task<void>                  _mainTask;
     bool                              _isStarted;
 
@@ -154,6 +182,7 @@ private:
     ProgressUpload                    _progressUp;
     ProgressPreparation               _progressPrep;
     const Application*                _app;
+    uint64_t                          _rate;
 };
 
 } /* namespace core */
