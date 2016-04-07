@@ -114,14 +114,13 @@ FolderNode::createChildFolder(const utility::string_t& name) const
 namespace fs = boost::filesystem;
 
 Node::UploadingFile
-FolderNode::uploadFile(const string_t& filepath, pplx::cancellation_token_source cts)
+FolderNode::uploadFile(const fs::path& path, pplx::cancellation_token_source cts)
 {
     if (_app == nullptr)
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Application is null")});
     }
 
-    auto path = fs::path{filepath};
     if (!fs::exists(path) || !fs::is_regular_file(path))
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("This is not a regular file")});
@@ -131,7 +130,7 @@ FolderNode::uploadFile(const string_t& filepath, pplx::cancellation_token_source
     auto nodeName = path.filename().native();
     auto nodeKeyClear = _app->currentUser().personalData().nodeKeyClear();
 
-    auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(filepath, cts)};
+    auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(path, cts)};
     calculator->start();
 
     auto app = _app;
@@ -141,7 +140,7 @@ FolderNode::uploadFile(const string_t& filepath, pplx::cancellation_token_source
         auto decodedNodeKey = Crypto::base64decode(nodeKeyClear);
         auto fkeyEnc = Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey);
 
-        return std::make_shared<FileUploader>(filepath, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc), *app, cts);
+        return std::make_shared<FileUploader>(path, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc), *app, cts);
     });
 
     return UploadingFile{new std::pair<std::unique_ptr<Sha1Calculator>, pplx::task<std::shared_ptr<FileUploader>>>{std::move(calculator), std::move(task)}};

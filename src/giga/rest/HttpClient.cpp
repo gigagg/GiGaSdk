@@ -34,7 +34,7 @@ namespace {
 
 web::http::client::http_client_config getConfig() {
     auto config = web::http::client::http_client_config{};
-#ifdef DEBUG
+#ifdef USE_DEV_GG
     config.set_validate_certificates(false);
 #endif
     return config;

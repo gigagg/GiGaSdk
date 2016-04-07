@@ -17,6 +17,7 @@
 #ifndef GIGA_CORE_FILETRANSFERER_H_
 #define GIGA_CORE_FILETRANSFERER_H_
 
+#include <boost/filesystem.hpp>
 #include <cpprest/details/basic_types.h>
 #include <pplx/pplxtasks.h>
 #include <mutex>
@@ -97,6 +98,12 @@ public:
      */
     void
     limitRate (uint64_t rate);
+
+    virtual FileTransferer::Progress
+    progress () const = 0;
+
+    virtual const boost::filesystem::path&
+    filename() const = 0;
 
 protected:
     virtual void doStart() = 0;

@@ -62,6 +62,12 @@ public:
     authenticate (const utility::string_t& login, const utility::string_t& password);
 
     /**
+     * @return true if the ```authenticate()``` method has been called and successfull.
+     */
+    bool
+    isAuthenticated() const;
+
+    /**
      * @return The currently logged user (when you called ```authenticate(const utility::string_t&, const utility::string_t&)```).
      */
     const core::User&

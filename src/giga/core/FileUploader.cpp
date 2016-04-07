@@ -34,6 +34,7 @@
 #include <curl_easy.h>
 #include <mutex>
 
+using boost::filesystem::path;
 using Concurrency::streams::basic_istream;
 using Concurrency::streams::file_stream;
 using giga::details::ChunkUploader;
@@ -74,7 +75,7 @@ namespace giga
 namespace core
 {
 
-FileUploader::FileUploader (const string_t& filename, const string_t& nodeName, const std::string& parentId,
+FileUploader::FileUploader (const path& filename, const string_t& nodeName, const std::string& parentId,
                             const std::string& sha1, const std::string& fid, const std::string& fkey,
                             const Application& app, pplx::cancellation_token_source cts) :
         FileTransferer{cts},
@@ -167,8 +168,8 @@ FileUploader::nodeName() const
     return _nodeName;
 }
 
-const string_t&
-FileUploader::fileName() const
+const boost::filesystem::path&
+FileUploader::filename() const
 {
     return _filename;
 }

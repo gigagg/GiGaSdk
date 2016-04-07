@@ -56,6 +56,12 @@ Application::authenticate (const string_t& login, const string_t& password)
     return *_currentUser;
 }
 
+bool
+Application::isAuthenticated() const
+{
+    return _currentUser != nullptr;
+}
+
 const core::User&
 Application::currentUser() const
 {

@@ -22,6 +22,7 @@
 #include <memory>
 #include <thread>
 
+using boost::filesystem::path;
 using CryptoPP::HexEncoder;
 using CryptoPP::StringSink;
 using CryptoPP::StringSource;
@@ -34,7 +35,7 @@ namespace core
 
 static constexpr uint32_t BUF_SIZE = 8192;
 
-Sha1Calculator::Sha1Calculator(const utility::string_t& filename, pplx::cancellation_token_source cts):
+Sha1Calculator::Sha1Calculator(const path& filename, pplx::cancellation_token_source cts):
         FileTransferer{cts},
         _filename{filename},
         _task{},
@@ -73,8 +74,8 @@ Sha1Calculator::progress () const
     return Progress{p.ulnow, _fileSize};
 }
 
-const utility::string_t&
-Sha1Calculator::fileName() const
+const boost::filesystem::path&
+Sha1Calculator::filename() const
 {
     return _filename;
 }

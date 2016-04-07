@@ -408,6 +408,22 @@ Crypto::aesEncrypt (const std::string& key, const std::string& iv, const std::st
 }
 
 std::string
+Crypto::aesDecrypt (const std::string& key, const std::string& iv, const std::string& data)
+{
+    CBC_Mode<AES>::Decryption e;
+    e.SetKeyWithIV(toByteCst(key), key.size(), toByteCst(iv), iv.size());
+
+    std::string decrypted;
+    StringSource ss(toByteCst (data), data.size(), true,
+        new StreamTransformationFilter(e,
+            new StringSink(decrypted)
+        )
+    );
+
+    return decrypted;
+}
+
+std::string
 Crypto::aesDecrypt (const string_t& spassword, const std::string& saltStr, const std::string& ivStr, const std::string& data)
 {
     auto key   = pbkdf2_sha256(spassword, saltStr, 16);

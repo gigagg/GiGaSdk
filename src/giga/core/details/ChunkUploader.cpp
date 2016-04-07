@@ -32,6 +32,7 @@
 #include <string>
 
 using boost::filesystem::file_size;
+using boost::filesystem::path;
 using curl::curl_easy;
 using curl::curl_ios;
 using giga::data::Node;
@@ -46,7 +47,7 @@ namespace
 class ReadCallbackData
 {
 public:
-    explicit ReadCallbackData(const string_t filename);
+    explicit ReadCallbackData(const path filename);
     ~ReadCallbackData();
     ReadCallbackData(const ReadCallbackData&)            = delete;
     ReadCallbackData(ReadCallbackData&&)                 = delete;
@@ -65,10 +66,10 @@ private:
     uint64_t       _end;
 };
 
-ReadCallbackData::ReadCallbackData (const string_t filename) :
+ReadCallbackData::ReadCallbackData (const path filename) :
         _file{}, _start{0}, _end{0}
 {
-    _file.open(filename, std::fstream::binary);
+    _file.open(filename.c_str(), std::fstream::binary);
 }
 
 ReadCallbackData::~ReadCallbackData ()
@@ -123,7 +124,7 @@ namespace giga
 namespace details
 {
 
-ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const std::string& sha1, const string_t& filename,
+ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const std::string& sha1, const path& filename,
                               const string_t& mime, details::CurlProgress* progress, const Application& app) :
                _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), app.api().getOAuthConfig()->token().access_token()).to_uri()},
                _nodeName{nodeName},
@@ -195,6 +196,9 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
         GIGA_DEBUG_LOG(_uploadUrl.to_uri().to_string());
         curl.add<CURLOPT_URL>(upUri.c_str());
     }
+#ifdef USE_DEV_GG
+    curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
+#endif
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
     curl.add<CURLOPT_PROGRESSDATA>(_progress);

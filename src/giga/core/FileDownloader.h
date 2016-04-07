@@ -99,17 +99,20 @@ public:
     /**
      * During the download process, we use this temporary file
      */
-    boost::filesystem::path
+    const boost::filesystem::path&
     downloadingFile () const;
 
     /**
      * At the end of the download process, the file will be here
      */
-    boost::filesystem::path
+    const boost::filesystem::path&
     destinationFile () const;
 
     FileTransferer::Progress
-    progress () const;
+    progress () const override;
+
+    const boost::filesystem::path&
+    filename() const override;
 
 protected:
     void

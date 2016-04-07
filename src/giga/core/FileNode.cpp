@@ -168,7 +168,7 @@ FileNode::createChildFolder(const utility::string_t&) const
 }
 
 Node::UploadingFile
-FileNode::uploadFile(const utility::string_t&, pplx::cancellation_token_source)
+FileNode::uploadFile(const boost::filesystem::path&, pplx::cancellation_token_source)
 {
     BOOST_THROW_EXCEPTION(ErrorException{U("Illegal action: this is a fileNode")});
 }

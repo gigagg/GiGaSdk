@@ -1,12 +1,14 @@
+#include <cpprest/details/basic_types.h>
 #include <giga/Application.h>
 #include <giga/core/Downloader.h>
+#include <giga/core/FileUploader.h>
 #include <iomanip>
 
 using giga::Config;
 using giga::Application;
 using giga::core::Downloader;
-using giga::core::FileDownloader;
 using boost::filesystem::path;
+using giga::core::FileTransferer;
 
 using utility::string_t;
 
@@ -31,18 +33,18 @@ int main(int, char**)
     auto nbFiles   = comics->nbFiles() + (comics->type() == giga::core::Node::Type::file ? 1 : 0);
     auto totalSize = comics->size(); // The total size to download
 
-    auto progress = [nbFiles, totalSize](FileDownloader& fileDownloader, uint64_t count, uint64_t bytes) {
-        auto percent = ((double) bytes * 100) / (double) totalSize;
-        (ucout << U("                                                      \r")).flush(); // erase the current line.
-        ucout << count << U("/") << nbFiles << U(" ")
-                  << std::setprecision(3) << percent << U("% - ")
-                  << fileDownloader.destinationFile().filename().native();
+    auto progress = [nbFiles, totalSize](FileTransferer& ft, uint64_t left, uint64_t) {
+        ucout << U("downloading ")
+              << std::setprecision(3) << ft.progress().percent() << U("% - ")
+              << ft.filename()
+              << U(" (") << left << U(" left)")
+              << std::endl;
     };
 
-    Downloader downloader{app, progress};
+    Downloader downloader{app};
+    downloader.setDownloadProgressFct(progress);
     downloader.addDownload(std::move(comics), path{U("./")});
     downloader.start();
     downloader.join();
-    std::cout << std::endl;
     return 0;
 }

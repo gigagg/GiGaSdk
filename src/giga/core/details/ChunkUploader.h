@@ -23,6 +23,7 @@
 #include <cpprest/http_client.h>
 #include <iosfwd>
 #include <cpprest/details/basic_types.h>
+#include <boost/filesystem.hpp>
 
 namespace
 {
@@ -53,7 +54,7 @@ public:
 
     explicit
     ChunkUploader (web::uri_builder& uploadUrl, const utility::string_t& nodeName, const std::string& sha1,
-                   const utility::string_t& filename, const utility::string_t& mime, CurlProgress* progress,
+                   const boost::filesystem::path& filename, const utility::string_t& mime, CurlProgress* progress,
                    const Application& app);
 
     ChunkUploader()                                = delete;
@@ -73,7 +74,7 @@ private:
     web::uri_builder        _uploadUrl;
     const utility::string_t _nodeName;
     const std::string       _sha1;
-    const utility::string_t _filename;
+    const boost::filesystem::path _filename;
     const utility::string_t _mime;
     uint64_t                _fileSize;
     CurlProgress*           _progress;

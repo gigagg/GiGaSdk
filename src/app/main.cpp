@@ -235,49 +235,38 @@ int main(int argc, const char* argv[]) {
                 {
                     BOOST_THROW_EXCEPTION(ErrorException{ U("Node must be a folder")});
                 }
-                core::Uploader uploader {
-                    app,
-                    [](core::FileUploader& fd, uint64_t count, uint64_t) {
-                        ucout << count << " "
-                                  << std::setprecision(3) << fd.progress().percent() << "% - "
-                                  << fd.nodeName() << std::endl;
-                    },
-                    [](core::Sha1Calculator& sh) {
-                        ucout << "preparing: " << std::setprecision(3) << sh.progress().percent() << "% - "
-                                << sh.fileName() << std::endl;
-                    }
-                };
+                core::Uploader uploader {app};
+                uploader.setUploadProgressFct([](core::FileTransferer& ft, uint64_t left, uint64_t) {
+                    ucout << U("uploading ")
+                          << std::setprecision(3) << ft.progress().percent() << U("% - ")
+                          << ft.filename()
+                          << U(" (") << left << U(" left)")
+                          << std::endl;
+                });
+                uploader.setPreparationProgressFct([](core::FileTransferer& ft, uint64_t left, uint64_t) {
+                    ucout << U("preparing ")
+                          << std::setprecision(3) << ft.progress().percent() << U("% - ")
+                          << ft.filename()
+                          << U(" (") << left << U(" left)")
+                          << std::endl;
+                });
                 uploader.addUpload(*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<string_t>());
                 uploader.start();
                 uploader.join();
-
-                auto uploads = uploader.uploadingFiles();
-                std::vector<std::shared_ptr<core::Node>> arr(uploads.size());
-                std::transform(uploads.begin(), uploads.end(), arr.begin(), [](const std::shared_ptr<core::FileUploader> u) {
-                    return u->task().get();
-                });
-                printNodes("uploaded", arr);
             }
             if (vm.count("download"))
             {
-                auto nbFiles   = node->nbFiles() + (node->type() == core::Node::Type::file ? 1 : 0);
-                auto totalSize = node->size();
-
-                ucout << std::endl;
-                core::Downloader dl {
-                    app,
-                    [nbFiles, totalSize](core::FileDownloader& fd, uint64_t count, uint64_t size) {
-                        auto percent = ((double) size * 100) / (double) totalSize;
-                        (ucout << "                                                      \r").flush();
-                        ucout << count << "/" << nbFiles << " "
-                                  << std::setprecision(3) << percent << "% - "
-                                  << fd.destinationFile().filename().native();
-                    }
-                };
+                core::Downloader dl {app};
+                dl.setDownloadProgressFct([](core::FileTransferer& ft, uint64_t left, uint64_t) {
+                    ucout << U("downloading ")
+                          << std::setprecision(3) << ft.progress().percent() << U("% - ")
+                          << ft.filename()
+                          << U(" (") << left << U(" left)")
+                          << std::endl;
+                });
                 dl.addDownload(std::move(node), vm["download"].as<string_t>());
                 dl.start();
                 dl.join();
-                ucout << "\nFile downloaded: " << dl.downloadingFileNumber() << std::endl;
             }
         }
 

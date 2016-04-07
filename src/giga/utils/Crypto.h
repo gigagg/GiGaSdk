@@ -96,6 +96,9 @@ public:
 
     static std::string
     aesEncrypt (const std::string& key, const std::string& iv, const std::string& data);
+
+    static std::string
+    aesDecrypt (const std::string& key, const std::string& iv, const std::string& data);
 };
 
 template<Crypto::AesTuple n, class ... Types>

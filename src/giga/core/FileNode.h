@@ -132,7 +132,7 @@ public:
     createChildFolder(const utility::string_t& name) const override;
 
     virtual UploadingFile
-    uploadFile(const utility::string_t& filepath, pplx::cancellation_token_source cts = pplx::cancellation_token_source{}) override;
+    uploadFile(const boost::filesystem::path& filepath, pplx::cancellation_token_source cts = pplx::cancellation_token_source{}) override;
 
     virtual FileDownloader
     download(const utility::string_t& destinationPath, FileDownloader::Policy policy = FileDownloader::Policy::ignore) override;

@@ -70,9 +70,15 @@ private:
     utility::string_t _appKey;
     utility::string_t _appScope;
 
+#ifdef USE_DEV_GG
+    const utility::string_t _oauthAuthorizationEndpoint = U("https://dev.gg/oauth/authorize");
+    const utility::string_t _oauthTokenEndpoint         = U("https://dev.gg/oauth/token");
+    const utility::string_t _apiHost                    = U("https://dev.gg");
+#else
     const utility::string_t _oauthAuthorizationEndpoint = U("https://giga.gg/oauth/authorize");
     const utility::string_t _oauthTokenEndpoint         = U("https://giga.gg/oauth/token");
     const utility::string_t _apiHost                    = U("https://giga.gg");
+#endif
 };
 
 inline Config&

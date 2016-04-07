@@ -34,6 +34,10 @@ class Application;
 namespace core
 {
 
+struct ScannedNode;
+struct PreparedFile;
+struct UploadRequest;
+
 /**
  * Upload files and folders.
  *
@@ -44,21 +48,19 @@ namespace core
 class Uploader
 {
 public:
-    typedef std::function<void(FileUploader&, uint64_t count, uint64_t bytes)> ProgressUpload;
-    typedef std::function<void(Sha1Calculator&)> ProgressPreparation;
+    typedef std::function<void(FileTransferer&, uint64_t waitingCount, uint64_t bytesTransfered)> ProgressFct;
+    typedef std::function<void(FileTransferer&, std::shared_ptr<Node>)> NewNodeFct;
+    typedef std::pair<boost::filesystem::path, std::string>  Error;
 
 public:
     /**
-     * @brief construct an Uploader
+     * @brief Construct an Uploader
      *
-     * @param clbUp a callback function that will be called periodically to let you know of the upload progress
-     * @param clbPrep a callback function that will be called periodically to let you know of the preparation progress (sha1)
-     *
-     * ```clb``` will be called at least once for each file being uploaded.
+     * @see setUploadProgressFct()
+     * @see setPreparationProgressFct()
+     * @see setOnNewNodeFct()
      */
-    explicit Uploader(const Application& app,
-                      ProgressUpload clbUp = [](FileUploader&, uint64_t, uint64_t){},
-                      ProgressPreparation clbPrep = [](Sha1Calculator&){});
+    explicit Uploader(const Application& app);
     ~Uploader();
 
     Uploader(Uploader&&)                 = delete;
@@ -67,6 +69,36 @@ public:
     Uploader& operator=(Uploader&&)      = delete;
 
 public:
+
+    /**
+     * @brief Set a callback to follow the upload progress
+     * @param fct a callback function that will be called periodically to let you know of the upload progress
+     *
+     * ```fct``` will be called :
+     *
+     * - At the beginning of the upload for each file
+     * - For long upload it is called periodically.
+     *
+     * You should not do any long lasting computation in this function.
+     */
+    void
+    setUploadProgressFct(ProgressFct fct);
+
+    /**
+     * @brief Set a callback to follow the preparation process
+     * @param fct a callback function that will be called periodically to let you know of the progress of the preparation process (mostly sha1 calculation).
+     *
+     * ```fct``` will be called at least once for each file being prepared.
+     * You should not do any long lasting computation in this function.
+     */
+    void
+    setPreparationProgressFct(ProgressFct fct);
+
+    /**
+     * @brief The ```fct``` will be called for each new node
+     */
+    void
+    setOnNewNodeFct(NewNodeFct fct);
 
     /**
      * @brief add a file or folder to the list of uploads
@@ -79,35 +111,6 @@ public:
 
     void
     addUploads(FolderNode parent, std::vector<boost::filesystem::path>&& pathes);
-
-    /**
-     * @brief Tells if the preparation phase is finished
-     *
-     * Before uploading a file, we need to calculate its sha1.
-     * This phase is called the preparation phase.
-     */
-    bool
-    isPreparationFinished() const;
-
-    /**
-     * @brief Gets the uploading files.
-     *
-     * During the uploading process, the local files are scanned.
-     * The scanned files are prepared (see ```isPreparationFinished()```).
-     * When the preparation phase is finished a FileUploader object is created.
-     * This method return the list of FileUploader object already created.
-     *
-     * In this list of FileUploader, at most one is currently being uploaded,
-     * some might be finished, other might be waiting.
-     */
-    std::vector<std::shared_ptr<FileUploader>>
-    uploadingFiles();
-
-    /**
-     * @brief return ```uploadingFiles().size()```
-     */
-    std::vector<std::shared_ptr<FileUploader>>::size_type
-    uploadingFilesCount();
 
     /**
      * @brief start the uploading process
@@ -147,42 +150,99 @@ public:
     resume();
 
     /**
+     * @brief Remove all the files waiting to be process. Only the current uploading file remains.
+     * The Error queue is cleared (@see ```consumeError()```)
+     */
+    void
+    clear();
+
+    /**
      * @brief Gets the current upload state
      */
     FileTransferer::State
     state();
 
+    bool
+    isStarted() const;
+
+    /**
+     * @brief Gets an error from the error queue
+     * @return The error, or nullptr if there is no error left
+     */
+    std::unique_ptr<Error>
+    consumeError();
+
+    struct FileTree final
+    {
+    public:
+        enum class Type {
+            file, directory
+        };
+
+    public:
+        explicit FileTree(utility::string_t filename, Type type):
+            filename{std::move(filename)}, type{type}, children{} {}
+
+        ~FileTree()                          = default;
+        FileTree(FileTree&&)                 = default;
+        FileTree(const FileTree&)            = default;
+        FileTree& operator=(const FileTree&) = default;
+        FileTree& operator=(FileTree&&)      = default;
+
+    public:
+        utility::string_t filename;
+        Type              type;
+        std::vector<FileTree>   children;
+    };
+
 private:
     void
-    scanFilesAddUploads (FolderNode& parent, const boost::filesystem::path& path);
+    scanFiles(FileTree& parent, const boost::filesystem::path& path);
 
-    std::function<std::shared_ptr<Node> (std::shared_ptr<Node> n)>
-    startNextUpload(std::shared_ptr<giga::core::FileUploader> next);
+    void
+    prepare (FolderNode& parent, const boost::filesystem::path& aPath, const FileTree& entry);
 
+    void
+    uploadFile (const std::unique_ptr<PreparedFile>& element);
+
+    void
+    clearQueues ();
 
 private:
-    typedef std::shared_ptr<FileUploader> ReadyEntry;
-    typedef std::pair<FolderNode, std::vector<boost::filesystem::path>> QueueElement;
-    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<QueueElement>> Queue;
+    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<UploadRequest>> RequestQueue;
+    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<ScannedNode>>   ScannedQueue;
+    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<PreparedFile>>  PreparedQueue;
 
-    Queue                             _queue;
-    Node::UploadingFile               _preparing;
-    pplx::task<std::shared_ptr<Node>> _uploading;
-    pplx::cancellation_token_source   _cts;
-    pplx::task<void>                  _mainTask;
-    bool                              _isStarted;
+    typedef moodycamel::BlockingReaderWriterQueue<Error>  ErrorQueue;
 
-    mutable std::mutex                _mut;
-    std::vector<ReadyEntry>           _readyList;
-    bool                              _isPreparationFinished;
+    RequestQueue                    _upRequest;
+    ScannedQueue                    _toPrepare;
+    PreparedQueue                   _toUpload;
+    ErrorQueue                      _errors;
 
-    uint64_t                          _upBytes;
-    uint64_t                          _upCount;
-    std::atomic<bool>                 _isFinished;
-    ProgressUpload                    _progressUp;
-    ProgressPreparation               _progressPrep;
-    const Application*                _app;
-    uint64_t                          _rate;
+    std::unique_ptr<UploadRequest>  _scanningFile;
+    std::unique_ptr<Sha1Calculator> _preparingFile;
+    std::unique_ptr<FileUploader>   _uploadingFile;
+
+    pplx::cancellation_token_source _scanCts;
+    pplx::cancellation_token_source _clearCts;
+    pplx::cancellation_token_source _cts;
+    pplx::task<void>                _mainTask;
+    bool                            _isStarted;
+
+    mutable std::mutex              _mut;
+
+    uint64_t                        _upBytes;
+    uint64_t                        _upCount;
+    uint64_t                        _sha1Bytes;
+    uint64_t                        _sha1Count;
+    uint64_t                        _totalCount;
+    std::atomic<bool>               _isFinished;
+    ProgressFct                     _progressUp;
+    ProgressFct                     _progressPrep;
+    NewNodeFct                      _onNewNode;
+    const Application*              _app;
+    uint64_t                        _rate;
 };
 
 } /* namespace core */

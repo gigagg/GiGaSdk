@@ -211,7 +211,7 @@ FileDownloader::doStart()
                         curl.add<CURLOPT_RANGE>(posStr.c_str());
                     }
 
-#ifdef DEBUG
+#ifdef USE_DEV_GG
                     curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
 #endif
                     curl.perform();
@@ -261,14 +261,20 @@ FileDownloader::task () const
     return _task;
 }
 
-path
+const path&
 FileDownloader::downloadingFile () const
 {
     return _tempFile;
 }
 
-path
+const path&
 FileDownloader::destinationFile () const
+{
+    return _destFile;
+}
+
+const path&
+FileDownloader::filename () const
 {
     return _destFile;
 }

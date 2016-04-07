@@ -40,15 +40,16 @@ namespace giga
 namespace core
 {
 
-Downloader::Downloader (const Application& app, Downloader::ProgressCallback clb) :
+Downloader::Downloader (const Application& app) :
         _isStarted{false},
         _downloading{},
+        _nbFiles{0},
         _dlCount{0},
         _dlBytes{0},
         _mainTask{},
         _isFinished{false},
         _mut{},
-        _progressCallback{clb},
+        _progressCallback{[](giga::core::FileTransferer&, uint64_t, uint64_t){}},
         _app{&app},
         _rate{0}
 {
@@ -69,18 +70,18 @@ Downloader::~Downloader ()
     }
 }
 
+void
+Downloader::setDownloadProgressFct(ProgressFct fct)
+{
+    std::lock_guard<std::mutex> l{_mut};
+    _progressCallback = fct;
+}
+
 std::shared_ptr<FileDownloader>
 Downloader::downloadingFile ()
 {
     std::lock_guard<std::mutex> l{_mut};
     return _downloading;
-}
-
-uint64_t
-Downloader::downloadingFileNumber ()
-{
-    std::lock_guard<std::mutex> l{_mut};
-    return _dlCount;
 }
 
 void
@@ -102,7 +103,7 @@ Downloader::start ()
             std::lock_guard<std::mutex> l(_mut);
             if (_downloading != nullptr)
             {
-                _progressCallback(*_downloading, _dlCount, _dlBytes + _downloading->progress().transfered);
+                _progressCallback(*_downloading, _nbFiles - _dlCount, _dlBytes + _downloading->progress().transfered);
             }
         }
     }, _cts.get_token());
@@ -174,10 +175,21 @@ Downloader::state()
     return FileTransferer::State::pending;
 }
 
+bool
+Downloader::isStarted() const
+{
+    std::lock_guard<std::mutex> l(_mut);
+    return _isStarted;
+}
+
 void
 Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::path& path)
 {
     _queue.enqueue(giga::make_unique<QueueElement>(std::make_pair(std::move(node), path)));
+    {
+        std::lock_guard<std::mutex> l{_mut};
+        _nbFiles += node->nbFiles();
+    }
 }
 
 void
@@ -222,7 +234,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
                 std::lock_guard<std::mutex> l{_mut};
                 _downloading = std::move(fdownloader);
                 ++_dlCount;
-                _progressCallback(*_downloading, _dlCount, _dlBytes);
+                _progressCallback(*_downloading, _nbFiles - _dlCount, _dlBytes);
             }
             task.wait();
             {
@@ -233,7 +245,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
         catch (...)
         {
             fdownloader->setError(boost::current_exception_diagnostic_information());
-            _progressCallback(*_downloading, _dlCount, _dlBytes);
+            _progressCallback(*_downloading, _nbFiles - _dlCount, _dlBytes);
         }
     }
     else if (!npathExists)

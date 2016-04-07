@@ -21,6 +21,7 @@
 
 #include <pplx/pplxtasks.h>
 #include <cpprest/details/basic_types.h>
+#include <boost/filesystem.hpp>
 
 namespace giga
 {
@@ -44,7 +45,7 @@ class FileUploader final : public FileTransferer
 {
 public:
     explicit
-    FileUploader (const utility::string_t& filename, const utility::string_t& nodeName, const std::string& parentId,
+    FileUploader (const boost::filesystem::path& filename, const utility::string_t& nodeName, const std::string& parentId,
                   const std::string& sha1, const std::string& fid, const std::string& fkey, const Application& app,
                   pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
     ~FileUploader ()                             = default;
@@ -70,13 +71,13 @@ public:
      * @brief Gets this upload progress.
      */
     FileTransferer::Progress
-    progress () const;
+    progress () const override;
 
     const utility::string_t&
     nodeName() const;
 
-    const utility::string_t&
-    fileName() const;
+    const boost::filesystem::path&
+    filename() const override;
 
     uint64_t
     fileSize() const;
@@ -88,12 +89,12 @@ protected:
 private:
     pplx::task<std::shared_ptr<Node>> _task;
 
-    utility::string_t  _filename;
-    utility::string_t  _nodeName;
-    std::string        _parentId;
-    std::string        _sha1;
-    std::string        _fid;
-    std::string        _fkey;
+    boost::filesystem::path _filename;
+    utility::string_t       _nodeName;
+    std::string             _parentId;
+    std::string             _sha1;
+    std::string             _fid;
+    std::string             _fkey;
 
     uint64_t           _fileSize;
     const Application* _app;

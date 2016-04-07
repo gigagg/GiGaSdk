@@ -40,16 +40,14 @@ class Node;
 class Downloader final
 {
 public:
-    typedef std::function<void(FileDownloader&, uint64_t count, uint64_t bytes)> ProgressCallback;
+    typedef std::function<void(giga::core::FileTransferer& ft, uint64_t left, uint64_t bytes)> ProgressFct;
 
 public:
     /**
      * @brief construct a Downloader
-     * @param clb a callback function that will be executed periodically to let you know of the download progress.
-     *
-     * ```clb``` will be called at least once for each file being downloaded.
+     * @see setDownloadProgressFct()
      */
-    explicit Downloader(const Application& app, ProgressCallback clb = [](FileDownloader&, uint64_t, uint64_t){});
+    explicit Downloader(const Application& app);
     ~Downloader();
 
     Downloader(Downloader&&)                 = delete;
@@ -58,6 +56,20 @@ public:
     Downloader& operator=(Downloader&&)      = delete;
 
 public:
+    /**
+     * @brief Set a callback to follow the download progress
+     * @param fct a callback function that will be called periodically to let you know of the download progress
+     *
+     * ```fct``` will be called :
+     *
+     * - At the beginning of the download for each file
+     * - For long download it is called periodically.
+     *
+     * You should not do any long lasting computation in this function.
+     */
+    void
+    setDownloadProgressFct(ProgressFct fct);
+
     /**
      * @brief add a file or folder to the list of download
      *
@@ -78,12 +90,6 @@ public:
      */
     std::shared_ptr<FileDownloader>
     downloadingFile();
-
-    /**
-     * @return The number of files downloaded + 1 if there is a file currently being downloaded.
-     */
-    uint64_t
-    downloadingFileNumber();
 
     /**
      * @brief Start the uploading process
@@ -128,6 +134,9 @@ public:
     FileTransferer::State
     state();
 
+    bool
+    isStarted() const;
+
 private:
     void
     downloadFile (Node& node, const boost::filesystem::path& path);
@@ -141,12 +150,13 @@ private:
     std::unique_ptr<Node>           _node;
     boost::filesystem::path         _path;
     std::shared_ptr<FileDownloader> _downloading;
+    uint64_t                        _nbFiles;
     uint64_t                        _dlCount;
     uint64_t                        _dlBytes;
     pplx::task<void>                _mainTask;
     std::atomic<bool>               _isFinished;
     mutable std::mutex              _mut;
-    ProgressCallback                _progressCallback;
+    ProgressFct                     _progressCallback;
     const Application*              _app;
     pplx::cancellation_token_source _cts;
     uint64_t                        _rate;

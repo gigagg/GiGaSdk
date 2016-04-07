@@ -12,6 +12,7 @@
 
 #include <cpprest/details/basic_types.h>
 #include <pplx/pplxtasks.h>
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <memory>
 
@@ -24,7 +25,7 @@ class Sha1Calculator : public FileTransferer
 {
 public:
     explicit
-    Sha1Calculator(const utility::string_t& filename, pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
+    Sha1Calculator(const boost::filesystem::path& filename, pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
     ~Sha1Calculator();
 
     Sha1Calculator ()                                = delete;
@@ -47,17 +48,17 @@ public:
      * @brief Gets the progress of the sha1 calculation.
      */
     FileTransferer::Progress
-    progress () const;
+    progress () const override;
 
-    const utility::string_t&
-    fileName() const;
+    const boost::filesystem::path&
+    filename() const override;
 
 protected:
     void
     doStart () override;
 
 private:
-    utility::string_t       _filename;
+    boost::filesystem::path _filename;
     pplx::task<std::string> _task;
     std::ifstream           _is;
     std::unique_ptr<char[]> _buf;
