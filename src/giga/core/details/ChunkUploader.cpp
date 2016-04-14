@@ -147,6 +147,7 @@ ChunkUploader::upload ()
         std::ostringstream str;
         curl_ios<std::ostringstream> writer(str);
         curl_easy curl(writer);
+        _progress->setCurl(curl);
 
         auto response = sendChunk(position, callbackData, curl, str);
         auto regex    = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+)$"};

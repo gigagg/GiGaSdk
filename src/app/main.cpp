@@ -236,18 +236,18 @@ int main(int argc, const char* argv[]) {
                     BOOST_THROW_EXCEPTION(ErrorException{ U("Node must be a folder")});
                 }
                 core::Uploader uploader {app};
-                uploader.setUploadProgressFct([](core::FileTransferer& ft, uint64_t left, uint64_t) {
+                uploader.setUploadProgressFct([](core::FileTransferer& ft, core::TransferProgress p) {
                     ucout << U("uploading ")
                           << std::setprecision(3) << ft.progress().percent() << U("% - ")
                           << ft.filename()
-                          << U(" (") << left << U(" left)")
+                          << U(" (") << p.fileDone << U("/") << p.fileCount << U(")")
                           << std::endl;
                 });
-                uploader.setPreparationProgressFct([](core::FileTransferer& ft, uint64_t left, uint64_t) {
+                uploader.setPreparationProgressFct([](core::FileTransferer& ft, core::TransferProgress p) {
                     ucout << U("preparing ")
                           << std::setprecision(3) << ft.progress().percent() << U("% - ")
                           << ft.filename()
-                          << U(" (") << left << U(" left)")
+                          << U(" (") << p.fileDone << U("/") << p.fileCount << U(")")
                           << std::endl;
                 });
                 uploader.addUpload(*static_cast<core::FolderNode*>(node.get()), vm["upload"].as<string_t>());
@@ -257,11 +257,11 @@ int main(int argc, const char* argv[]) {
             if (vm.count("download"))
             {
                 core::Downloader dl {app};
-                dl.setDownloadProgressFct([](core::FileTransferer& ft, uint64_t left, uint64_t) {
+                dl.setDownloadProgressFct([](core::FileTransferer& ft, core::TransferProgress p) {
                     ucout << U("downloading ")
                           << std::setprecision(3) << ft.progress().percent() << U("% - ")
                           << ft.filename()
-                          << U(" (") << left << U(" left)")
+                          << U(" (") << p.fileDone << U("/") << p.fileCount << U(")")
                           << std::endl;
                 });
                 dl.addDownload(std::move(node), vm["download"].as<string_t>());

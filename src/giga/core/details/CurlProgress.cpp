@@ -122,14 +122,14 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
         // Do the limit rate outside of the mutex locked zone
         // because there is waiting here.
         auto transfered = static_cast<uint64_t>(dlnow + ulnow);
-        if (limitRate != _currentLimitRate)
+        if (limitRate != _currentLimitRate || transfered == 0ul)
         {
             _rateBytes = transfered;
             _currentLimitRate = limitRate;
             _rateTime = high_resolution_clock::now();
             _bucket = _limitRate; // give it 1 sec
         }
-        if (limitRate > 0)
+        if (limitRate > 0 && transfered > 0)
         {
             auto now = high_resolution_clock::now();
             do
@@ -137,9 +137,10 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
                 // calculate duration
                 duration<float> duration = now - _rateTime;
                 auto elapsedMs = duration_cast<milliseconds>(duration).count();
+                _rateTime = now;
 
                 // add bytes in the bucket
-                _bucket += static_cast<uint64_t>((elapsedMs * _limitRate) / 1000);
+                _bucket += std::max(static_cast<uint64_t>((elapsedMs * _limitRate) / 1000), 1ul);
 
                 // take bytes in the bucket
                 auto take = std::min(_bucket, transfered - _rateBytes);
@@ -147,14 +148,12 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
                 _rateBytes += take;
 
                 // wait for new bytes.
-                if (_bucket == 0 && (transfered - _rateBytes) > 0)
+                if (_bucket == 0)
                 {
                     std::this_thread::sleep_for(milliseconds(500));
                     now = high_resolution_clock::now();
                 }
             } while (_bucket == 0 && (dlnow - _rateBytes) > 0);
-
-            _rateTime = now;
         }
     } catch (...) {
         return CURLE_OBSOLETE40;

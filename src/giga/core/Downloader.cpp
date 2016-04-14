@@ -41,16 +41,19 @@ namespace core
 {
 
 Downloader::Downloader (const Application& app) :
+        _queue{},
+        _errors{},
         _isStarted{false},
+        _node{nullptr},
+        _path{},
         _downloading{},
-        _nbFiles{0},
-        _dlCount{0},
-        _dlBytes{0},
+        _progress{},
         _mainTask{},
         _isFinished{false},
         _mut{},
-        _progressCallback{[](giga::core::FileTransferer&, uint64_t, uint64_t){}},
+        _progressCallback{[](giga::core::FileTransferer&, TransferProgress){}},
         _app{&app},
+        _cts{},
         _rate{0}
 {
 }
@@ -91,7 +94,15 @@ Downloader::start ()
         std::unique_ptr<QueueElement> element = nullptr;
         for(_queue.wait_dequeue(element); element != nullptr; _queue.wait_dequeue(element))
         {
-            downloadFile(*element->first, element->second);
+            try
+            {
+                downloadFile(*element->first, element->second);
+            }
+            catch (...)
+            {
+                GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+                _errors.enqueue(std::make_pair(element->first->id(), boost::current_exception_diagnostic_information()));
+            }
         }
         _isFinished = true;
     }, _cts.get_token());
@@ -103,7 +114,7 @@ Downloader::start ()
             std::lock_guard<std::mutex> l(_mut);
             if (_downloading != nullptr)
             {
-                _progressCallback(*_downloading, _nbFiles - _dlCount, _dlBytes + _downloading->progress().transfered);
+                _progressCallback(*_downloading, _progress.getProgressAddByte(_downloading->progress().transfered));
             }
         }
     }, _cts.get_token());
@@ -165,6 +176,36 @@ Downloader::resume()
     }
 }
 
+void
+Downloader::clear ()
+{
+    if (_isStarted)
+    {
+        std::unique_ptr<QueueElement> element = nullptr;
+        while(_queue.try_dequeue(element)){}
+    }
+}
+
+std::unique_ptr<Downloader::Error>
+Downloader::consumeError ()
+{
+    Error e{};
+    if (!_errors.try_dequeue(e))
+    {
+        return nullptr;
+    }
+    return giga::make_unique<Downloader::Error>(e);
+}
+
+void
+Downloader::callProgressFct () const
+{
+    if (_downloading != nullptr)
+    {
+        _progressCallback(*_downloading, _progress.getProgressAddByte(_downloading->progress().transfered));
+    }
+}
+
 FileTransferer::State
 Downloader::state()
 {
@@ -178,7 +219,6 @@ Downloader::state()
 bool
 Downloader::isStarted() const
 {
-    std::lock_guard<std::mutex> l(_mut);
     return _isStarted;
 }
 
@@ -188,7 +228,8 @@ Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::
     _queue.enqueue(giga::make_unique<QueueElement>(std::make_pair(std::move(node), path)));
     {
         std::lock_guard<std::mutex> l{_mut};
-        _nbFiles += node->nbFiles();
+        _progress.fileCount  += node->type() == Node::Type::file ? 1ul : node->nbFiles();
+        _progress.bytesTotal += node->size();
     }
 }
 
@@ -233,19 +274,20 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
             {
                 std::lock_guard<std::mutex> l{_mut};
                 _downloading = std::move(fdownloader);
-                ++_dlCount;
-                _progressCallback(*_downloading, _nbFiles - _dlCount, _dlBytes);
+                _progressCallback(*_downloading, _progress);
             }
             task.wait();
             {
                 std::lock_guard<std::mutex> l{_mut};
-                _dlBytes += node.size();
+                _progress.fileDone += 1;
+                _progress.bytesTransfered += node.size();
             }
         }
         catch (...)
         {
+            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
             fdownloader->setError(boost::current_exception_diagnostic_information());
-            _progressCallback(*_downloading, _nbFiles - _dlCount, _dlBytes);
+            _progressCallback(*_downloading, _progress);
         }
     }
     else if (!npathExists)

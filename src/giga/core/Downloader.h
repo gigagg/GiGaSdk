@@ -18,6 +18,7 @@
 #define GIGA_CORE_DOWNLOADER_H_
 
 #include "FileTransferer.h"
+#include "TransferProgress.h"
 #include "../utils/readerwriterqueue.h"
 
 #include <boost/filesystem.hpp>
@@ -40,7 +41,8 @@ class Node;
 class Downloader final
 {
 public:
-    typedef std::function<void(giga::core::FileTransferer& ft, uint64_t left, uint64_t bytes)> ProgressFct;
+    typedef std::function<void(FileTransferer&, TransferProgress)> ProgressFct;
+    typedef std::pair<utility::string_t /* id */, std::string /* error */>  Error;
 
 public:
     /**
@@ -81,17 +83,6 @@ public:
     addDownload(std::unique_ptr<Node>&& node, const boost::filesystem::path& path);
 
     /**
-     * @brief Gets the current FileDownloader.
-     *
-     * For each file downloaded by the ```Downloader``` a ```FileDownloader``` is created.
-     * This methods return the ```FileDownloader``` for the file being currently download.
-     * It may return ```nullptr``` if there is no file downloading yet.
-     * @return The current FileDownloader or nullptr.
-     */
-    std::shared_ptr<FileDownloader>
-    downloadingFile();
-
-    /**
      * @brief Start the uploading process
      */
     void
@@ -129,6 +120,13 @@ public:
     resume();
 
     /**
+     * @brief Remove all the files waiting to be process. Only the current downloading file remains.
+     * The Error queue is cleared (@see ```consumeError()```)
+     */
+    void
+    clear();
+
+    /**
      * @brief Gets the current download state
      */
     FileTransferer::State
@@ -137,6 +135,27 @@ public:
     bool
     isStarted() const;
 
+    /**
+     * @brief Gets the current FileDownloader.
+     *
+     * For each file downloaded by the ```Downloader``` a ```FileDownloader``` is created.
+     * This methods return the ```FileDownloader``` for the file being currently download.
+     * It may return ```nullptr``` if there is no file downloading yet.
+     * @return The current FileDownloader or nullptr.
+     */
+    std::shared_ptr<FileDownloader>
+    downloadingFile();
+
+    /**
+     * @brief Gets an error from the error queue
+     * @return The error, or nullptr if there is no error left
+     */
+    std::unique_ptr<Error>
+    consumeError();
+
+    void
+    callProgressFct() const;
+
 private:
     void
     downloadFile (Node& node, const boost::filesystem::path& path);
@@ -144,15 +163,15 @@ private:
 private:
     typedef std::pair<std::unique_ptr<Node>, const boost::filesystem::path> QueueElement;
     typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<QueueElement>> Queue;
+    typedef moodycamel::BlockingReaderWriterQueue<Error>  ErrorQueue;
 
     Queue                           _queue;
+    ErrorQueue                      _errors;
     bool                            _isStarted;
     std::unique_ptr<Node>           _node;
     boost::filesystem::path         _path;
     std::shared_ptr<FileDownloader> _downloading;
-    uint64_t                        _nbFiles;
-    uint64_t                        _dlCount;
-    uint64_t                        _dlBytes;
+    TransferProgress                _progress;
     pplx::task<void>                _mainTask;
     std::atomic<bool>               _isFinished;
     mutable std::mutex              _mut;

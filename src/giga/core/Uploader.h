@@ -18,6 +18,7 @@
 #define GIGA_CORE_UPLOADER_H_
 
 #include "FolderNode.h"
+#include "TransferProgress.h"
 #include "../utils/readerwriterqueue.h"
 
 #include <boost/filesystem.hpp>
@@ -37,6 +38,7 @@ namespace core
 struct ScannedNode;
 struct PreparedFile;
 struct UploadRequest;
+struct FileTree;
 
 /**
  * Upload files and folders.
@@ -48,7 +50,7 @@ struct UploadRequest;
 class Uploader
 {
 public:
-    typedef std::function<void(FileTransferer&, uint64_t waitingCount, uint64_t bytesTransfered)> ProgressFct;
+    typedef std::function<void(FileTransferer&, TransferProgress)> ProgressFct;
     typedef std::function<void(FileTransferer&, std::shared_ptr<Node>)> NewNodeFct;
     typedef std::pair<boost::filesystem::path, std::string>  Error;
 
@@ -165,6 +167,9 @@ public:
     bool
     isStarted() const;
 
+    FileUploader*
+    uploadingFile();
+
     /**
      * @brief Gets an error from the error queue
      * @return The error, or nullptr if there is no error left
@@ -172,28 +177,8 @@ public:
     std::unique_ptr<Error>
     consumeError();
 
-    struct FileTree final
-    {
-    public:
-        enum class Type {
-            file, directory
-        };
-
-    public:
-        explicit FileTree(utility::string_t filename, Type type):
-            filename{std::move(filename)}, type{type}, children{} {}
-
-        ~FileTree()                          = default;
-        FileTree(FileTree&&)                 = default;
-        FileTree(const FileTree&)            = default;
-        FileTree& operator=(const FileTree&) = default;
-        FileTree& operator=(FileTree&&)      = default;
-
-    public:
-        utility::string_t filename;
-        Type              type;
-        std::vector<FileTree>   children;
-    };
+    void
+    callProgressFct() const;
 
 private:
     void
@@ -224,23 +209,18 @@ private:
     std::unique_ptr<Sha1Calculator> _preparingFile;
     std::unique_ptr<FileUploader>   _uploadingFile;
 
-    pplx::cancellation_token_source _scanCts;
-    pplx::cancellation_token_source _clearCts;
     pplx::cancellation_token_source _cts;
     pplx::task<void>                _mainTask;
     bool                            _isStarted;
 
     mutable std::mutex              _mut;
 
-    uint64_t                        _upBytes;
-    uint64_t                        _upCount;
-    uint64_t                        _sha1Bytes;
-    uint64_t                        _sha1Count;
-    uint64_t                        _totalCount;
-    std::atomic<bool>               _isFinished;
-    ProgressFct                     _progressUp;
-    ProgressFct                     _progressPrep;
+    TransferProgress                _upProgress;
+    TransferProgress                _sha1Progress;
+    ProgressFct                     _upProgressFct;
+    ProgressFct                     _sha1ProgressFct;
     NewNodeFct                      _onNewNode;
+    std::atomic<bool>               _isFinished;
     const Application*              _app;
     uint64_t                        _rate;
 };

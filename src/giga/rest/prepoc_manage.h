@@ -15,6 +15,8 @@
  */
 #ifndef GIGA_MANAGE
 
+#include <cpprest/details/basic_types.h>
+
 #define GIGA_MANAGE(serializer, property) \
     serializer.manage(property, U(#property))
 

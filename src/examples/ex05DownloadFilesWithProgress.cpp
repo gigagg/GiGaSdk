@@ -7,8 +7,9 @@
 using giga::Config;
 using giga::Application;
 using giga::core::Downloader;
-using boost::filesystem::path;
 using giga::core::FileTransferer;
+using giga::core::TransferProgress;
+using boost::filesystem::path;
 
 using utility::string_t;
 
@@ -33,11 +34,11 @@ int main(int, char**)
     auto nbFiles   = comics->nbFiles() + (comics->type() == giga::core::Node::Type::file ? 1 : 0);
     auto totalSize = comics->size(); // The total size to download
 
-    auto progress = [nbFiles, totalSize](FileTransferer& ft, uint64_t left, uint64_t) {
+    auto progress = [nbFiles, totalSize](FileTransferer& ft, TransferProgress p) {
         ucout << U("downloading ")
               << std::setprecision(3) << ft.progress().percent() << U("% - ")
               << ft.filename()
-              << U(" (") << left << U(" left)")
+              << U(" (") << p.fileDone << U("/") << p.fileCount << U(")")
               << std::endl;
     };
 

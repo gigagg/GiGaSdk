@@ -45,8 +45,16 @@ public:
         double
         percent() const;
 
-        const uint64_t transfered;
-        const uint64_t size;
+        uint64_t transfered;
+        uint64_t size;
+
+        bool operator==(const Progress& rhs) {
+            return transfered == rhs.transfered && size == rhs.size;
+        }
+
+        bool operator!=(const Progress& rhs) {
+            return !(*this == rhs);
+        }
     };
 
 public:
