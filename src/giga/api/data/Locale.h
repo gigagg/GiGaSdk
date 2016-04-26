@@ -21,6 +21,9 @@
 #include <cpprest/details/basic_types.h>
 #include "../../rest/prepoc_manage.h"
 
+namespace giga {
+namespace data {
+
 struct Locale {
     utility::string_t contryCode  = U("FR");
     utility::string_t countryName = {};
@@ -35,5 +38,8 @@ struct Locale {
         us.manage(ip, utility::string_t(U("ip")));
     }
 };
+
+}
+}
 
 #endif /* LOCALE_H_ */

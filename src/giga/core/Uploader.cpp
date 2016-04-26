@@ -40,68 +40,22 @@ namespace giga
 namespace core
 {
 
-struct FileTree final
-{
-public:
-    enum class Type {
-        file, directory
-    };
-
-public:
-    explicit FileTree(utility::string_t filename, Type type):
-        filename{std::move(filename)}, type{type}, children{} {}
-
-    ~FileTree()                          = default;
-    FileTree(FileTree&&)                 = default;
-    FileTree(const FileTree&)            = default;
-    FileTree& operator=(const FileTree&) = default;
-    FileTree& operator=(FileTree&&)      = default;
-
-public:
-    utility::string_t filename;
-    Type              type;
-    std::vector<FileTree>   children;
-};
-
-struct ScannedNode
-{
-    explicit ScannedNode(FolderNode parent, boost::filesystem::path path, FileTree entry):
-            parent{std::move(parent)}, path{std::move(path)}, entry{std::move(entry)}
-    {}
-
-    FolderNode              parent;
-    boost::filesystem::path path;
-    FileTree                entry;
-};
-
-struct PreparedFile
-{
-    explicit
-    PreparedFile (std::string parentId, boost::filesystem::path path, std::string sha1, std::string fkey, std::string fid, std::string fkeyEnc) :
-            parentId(parentId), path(path), sha1(sha1), fkey(fkey), fid(fid), fkeyEnc(fkeyEnc)
-    {
-    }
-    std::string             parentId;
-    boost::filesystem::path path;
-    std::string             sha1;
-    std::string             fkey;
-    std::string             fid;
-    std::string             fkeyEnc;
-};
-
 struct UploadRequest
 {
-    explicit UploadRequest(FolderNode parent, std::vector<boost::filesystem::path> pathes):
-                    parent{std::move(parent)}, pathes{std::move(pathes)}
+    explicit UploadRequest(FolderNode dest, std::vector<boost::filesystem::path> pathes):
+                    dest{std::move(dest)}, pathes{std::move(pathes)}
     {}
-    FolderNode                           parent;
+    FolderNode                           dest;
     std::vector<boost::filesystem::path> pathes;
 };
 
 Uploader::Uploader(const Application& app):
-    _upRequest{},
-    _toPrepare{},
-    _toUpload{},
+    _requests{},
+    _scanned{},
+    _prepared{},
+    _clearRequestQueue{0},
+    _clearScannedQueue{0},
+    _clearPreparedQueue{0},
     _scanningFile{nullptr},
     _preparingFile{nullptr},
     _uploadingFile{nullptr},
@@ -109,12 +63,17 @@ Uploader::Uploader(const Application& app):
     _mainTask{},
     _isStarted{false},
     _mut{},
+    _mutQueue{},
     _upProgressFct{[](FileTransferer&, TransferProgress){}},
     _sha1ProgressFct{[](FileTransferer&, TransferProgress){}},
-    _onNewNode{[](FileTransferer&, std::shared_ptr<Node>){}},
+    _onScannedFct{[](const ScannedFile&){}},
+    _onPreparedFct{[](const PreparedFile&){}},
+    _onUploadedFct{[](const boost::filesystem::path&, std::shared_ptr<Node>){}},
+    _onErrorFct{[](const boost::filesystem::path&, std::string&&){}},
     _isFinished{false},
     _app(&app),
-    _rate{0}
+    _rate{0},
+    _isPaused{false}
 {
 }
 
@@ -148,10 +107,31 @@ Uploader::setPreparationProgressFct (ProgressFct fct)
 }
 
 void
-Uploader::setOnNewNodeFct (NewNodeFct fct)
+Uploader::setOnScannedFct(OnScannedFct fct)
 {
     std::lock_guard<std::mutex> l(_mut);
-    _onNewNode = fct;
+    _onScannedFct = fct;
+}
+
+void
+Uploader::setOnPreparedFct(OnPreparedFct fct)
+{
+    std::lock_guard<std::mutex> l(_mut);
+    _onPreparedFct = fct;
+}
+
+void
+Uploader::setOnUploadedFct(OnUploadedFct fct)
+{
+    std::lock_guard<std::mutex> l(_mut);
+    _onUploadedFct = fct;
+}
+
+void
+Uploader::setOnErrorFct(OnErrorFct fct)
+{
+    std::lock_guard<std::mutex> l(_mut);
+    _onErrorFct = fct;
 }
 
 void
@@ -165,7 +145,7 @@ Uploader::addUpload (FolderNode parent, boost::filesystem::path&& path)
 void
 Uploader::addUploads(FolderNode parent, std::vector<boost::filesystem::path>&& pathes)
 {
-    _upRequest.enqueue(giga::make_unique<UploadRequest>(std::move(parent), std::move(pathes)));
+    _requests.enqueue(giga::make_unique<UploadRequest>(std::move(parent), std::move(pathes)));
 }
 
 void
@@ -177,34 +157,66 @@ Uploader::start()
     }
     auto scanTask = pplx::create_task([this]() {
         std::unique_ptr<UploadRequest> element = nullptr;
-        for(_upRequest.wait_dequeue(element); element != nullptr; _upRequest.wait_dequeue(element))
+        for(_requests.wait_dequeue(element); element != nullptr || _clearRequestQueue > 0; _requests.wait_dequeue(element))
         {
+            if (_clearRequestQueue > 0)
+            {
+                if (element == nullptr)
+                {
+                    _clearRequestQueue -= 1;
+                    enqueue<ScannedFile>(_scanned, nullptr);
+                }
+                continue;
+            }
             {
                 std::lock_guard<std::mutex> l(_mut);
                 _scanningFile = std::move(element);
             }
             for (const auto& path : _scanningFile->pathes)
             {
-                    FileTree e{U(""), is_directory(path) ? FileTree::Type::directory : FileTree::Type::file};
-                    scanFiles(e, path);
-                    _toPrepare.enqueue(giga::make_unique<ScannedNode>(_scanningFile->parent, path, std::move(e)));
+                scanFiles(_scanningFile->dest, path);
+
+                ScannedFile sf{_scanningFile->dest.id(), path, 0ul};
+                std::lock_guard<std::mutex> l{_mut};
+                _onScannedFct(sf);
             }
         }
+        enqueue<ScannedFile>(_scanned, nullptr);
     });
 
     auto prepareTask = pplx::create_task([this]() {
-        std::unique_ptr<ScannedNode> element = nullptr;
-        for(_toPrepare.wait_dequeue(element); element != nullptr; _toPrepare.wait_dequeue(element))
+        std::unique_ptr<ScannedFile> element = nullptr;
+        for(_scanned.wait_dequeue(element); element != nullptr || _clearScannedQueue > 0; _scanned.wait_dequeue(element))
         {
-            prepare(element->parent, element->path, element->entry);
+            if (_clearScannedQueue > 0)
+            {
+                if (element == nullptr)
+                {
+                    _clearScannedQueue -= 1;
+                    enqueue<PreparedFile>(_prepared, nullptr);
+                }
+                continue;
+            }
+
+            prepare(*element);
         }
+        enqueue<PreparedFile>(_prepared, nullptr);
     });
 
     auto uploadTask = pplx::create_task([this]() {
         std::unique_ptr<PreparedFile> element = nullptr;
-        for(_toUpload.wait_dequeue(element); element != nullptr; _toUpload.wait_dequeue(element))
+        for(_prepared.wait_dequeue(element); element != nullptr || _clearPreparedQueue > 0; _prepared.wait_dequeue(element))
         {
-            uploadFile(element);
+            if (_clearPreparedQueue > 0)
+            {
+                if (element == nullptr)
+                {
+                    _clearPreparedQueue -= 1;
+                }
+                continue;
+            }
+
+            uploadFile(*element);
         }
         _isFinished = true;
     });
@@ -246,9 +258,7 @@ Uploader::join()
 {
     if (_isStarted)
     {
-        _upRequest.enqueue(nullptr);
-        _toPrepare.enqueue(nullptr);
-        _toUpload.enqueue(nullptr);
+        _requests.enqueue(nullptr);
         _mainTask.wait();
         _isStarted = false;
     }
@@ -259,10 +269,6 @@ Uploader::kill()
 {
     if (_isStarted)
     {
-        clearQueues();
-        _upRequest.enqueue(nullptr);
-        _toPrepare.enqueue(nullptr);
-        _toUpload.enqueue(nullptr);
         _cts.cancel();
         if (_preparingFile != nullptr)
         {
@@ -294,6 +300,7 @@ Uploader::pause()
     if (_uploadingFile != nullptr)
     {
         _uploadingFile->pause();
+        _isPaused = true;
     }
 }
 
@@ -304,24 +311,8 @@ Uploader::resume()
     if (_uploadingFile != nullptr)
     {
         _uploadingFile->resume();
+        _isPaused = false;
     }
-}
-
-void
-Uploader::clearQueues ()
-{
-    std::unique_ptr<UploadRequest> u = nullptr;
-    while (_upRequest.try_dequeue(u))
-    {}
-    std::unique_ptr<ScannedNode> s = nullptr;
-    while (_toPrepare.try_dequeue(s))
-    {}
-    std::unique_ptr<PreparedFile> p = nullptr;
-    while (_toUpload.try_dequeue(p))
-    {}
-    Error e;
-    while (_errors.try_dequeue(e))
-    {}
 }
 
 void
@@ -329,29 +320,21 @@ Uploader::clear()
 {
     if (_isStarted)
     {
-        clearQueues();
+        _clearPreparedQueue += 1;
+        _clearScannedQueue  += 1;
+        _clearRequestQueue  += 1;
+
         if (_preparingFile != nullptr)
         {
             _preparingFile->cancel();
         }
+        _requests.enqueue(nullptr);
 
-        bool isUploading = false;
-        if (_uploadingFile != nullptr &&
-            _uploadingFile->state() != FileTransferer::State::canceled &&
-            _uploadingFile->state() != FileTransferer::State::finished &&
-            _uploadingFile->state() != FileTransferer::State::error)
-        {
-            isUploading = true;
-        }
+        auto ustate = _uploadingFile != nullptr ? _uploadingFile->state() : FileTransferer::State::canceled;
+        auto isUploading = ustate == FileTransferer::State::started || ustate == FileTransferer::State::paused;
 
-        bool isPreparing = false;
-        if (_preparingFile != nullptr &&
-            _preparingFile->state() != FileTransferer::State::canceled &&
-            _preparingFile->state() != FileTransferer::State::finished &&
-            _preparingFile->state() != FileTransferer::State::error)
-        {
-            isPreparing = true;
-        }
+        auto pstate = _preparingFile != nullptr ? _preparingFile->state() : FileTransferer::State::canceled;
+        auto isPreparing = pstate == FileTransferer::State::started || pstate == FileTransferer::State::paused;
 
         {
             std::lock_guard<std::mutex> l(_mut);
@@ -364,8 +347,10 @@ Uploader::clear()
             _sha1Progress.bytesTotal      = isPreparing ? _preparingFile->progress().size : 0ul;
             _sha1Progress.fileDone        = 0ul;
             _sha1Progress.fileCount       = isPreparing ? 1ul: 0ul;
+
+            _sha1ProgressFct(*_preparingFile, _sha1Progress);
+            _upProgressFct(*_uploadingFile, _upProgress);
         }
-        clearQueues();
     }
 }
 
@@ -388,20 +373,10 @@ Uploader::uploadingFile()
     return _uploadingFile.get();
 }
 
-std::unique_ptr<Uploader::Error>
-Uploader::consumeError ()
-{
-    Error e{};
-    if (!_errors.try_dequeue(e))
-    {
-        return nullptr;
-    }
-    return giga::make_unique<Uploader::Error>(e);
-}
-
 void
 Uploader::callProgressFct () const
 {
+    std::lock_guard<std::mutex> l{_mut};
     if (_uploadingFile != nullptr)
     {
         _upProgressFct(*_uploadingFile, _upProgress.getProgressAddByte(_uploadingFile->progress().transfered));
@@ -413,140 +388,166 @@ Uploader::callProgressFct () const
 }
 
 void
-Uploader::scanFiles(FileTree& parent, const boost::filesystem::path& ppath)
+Uploader::addScannedFile (const std::string parentId, const boost::filesystem::path& path)
 {
-    if (parent.type == FileTree::Type::file)
+    enqueue<ScannedFile>(_scanned, make_unique<ScannedFile>(parentId, path, boost::filesystem::file_size(path)));
+}
+
+void
+Uploader::addPreparedFile (const std::string parentId, const boost::filesystem::path& path, const std::string& sha1)
+{
+    auto decodedNodeKey = Crypto::base64decode(_app->currentUser().personalData().nodeKeyClear());
+    auto fkey = Crypto::calculateFkey(sha1);
+    auto prepared = make_unique<PreparedFile>(
+        parentId,
+        path,
+        sha1,
+        fkey,
+        Crypto::calculateFid(sha1),
+        Crypto::base64encode(Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey))
+    );
+    enqueue<PreparedFile>(_prepared, std::move(prepared));
+}
+
+void
+Uploader::scanFiles(FolderNode& dest, const boost::filesystem::path& ppath)
+{
+    if (dest.type() == Node::Type::file)
     {
-        uint64_t size = boost::filesystem::file_size(ppath);
-        std::lock_guard<std::mutex> l{_mut};
-        _upProgress.fileCount  += 1;
-        _upProgress.bytesTotal += size;
+        BOOST_THROW_EXCEPTION(ErrorException{"dest should be FolderNode"});
+    }
+    if (_clearRequestQueue > 0)
+    {
         return;
     }
 
-    using namespace boost::filesystem;
-    auto rng = boost::make_iterator_range(directory_iterator(ppath), directory_iterator());
-    for (directory_entry& entry : rng)
+    auto isDirectory = is_directory(ppath);
+    auto name        = ppath.filename().native();
+    if (!exists (ppath) || (!isDirectory && !is_regular_file(ppath)))
     {
-        if (_cts.get_token().is_canceled())
-        {
-            return;
-        }
-
-        const auto& path = entry.path();
-        auto name        = path.filename().native();
-        auto isDirectory = is_directory(path);
-        if (!exists (path) || (!isDirectory && !is_regular_file(path)))
-        {
-            continue;
-        }
-        if (name == U("") || name == U(".") || name == U(".."))
-        {
-            continue;
-        }
-
-        auto it = parent.children.emplace(parent.children.end(), std::move(name), isDirectory ? FileTree::Type::directory : FileTree::Type::file);
-        auto& children = *it;
-        scanFiles(children, entry.path());
+        return;
     }
-    std::sort(parent.children.begin(), parent.children.end(), [](const FileTree& lhs, const FileTree& rhs) {
-       return lhs.filename <  rhs.filename;
-    });
-}
-
-
-void
-Uploader::prepare (FolderNode& parent, const boost::filesystem::path& aPath, const FileTree& entry)
-{
-    using namespace boost::filesystem;
-    auto currentPath = aPath;
-
-    try
+    if (name == U("") || name[0] == U('.'))
     {
-        if (entry.filename != U("") && entry.filename != U("."))
-        {
-            currentPath /= entry.filename;
-        }
+        return;
+    }
 
-        if (_cts.get_token().is_canceled())
+    if (!isDirectory)
+    {
+        uint64_t size  = boost::filesystem::file_size(ppath);
+        if (size == 0ul)
         {
             return;
         }
-        if (!exists (currentPath))
+        auto scannedFile = giga::make_unique<ScannedFile>(dest.id(), ppath, size);
         {
-            BOOST_THROW_EXCEPTION(ErrorException{U("File or directory not found")});
+            std::lock_guard<std::mutex> l{_mut};
+            _sha1Progress.fileCount  += 1;
+            _sha1Progress.bytesTotal += size;
+            _onScannedFct(*scannedFile);
         }
+        enqueue(_scanned, std::move(scannedFile));
+        return;
+    }
+    else
+    {
+        const auto& children = dest.getChildren();
+        auto it = std::find_if(children.begin(), children.end(), [&name](const std::unique_ptr<Node>& e){
+            return e->type() == Node::Type::folder && e->name() == name;
+        });
 
-        if (entry.type == FileTree::Type::file)
+        FolderNode node;
+        if (it != children.end())
         {
-
-            auto parentId = parent.id();
-            auto nodeName = currentPath.filename().native();
-            auto decodedNodeKey = Crypto::base64decode(_app->currentUser().personalData().nodeKeyClear());
-
-            // WARNING: uploader gets moved into _preparingFile
-            auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(currentPath)};
-            calculator->start();
-
-            auto task = calculator->task().then([=](std::string sha1) {
-                auto fkey = Crypto::calculateFkey(sha1);
-                auto prepared = std::make_shared<PreparedFile>(
-                    parent.id(),
-                    currentPath,
-                    sha1,
-                    fkey,
-                    Crypto::calculateFid(sha1),
-                    Crypto::base64encode(Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey))
-                );
-
-                return prepared;
-            });
-
-            {
-                std::lock_guard<std::mutex> l{_mut};
-                _preparingFile = std::move(calculator);
-                _sha1ProgressFct(*_preparingFile, _sha1Progress);
-            }
-            std::shared_ptr<PreparedFile> prepared = task.get();
-            _toUpload.enqueue(giga::make_unique<PreparedFile>(std::move(*prepared)));
-            {
-                std::lock_guard<std::mutex> l{_mut};
-                _sha1Progress.bytesTransfered += _preparingFile->progress().transfered;
-                _sha1Progress.fileDone += 1;
-            }
+            node = *static_cast<FolderNode*>(it->get());
         }
         else
         {
-            auto name = currentPath.filename().native();
-            const auto& children = parent.getChildren();
-            auto it = std::find_if(children.begin(), children.end(), [&name](const std::unique_ptr<Node>& e){
-                return e->type() == Node::Type::folder && e->name() == name;
-            });
+            node = dest.addChildFolder(name);
+        }
 
-            FolderNode node;
-            if (it != children.end())
-            {
-                node = *static_cast<FolderNode*>(it->get());
-            }
-            else
-            {
-                node = parent.addChildFolder(name);
-            }
+        using namespace boost::filesystem;
+        auto rng = boost::make_iterator_range(directory_iterator(ppath), directory_iterator());
+        std::vector<directory_entry> entries;
+        std::copy(directory_iterator(ppath), directory_iterator(), std::back_inserter(entries));
+        std::sort(entries.begin(), entries.end());
 
-            for (const auto& child: entry.children)
+        for (auto& entry : entries)
+        {
+            if (_cts.get_token().is_canceled())
             {
-                prepare(node, currentPath, child);
+                return;
             }
+            scanFiles(node, entry.path());
+        }
+    }
+}
+
+void
+Uploader::prepare (const ScannedFile& scanned)
+{
+    const auto& path     = scanned.path;
+    const auto& parentId = scanned.parentId;
+
+    using namespace boost::filesystem;
+    try
+    {
+        if (_cts.get_token().is_canceled())
+        {
+            return;
+        }
+        if (!exists (path) || !is_regular_file(path))
+        {
+            BOOST_THROW_EXCEPTION(ErrorException{U("Not a file")});
+        }
+
+        auto nodeName = path.filename().native();
+        auto decodedNodeKey = Crypto::base64decode(_app->currentUser().personalData().nodeKeyClear());
+
+        // WARNING: uploader gets moved into _preparingFile
+        auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(path)};
+        calculator->start();
+
+        auto task = calculator->task().then([=](std::string sha1) {
+            auto fkey = Crypto::calculateFkey(sha1);
+            auto prepared = std::make_shared<PreparedFile>(
+                parentId,
+                path,
+                sha1,
+                fkey,
+                Crypto::calculateFid(sha1),
+                Crypto::base64encode(Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey))
+            );
+
+            return prepared;
+        });
+
+        {
+            std::lock_guard<std::mutex> l{_mut};
+            _upProgress.fileCount    += 1;
+            _upProgress.bytesTotal   += scanned.size;
+            _preparingFile = std::move(calculator);
+            _sha1ProgressFct(*_preparingFile, _sha1Progress);
+        }
+        std::shared_ptr<PreparedFile> prepared = task.get();
+        _onPreparedFct(*prepared);
+        enqueue(_prepared, giga::make_unique<PreparedFile>(std::move(*prepared)));
+        {
+            std::lock_guard<std::mutex> l{_mut};
+            _sha1Progress.bytesTransfered += _preparingFile->progress().transfered;
+            _sha1Progress.fileDone += 1;
         }
     }
     catch (...)
     {
         if (_preparingFile == nullptr || _preparingFile->state() != FileTransferer::State::canceled)
         {
-            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
-            _errors.enqueue(std::make_pair(currentPath, boost::current_exception_diagnostic_information()));
+            auto info =  boost::current_exception_diagnostic_information();
+            GIGA_DEBUG_LOG(info);
+            std::lock_guard<std::mutex> l{_mut};
+            _onErrorFct(path,std::move(info));
         }
-        if (_preparingFile != nullptr && entry.type == FileTree::Type::file)
+        if (_preparingFile != nullptr)
         {
             _sha1Progress.bytesTransfered += _preparingFile->progress().size;
             _sha1Progress.fileDone += 1;
@@ -554,30 +555,46 @@ Uploader::prepare (FolderNode& parent, const boost::filesystem::path& aPath, con
     }
 }
 
+bool
+Uploader::isPaused () const
+{
+    std::lock_guard<std::mutex> l(_mut);
+    return _isPaused;
+}
+
+
 void
-Uploader::uploadFile (const std::unique_ptr<PreparedFile>& element)
+Uploader::uploadFile (const PreparedFile& prepared)
 {
     try
     {
         // WARNING: uploader gets moved into _uploadingFile
-        auto uploader = giga::make_unique<FileUploader>(element->path,
-                                                        element->path.filename().native(),
-                                                        element->parentId,
-                                                        element->sha1,
-                                                        element->fid,
-                                                        element->fkeyEnc,
+        auto uploader = giga::make_unique<FileUploader>(prepared.path,
+                                                        prepared.path.filename().native(),
+                                                        prepared.parentId,
+                                                        prepared.sha1,
+                                                        prepared.fid,
+                                                        prepared.fkeyEnc,
                                                         *_app);
         {
             std::lock_guard<std::mutex> l(_mut);
             _uploadingFile = std::move(uploader);
             _uploadingFile->limitRate(_rate);
             _uploadingFile->start();
+            if (_isPaused)
+            {
+                _uploadingFile->pause();
+            }
             _upProgressFct(*_uploadingFile, _upProgress);
+        }
+        while (isPaused())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         auto node = _uploadingFile->task().get();
         {
             std::lock_guard<std::mutex> l(_mut);
-            _onNewNode(*_uploadingFile, node);  // I must do the onNewNode() first, in case it throw an exception
+            _onUploadedFct(prepared.path, node);  // I must do the _onUploadedFct() first, in case it throw an exception
             _upProgress.bytesTransfered += _uploadingFile->progress().transfered;
             _upProgress.fileDone += 1;
         }
@@ -586,8 +603,10 @@ Uploader::uploadFile (const std::unique_ptr<PreparedFile>& element)
     {
         if (_uploadingFile->state() != FileTransferer::State::canceled)
         {
-            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
-            _errors.enqueue(std::make_pair(element->path, boost::current_exception_diagnostic_information()));
+            auto info = boost::current_exception_diagnostic_information();
+            GIGA_DEBUG_LOG(info);
+            std::lock_guard<std::mutex> l(_mut);
+            _onErrorFct(prepared.path, std::move(info));
         }
         std::lock_guard<std::mutex> l(_mut);
         _upProgress.bytesTransfered += _uploadingFile->progress().size;

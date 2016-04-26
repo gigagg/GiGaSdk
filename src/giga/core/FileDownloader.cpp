@@ -25,6 +25,7 @@
 #include "../utils/Utils.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
@@ -173,18 +174,14 @@ FileDownloader::doStart()
     }
     else
     {
-        _task = _app->api().refreshToken().then([tempFile, fileUri, progress, fileSize]() {
-            try {
-                details::CurlWriter writer{tempFile};
-
-                unsigned short httpCode = 0;
-                for (auto i = 0; i < 5 && httpCode != 200; ++i)
-                {
-                    if (i != 0)
-                    {
-                        // Wait 3 seconds on retry
-                        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-                    }
+        auto cts = _cts;
+        _task = _app->api().refreshToken().then([tempFile, fileUri, progress, fileSize, cts]() {
+            unsigned short httpCode = 0;
+            const auto maxTry = 5;
+            for (auto i = 0; i <= maxTry && httpCode != 200; ++i)
+            {
+                try {
+                    details::CurlWriter writer{tempFile};
                     auto pos = writer.file().tellp();
                     if (pos == static_cast<int64_t>(fileSize))
                     {
@@ -220,27 +217,27 @@ FileDownloader::doStart()
                     {
                         GIGA_DEBUG_LOG(U("downloading error (retrying): ") << writer.getErrorData());
                     }
-                }
-                if (httpCode != 200)
-                {
-                    if (httpCode != CURLE_ABORTED_BY_CALLBACK)
+                    if (httpCode != 200)
                     {
-                        boost::filesystem::remove(tempFile);
+                        if (httpCode != CURLE_ABORTED_BY_CALLBACK)
+                        {
+                            boost::filesystem::remove(tempFile);
+                        }
+                        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode));
                     }
-                    BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode));
+
+                    // httpcode == 200 => download is complete.
+                    return;
                 }
-            } catch (const curl_easy_exception& error) {
-                auto track = error.get_traceback();
-                std::ostringstream ss;
-                for(const auto& obj : track)
+                catch (...)
                 {
-                    ss << obj.first << ": " << obj.second << "\n";
-                    if (obj.first == "Operation was aborted by an application callback")
+                    if (i == maxTry || cts.get_token().is_canceled())
                     {
-                        throw pplx::task_canceled{"Download canceled"};
+                        throw;
                     }
+                    GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+                    std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
                 }
-                BOOST_THROW_EXCEPTION(ErrorException{utils::str2wstr(ss.str())});
             }
         }, _cts.get_token()).then([destFile, tempFile, policy]() {
             if (policy != Policy::override && policy != Policy::overrideNewerSize && exists(destFile))

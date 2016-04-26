@@ -68,7 +68,7 @@ void
 FileTransferer::pause ()
 {
     std::lock_guard<std::mutex> l{_mut};
-    if (_state != State::started) {
+    if (_state != State::started && _state != State::paused) {
         BOOST_THROW_EXCEPTION(ErrorException{U("Pause is valid only in 'started' state")});
     }
     _progress->setPause(true);
@@ -79,7 +79,7 @@ void
 FileTransferer::resume ()
 {
     std::lock_guard<std::mutex> l{_mut};
-    if (_state != State::paused) {
+    if (_state != State::paused && _state != State::started) {
         BOOST_THROW_EXCEPTION(ErrorException{U("Resume is valid only in 'paused' state")});
     }
     _progress->setPause(false);

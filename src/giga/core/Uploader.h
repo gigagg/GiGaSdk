@@ -35,7 +35,7 @@ class Application;
 namespace core
 {
 
-struct ScannedNode;
+struct ScannedFile;
 struct PreparedFile;
 struct UploadRequest;
 struct FileTree;
@@ -51,8 +51,11 @@ class Uploader
 {
 public:
     typedef std::function<void(FileTransferer&, TransferProgress)> ProgressFct;
-    typedef std::function<void(FileTransferer&, std::shared_ptr<Node>)> NewNodeFct;
-    typedef std::pair<boost::filesystem::path, std::string>  Error;
+
+    typedef std::function<void(const ScannedFile&)>   OnScannedFct;
+    typedef std::function<void(const PreparedFile&)>  OnPreparedFct;
+    typedef std::function<void(const boost::filesystem::path&, std::shared_ptr<Node>)> OnUploadedFct;
+    typedef std::function<void(const boost::filesystem::path&, std::string&&)>         OnErrorFct;
 
 public:
     /**
@@ -96,11 +99,17 @@ public:
     void
     setPreparationProgressFct(ProgressFct fct);
 
-    /**
-     * @brief The ```fct``` will be called for each new node
-     */
     void
-    setOnNewNodeFct(NewNodeFct fct);
+    setOnScannedFct(OnScannedFct fct);
+
+    void
+    setOnPreparedFct(OnPreparedFct fct);
+
+    void
+    setOnUploadedFct(OnUploadedFct fct);
+
+    void
+    setOnErrorFct(OnErrorFct fct);
 
     /**
      * @brief add a file or folder to the list of uploads
@@ -170,40 +179,43 @@ public:
     FileUploader*
     uploadingFile();
 
-    /**
-     * @brief Gets an error from the error queue
-     * @return The error, or nullptr if there is no error left
-     */
-    std::unique_ptr<Error>
-    consumeError();
-
     void
     callProgressFct() const;
 
+    void
+    addScannedFile(const std::string parentId, const boost::filesystem::path& path);
+
+    void
+    addPreparedFile(const std::string parentId, const boost::filesystem::path& path, const std::string& sha1);
+
 private:
     void
-    scanFiles(FileTree& parent, const boost::filesystem::path& path);
+    scanFiles(FolderNode& dest, const boost::filesystem::path& ppath);
 
     void
-    prepare (FolderNode& parent, const boost::filesystem::path& aPath, const FileTree& entry);
+    prepare (const ScannedFile& scanned);
 
     void
-    uploadFile (const std::unique_ptr<PreparedFile>& element);
+    uploadFile (const PreparedFile& element);
 
-    void
-    clearQueues ();
+    bool
+    isPaused () const;
+
+    template <typename T> void
+    enqueue(moodycamel::BlockingReaderWriterQueue<std::unique_ptr<T>>& queue, std::unique_ptr<T>&& element);
 
 private:
     typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<UploadRequest>> RequestQueue;
-    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<ScannedNode>>   ScannedQueue;
+    typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<ScannedFile>>   ScannedQueue;
     typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<PreparedFile>>  PreparedQueue;
 
-    typedef moodycamel::BlockingReaderWriterQueue<Error>  ErrorQueue;
+    RequestQueue                    _requests;
+    ScannedQueue                    _scanned;
+    PreparedQueue                   _prepared;
 
-    RequestQueue                    _upRequest;
-    ScannedQueue                    _toPrepare;
-    PreparedQueue                   _toUpload;
-    ErrorQueue                      _errors;
+    std::atomic<int>                _clearRequestQueue;
+    std::atomic<int>                _clearScannedQueue;
+    std::atomic<int>                _clearPreparedQueue;
 
     std::unique_ptr<UploadRequest>  _scanningFile;
     std::unique_ptr<Sha1Calculator> _preparingFile;
@@ -214,15 +226,62 @@ private:
     bool                            _isStarted;
 
     mutable std::mutex              _mut;
+    std::mutex                      _mutQueue;
 
     TransferProgress                _upProgress;
     TransferProgress                _sha1Progress;
     ProgressFct                     _upProgressFct;
     ProgressFct                     _sha1ProgressFct;
-    NewNodeFct                      _onNewNode;
+    OnScannedFct                    _onScannedFct;
+    OnPreparedFct                   _onPreparedFct;
+    OnUploadedFct                   _onUploadedFct;
+    OnErrorFct                      _onErrorFct;
     std::atomic<bool>               _isFinished;
     const Application*              _app;
     uint64_t                        _rate;
+
+    bool                            _isPaused;
+};
+
+
+struct ScannedFile
+{
+    explicit
+    ScannedFile(std::string parentId, boost::filesystem::path path, uint64_t size):
+        parentId{std::move(parentId)}, path{std::move(path)}, size{size}
+    {}
+
+    ScannedFile(ScannedFile&&)                 = default;
+    ScannedFile(const ScannedFile&)            = default;
+    ScannedFile& operator=(const ScannedFile&) = default;
+    ScannedFile& operator=(ScannedFile&&)      = default;
+
+    const std::string             parentId;
+    const boost::filesystem::path path;
+    const uint64_t                size;
+};
+
+template <typename T> void
+Uploader::enqueue(moodycamel::BlockingReaderWriterQueue<std::unique_ptr<T>>& queue, std::unique_ptr<T>&& element)
+{
+    std::lock_guard<std::mutex> l{_mutQueue};
+    queue.enqueue(std::move(element));
+}
+
+struct PreparedFile
+{
+    explicit
+    PreparedFile (std::string parentId, boost::filesystem::path path, std::string sha1, std::string fkey, std::string fid, std::string fkeyEnc) :
+            parentId(parentId), path(path), sha1(sha1), fkey(fkey), fid(fid), fkeyEnc(fkeyEnc)
+    {
+    }
+
+    const std::string             parentId;
+    const boost::filesystem::path path;
+    const std::string             sha1;
+    const std::string             fkey;
+    const std::string             fid;
+    const std::string             fkeyEnc;
 };
 
 } /* namespace core */

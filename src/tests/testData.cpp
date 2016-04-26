@@ -1,3 +1,5 @@
+#include <giga/rest/JsonSerializer.h>
+
 /*
  * Copyright 2016 Gigatribe
  *
@@ -16,9 +18,11 @@
 #define BOOST_TEST_MODULE data
 #include <boost/test/included/unit_test.hpp>
 #include <giga/api/data/Node.h>
+#include <giga/api/data/Locale.h>
 #include <giga/api/data/User.h>
 #include <giga/utils/Utils.h>
 #include <giga/rest/JsonUnserializer.h>
+#include <giga/rest/JsonSerializer.h>
 #include <cpprest/details/basic_types.h>
 
 using namespace boost::unit_test;
@@ -217,4 +221,15 @@ BOOST_AUTO_TEST_CASE(test_data_node)
     BOOST_CHECK(0 == folder->size);
     BOOST_CHECK(boost::none == folder->square);
     BOOST_CHECK(boost::none == folder->url);
+}
+
+BOOST_AUTO_TEST_CASE(test_serialize)
+{
+    giga::data::Locale l{};
+    l.contryCode  = U("FR");
+    l.countryName = U("France");
+    l.currency    = U("EUR");
+
+    auto str = JSonSerializer::toString(l);
+    BOOST_CHECK(str == U(R"({"contryCode":"FR","countryName":"France","currency":"EUR","ip":null})"));
 }

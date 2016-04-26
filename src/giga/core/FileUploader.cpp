@@ -28,11 +28,13 @@
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
-#include <exception>
-#include <utility>
 #include <boost/filesystem.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+#include <utility>
 #include <curl_easy.h>
+#include <chrono>
 #include <mutex>
+#include <thread>
 
 using boost::filesystem::path;
 using Concurrency::streams::basic_istream;
@@ -124,8 +126,22 @@ FileUploader::doStart ()
             if (e.getJson().has_field(U("uploadUrl"))) {
                 auto uploadUrl = e.getJson().at(U("uploadUrl")).as_string();
                 auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(utils::str2wstr(nodeKeyCl))});
-                ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress, *app};
-                return ch.upload();
+                const auto maxTry = 3;
+                for (auto i = 1; i <= maxTry; ++i) {
+                    try {
+                        ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress, *app};
+                        return ch.upload();
+                    }
+                    catch (...)
+                    {
+                        if (i == maxTry || cts.get_token().is_canceled())
+                        {
+                            throw;
+                        }
+                        GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+                        std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
+                    }
+                }
             }
             throw;
         } catch (const ErrorLocked& e) {

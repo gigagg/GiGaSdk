@@ -124,8 +124,13 @@ public:
 
     template <typename T> T unserialize() const {
         auto t = T{};
-        doUnserialize(t);
-        return t;
+        unserialize(t);
+        return std::move(t);
+    }
+
+    template <typename T> T& unserialize(T& val) const {
+        doUnserialize(val);
+        return val;
     }
 
 private:

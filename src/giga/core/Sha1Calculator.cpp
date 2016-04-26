@@ -16,6 +16,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <curl/curl.h>
 #include <openssl/sha.h>
 #include <chrono>
@@ -51,10 +52,22 @@ Sha1Calculator::Sha1Calculator(const path& filename, pplx::cancellation_token_so
 
 Sha1Calculator::~Sha1Calculator()
 {
-    if (_is)
+    try
     {
-        _is.close();
+        if (!_task.is_done())
+        {
+            _task.wait();
+        }
+        if (_is)
+        {
+            _is.close();
+        }
     }
+    catch (...)
+    {
+        GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+    }
+
 }
 
 const pplx::task<std::string>&
