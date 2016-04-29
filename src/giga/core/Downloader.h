@@ -41,8 +41,9 @@ class Node;
 class Downloader final
 {
 public:
-    typedef std::function<void(FileTransferer&, TransferProgress)> ProgressFct;
-    typedef std::pair<utility::string_t /* id */, std::string /* error */>  Error;
+    typedef std::function<void(FileTransferer&, TransferProgress)>           ProgressFct;
+    typedef std::function<void(const Node&, const boost::filesystem::path&)> OnDownloadedFct;
+    typedef std::function<void(const std::string& /*id*/, std::string&&)>    OnErrorFct;
 
 public:
     /**
@@ -71,6 +72,12 @@ public:
      */
     void
     setDownloadProgressFct(ProgressFct fct);
+
+    void
+    setOnDownloadedFct(OnDownloadedFct fct);
+
+    void
+    setOnErrorFct(OnErrorFct fct);
 
     /**
      * @brief add a file or folder to the list of download
@@ -146,13 +153,6 @@ public:
     std::shared_ptr<FileDownloader>
     downloadingFile();
 
-    /**
-     * @brief Gets an error from the error queue
-     * @return The error, or nullptr if there is no error left
-     */
-    std::unique_ptr<Error>
-    consumeError();
-
     void
     callProgressFct() const;
 
@@ -163,22 +163,25 @@ private:
 private:
     typedef std::pair<std::unique_ptr<Node>, const boost::filesystem::path> QueueElement;
     typedef moodycamel::BlockingReaderWriterQueue<std::unique_ptr<QueueElement>> Queue;
-    typedef moodycamel::BlockingReaderWriterQueue<Error>  ErrorQueue;
 
     Queue                           _queue;
-    ErrorQueue                      _errors;
-    bool                            _isStarted;
-    std::unique_ptr<Node>           _node;
-    boost::filesystem::path         _path;
-    std::shared_ptr<FileDownloader> _downloading;
-    TransferProgress                _progress;
+
     pplx::task<void>                _mainTask;
+    bool                            _isStarted;
     std::atomic<bool>               _isFinished;
     mutable std::mutex              _mut;
+
+    std::shared_ptr<FileDownloader> _downloading;
+    TransferProgress                _progress;
     ProgressFct                     _progressCallback;
+    OnDownloadedFct                 _onDownloadedFct;
+    OnErrorFct                      _onErrorFct;
+
+    uint64_t                        _rate;
+    bool                            _isPaused;
+
     const Application*              _app;
     pplx::cancellation_token_source _cts;
-    uint64_t                        _rate;
 };
 
 } /* namespace core */

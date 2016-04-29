@@ -93,6 +93,18 @@ FileUploader::FileUploader (const path& filename, const string_t& nodeName, cons
 {
 }
 
+FileUploader::~FileUploader()
+{
+    try
+    {
+        _task.wait();
+    }
+    catch (...)
+    {
+        GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+    }
+}
+
 void
 FileUploader::doStart ()
 {

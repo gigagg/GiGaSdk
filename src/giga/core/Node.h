@@ -196,6 +196,8 @@ public:
     const utility::string_t&
     rename(const utility::string_t& name);
 
+    const std::shared_ptr<data::Node>
+    handle() const;
 
 protected:
     std::shared_ptr<data::Node> _data;

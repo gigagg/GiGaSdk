@@ -204,6 +204,11 @@ Node::rename(const string_t& name)
     _data->name = node->name;
     return node->name;
 }
+const std::shared_ptr<data::Node>
+Node::handle() const
+{
+    return _data;
+}
 
 } /* namespace core */
 } /* namespace giga */

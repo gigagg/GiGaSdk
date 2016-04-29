@@ -48,7 +48,7 @@ public:
     FileUploader (const boost::filesystem::path& filename, const utility::string_t& nodeName, const std::string& parentId,
                   const std::string& sha1, const std::string& fid, const std::string& fkey, const Application& app,
                   pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
-    ~FileUploader ()                             = default;
+    virtual ~FileUploader ();
 
     FileUploader ()                              = delete;
     FileUploader (FileUploader&&)                = delete;

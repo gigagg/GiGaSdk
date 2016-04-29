@@ -46,16 +46,26 @@ struct FileTree;
  * Start the upload process with the ```Uploader::start()``` method.
  * Uses ```Uploader::addUpload()``` to add file/folder to upload.
  * Terminate the uploading process using the ```Uploader::join()``` method.
+ *
+ * There are 3 phases in the upload process :
+ *  - First the folder to upload is scanned, and every file found will be sent to the preparation process
+ *  - Every file to upload needs to get prepared (calculate its sha1 etc...)
+ *  - The prepared files gets finally uploaded.
  */
 class Uploader
 {
 public:
+    enum class Step {
+        scanning, preparing, uploading
+    };
+
     typedef std::function<void(FileTransferer&, TransferProgress)> ProgressFct;
 
     typedef std::function<void(const ScannedFile&)>   OnScannedFct;
     typedef std::function<void(const PreparedFile&)>  OnPreparedFct;
     typedef std::function<void(const boost::filesystem::path&, std::shared_ptr<Node>)> OnUploadedFct;
-    typedef std::function<void(const boost::filesystem::path&, std::string&&)>         OnErrorFct;
+    typedef std::function<void(const boost::filesystem::path&, std::string&&, Step)>   OnErrorFct;
+
 
 public:
     /**
@@ -99,15 +109,32 @@ public:
     void
     setPreparationProgressFct(ProgressFct fct);
 
+    /**
+     * @param fct will be called every file found in the folders to upload
+     *
+     * For each file/folder passed to ```addUpload()```, the ```fct``` gets called
+     * one extra time, to notify that all files for this ```addUpload()``` have been scanned.
+     * In this special case, the ```ScannedFile::size``` is set to zero.
+     *
+     */
     void
     setOnScannedFct(OnScannedFct fct);
 
+    /**
+     * @param fct will be called every time a preparation is finish..
+     */
     void
     setOnPreparedFct(OnPreparedFct fct);
 
+    /**
+     * @param fct will be called for every node created (file or folder) during the upload process.
+     */
     void
     setOnUploadedFct(OnUploadedFct fct);
 
+    /**
+     * @param fct will be called for every error/canceled uploads.
+     */
     void
     setOnErrorFct(OnErrorFct fct);
 
@@ -238,8 +265,8 @@ private:
     OnErrorFct                      _onErrorFct;
     std::atomic<bool>               _isFinished;
     const Application*              _app;
-    uint64_t                        _rate;
 
+    uint64_t                        _rate;
     bool                            _isPaused;
 };
 

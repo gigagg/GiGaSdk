@@ -21,12 +21,12 @@ namespace giga
 namespace core
 {
 
-class Sha1Calculator : public FileTransferer
+class Sha1Calculator final : public FileTransferer
 {
 public:
     explicit
     Sha1Calculator(const boost::filesystem::path& filename, pplx::cancellation_token_source cts = pplx::cancellation_token_source{});
-    ~Sha1Calculator();
+    virtual ~Sha1Calculator();
 
     Sha1Calculator ()                                = delete;
     Sha1Calculator (Sha1Calculator&&)                = delete;

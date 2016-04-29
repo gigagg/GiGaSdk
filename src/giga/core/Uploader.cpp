@@ -69,7 +69,7 @@ Uploader::Uploader(const Application& app):
     _onScannedFct{[](const ScannedFile&){}},
     _onPreparedFct{[](const PreparedFile&){}},
     _onUploadedFct{[](const boost::filesystem::path&, std::shared_ptr<Node>){}},
-    _onErrorFct{[](const boost::filesystem::path&, std::string&&){}},
+    _onErrorFct{[](const boost::filesystem::path&, std::string&&, Step){}},
     _isFinished{false},
     _app(&app),
     _rate{0},
@@ -174,8 +174,20 @@ Uploader::start()
             }
             for (const auto& path : _scanningFile->pathes)
             {
-                scanFiles(_scanningFile->dest, path);
+                try
+                {
+                    scanFiles(_scanningFile->dest, path);
+                }
+                catch (...)
+                {
+                    auto info = boost::current_exception_diagnostic_information();
+                    GIGA_DEBUG_LOG(info);
 
+                    std::lock_guard<std::mutex> l(_mut);
+                    _onErrorFct(path, std::move(info), Step::scanning);
+                }
+
+                // notify that the scan of path is complete
                 ScannedFile sf{_scanningFile->dest.id(), path, 0ul};
                 std::lock_guard<std::mutex> l{_mut};
                 _onScannedFct(sf);
@@ -232,18 +244,20 @@ Uploader::start()
         while(!_isFinished)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            std::lock_guard<std::mutex> l(_mut);
-            if (_uploadingFile != nullptr && (upSaved != _uploadingFile.get() || upProgress != _uploadingFile->progress() || upSaved->state() != _uploadingFile->state()))
             {
-                upProgress = _uploadingFile->progress();
-                upSaved    = _uploadingFile.get();
-                _upProgressFct(*_uploadingFile, _upProgress.getProgressAddByte(upProgress.transfered));
-            }
-            if (_preparingFile != nullptr && (sha1Saved != _preparingFile.get() || sha1Progress != _preparingFile->progress() || sha1Saved->state() != _preparingFile->state()))
-            {
-                sha1Progress = _preparingFile->progress();
-                sha1Saved    = _preparingFile.get();
-                _sha1ProgressFct(*_preparingFile, _sha1Progress.getProgressAddByte(sha1Progress.transfered));
+                std::lock_guard<std::mutex> l(_mut);
+                if (_uploadingFile != nullptr && (upSaved != _uploadingFile.get() || upProgress != _uploadingFile->progress() || upSaved->state() != _uploadingFile->state()))
+                {
+                    upProgress = _uploadingFile->progress();
+                    upSaved    = _uploadingFile.get();
+                    _upProgressFct(*_uploadingFile, _upProgress.getProgressAddByte(upProgress.transfered));
+                }
+                if (_preparingFile != nullptr && (sha1Saved != _preparingFile.get() || sha1Progress != _preparingFile->progress() || sha1Saved->state() != _preparingFile->state()))
+                {
+                    sha1Progress = _preparingFile->progress();
+                    sha1Saved    = _preparingFile.get();
+                    _sha1ProgressFct(*_preparingFile, _sha1Progress.getProgressAddByte(sha1Progress.transfered));
+                }
             }
         }
     });
@@ -272,7 +286,7 @@ Uploader::kill()
         _cts.cancel();
         if (_preparingFile != nullptr)
         {
-            _uploadingFile->cancel();
+            _preparingFile->cancel();
         }
         if (_uploadingFile != nullptr)
         {
@@ -300,8 +314,8 @@ Uploader::pause()
     if (_uploadingFile != nullptr)
     {
         _uploadingFile->pause();
-        _isPaused = true;
     }
+    _isPaused = true;
 }
 
 void
@@ -311,8 +325,8 @@ Uploader::resume()
     if (_uploadingFile != nullptr)
     {
         _uploadingFile->resume();
-        _isPaused = false;
     }
+    _isPaused = false;
 }
 
 void
@@ -324,20 +338,20 @@ Uploader::clear()
         _clearScannedQueue  += 1;
         _clearRequestQueue  += 1;
 
-        if (_preparingFile != nullptr)
-        {
-            _preparingFile->cancel();
-        }
-        _requests.enqueue(nullptr);
-
-        auto ustate = _uploadingFile != nullptr ? _uploadingFile->state() : FileTransferer::State::canceled;
-        auto isUploading = ustate == FileTransferer::State::started || ustate == FileTransferer::State::paused;
-
-        auto pstate = _preparingFile != nullptr ? _preparingFile->state() : FileTransferer::State::canceled;
-        auto isPreparing = pstate == FileTransferer::State::started || pstate == FileTransferer::State::paused;
-
         {
             std::lock_guard<std::mutex> l(_mut);
+            if (_preparingFile != nullptr)
+            {
+                _preparingFile->cancel();
+            }
+            _requests.enqueue(nullptr);
+
+            auto ustate = _uploadingFile != nullptr ? _uploadingFile->state() : FileTransferer::State::canceled;
+            auto isUploading = ustate == FileTransferer::State::started || ustate == FileTransferer::State::paused;
+
+            auto pstate = _preparingFile != nullptr ? _preparingFile->state() : FileTransferer::State::canceled;
+            auto isPreparing = pstate == FileTransferer::State::started || pstate == FileTransferer::State::paused;
+
             _upProgress.bytesTransfered = isUploading ? _uploadingFile->progress().transfered : 0ul;
             _upProgress.bytesTotal      = isUploading ? _uploadingFile->progress().size : 0ul;
             _upProgress.fileDone        = 0ul;
@@ -348,8 +362,14 @@ Uploader::clear()
             _sha1Progress.fileDone        = 0ul;
             _sha1Progress.fileCount       = isPreparing ? 1ul: 0ul;
 
-            _sha1ProgressFct(*_preparingFile, _sha1Progress);
-            _upProgressFct(*_uploadingFile, _upProgress);
+            if (_preparingFile != nullptr)
+            {
+                _sha1ProgressFct(*_preparingFile, _sha1Progress);
+            }
+            if (_uploadingFile != nullptr)
+            {
+                _upProgressFct(*_uploadingFile, _upProgress);
+            }
         }
     }
 }
@@ -390,7 +410,13 @@ Uploader::callProgressFct () const
 void
 Uploader::addScannedFile (const std::string parentId, const boost::filesystem::path& path)
 {
-    enqueue<ScannedFile>(_scanned, make_unique<ScannedFile>(parentId, path, boost::filesystem::file_size(path)));
+    auto size = boost::filesystem::file_size(path);
+    {
+        std::lock_guard<std::mutex> l{_mut};
+        _sha1Progress.fileCount  += 1;
+        _sha1Progress.bytesTotal += size;
+    }
+    enqueue<ScannedFile>(_scanned, make_unique<ScannedFile>(parentId, path, size));
 }
 
 void
@@ -406,6 +432,13 @@ Uploader::addPreparedFile (const std::string parentId, const boost::filesystem::
         Crypto::calculateFid(sha1),
         Crypto::base64encode(Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey))
     );
+
+    auto size = boost::filesystem::file_size(path);
+    {
+        std::lock_guard<std::mutex> l{_mut};
+        _upProgress.fileCount    += 1;
+        _upProgress.bytesTotal   += size;
+    }
     enqueue<PreparedFile>(_prepared, std::move(prepared));
 }
 
@@ -464,6 +497,8 @@ Uploader::scanFiles(FolderNode& dest, const boost::filesystem::path& ppath)
         else
         {
             node = dest.addChildFolder(name);
+            std::lock_guard<std::mutex> l(_mut);
+            _onUploadedFct(ppath, std::shared_ptr<Node>(new FolderNode(node)));
         }
 
         using namespace boost::filesystem;
@@ -540,13 +575,11 @@ Uploader::prepare (const ScannedFile& scanned)
     }
     catch (...)
     {
-        if (_preparingFile == nullptr || _preparingFile->state() != FileTransferer::State::canceled)
-        {
-            auto info =  boost::current_exception_diagnostic_information();
-            GIGA_DEBUG_LOG(info);
-            std::lock_guard<std::mutex> l{_mut};
-            _onErrorFct(path,std::move(info));
-        }
+        auto info =  boost::current_exception_diagnostic_information();
+        GIGA_DEBUG_LOG(info);
+
+        std::lock_guard<std::mutex> l{_mut};
+        _onErrorFct(path, std::move(info), Step::preparing);
         if (_preparingFile != nullptr)
         {
             _sha1Progress.bytesTransfered += _preparingFile->progress().size;
@@ -601,14 +634,11 @@ Uploader::uploadFile (const PreparedFile& prepared)
     }
     catch (...)
     {
-        if (_uploadingFile->state() != FileTransferer::State::canceled)
-        {
-            auto info = boost::current_exception_diagnostic_information();
-            GIGA_DEBUG_LOG(info);
-            std::lock_guard<std::mutex> l(_mut);
-            _onErrorFct(prepared.path, std::move(info));
-        }
+        auto info = boost::current_exception_diagnostic_information();
+        GIGA_DEBUG_LOG(info);
+
         std::lock_guard<std::mutex> l(_mut);
+        _onErrorFct(prepared.path, std::move(info), Step::uploading);
         _upProgress.bytesTransfered += _uploadingFile->progress().size;
         _upProgress.fileDone += 1;
     }

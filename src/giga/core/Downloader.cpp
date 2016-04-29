@@ -42,19 +42,19 @@ namespace core
 
 Downloader::Downloader (const Application& app) :
         _queue{},
-        _errors{},
-        _isStarted{false},
-        _node{nullptr},
-        _path{},
-        _downloading{},
-        _progress{},
         _mainTask{},
+        _isStarted{false},
         _isFinished{false},
         _mut{},
+        _downloading{},
+        _progress{},
         _progressCallback{[](giga::core::FileTransferer&, TransferProgress){}},
+        _onDownloadedFct{[](const Node&, const boost::filesystem::path&){}},
+        _onErrorFct{[](const std::string& /*id*/, std::string&&){}},
+        _rate{0},
+        _isPaused{false},
         _app{&app},
-        _cts{},
-        _rate{0}
+        _cts{}
 {
 }
 
@@ -80,6 +80,20 @@ Downloader::setDownloadProgressFct(ProgressFct fct)
     _progressCallback = fct;
 }
 
+void
+Downloader::setOnDownloadedFct(OnDownloadedFct fct)
+{
+    std::lock_guard<std::mutex> l{_mut};
+    _onDownloadedFct = fct;
+}
+
+void
+Downloader::setOnErrorFct(OnErrorFct fct)
+{
+    std::lock_guard<std::mutex> l{_mut};
+    _onErrorFct = fct;
+}
+
 std::shared_ptr<FileDownloader>
 Downloader::downloadingFile ()
 {
@@ -97,11 +111,17 @@ Downloader::start ()
             try
             {
                 downloadFile(*element->first, element->second);
+                std::lock_guard<std::mutex> l{_mut};
+                _onDownloadedFct(*element->first, element->second);
             }
             catch (...)
             {
-                GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
-                _errors.enqueue(std::make_pair(element->first->id(), boost::current_exception_diagnostic_information()));
+                auto error = boost::current_exception_diagnostic_information();
+                GIGA_DEBUG_LOG(error);
+                {
+                    std::lock_guard<std::mutex> l{_mut};
+                    _onErrorFct(element->first->id(), std::move(error));
+                }
             }
         }
         _isFinished = true;
@@ -161,19 +181,23 @@ Downloader::limitRate(uint64_t rate)
 void
 Downloader::pause()
 {
+    std::lock_guard<std::mutex> l(_mut);
     if (_downloading != nullptr)
     {
         _downloading->pause();
     }
+    _isPaused = true;
 }
 
 void
 Downloader::resume()
 {
+    std::lock_guard<std::mutex> l(_mut);
     if (_downloading != nullptr)
     {
         _downloading->resume();
     }
+    _isPaused = false;
 }
 
 void
@@ -184,17 +208,6 @@ Downloader::clear ()
         std::unique_ptr<QueueElement> element = nullptr;
         while(_queue.try_dequeue(element)){}
     }
-}
-
-std::unique_ptr<Downloader::Error>
-Downloader::consumeError ()
-{
-    Error e{};
-    if (!_errors.try_dequeue(e))
-    {
-        return nullptr;
-    }
-    return giga::make_unique<Downloader::Error>(e);
 }
 
 void
@@ -225,11 +238,13 @@ Downloader::isStarted() const
 void
 Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::path& path)
 {
+    auto size = node->size();
+    auto count = node->type() == Node::Type::file ? 1ul : node->nbFiles();
     _queue.enqueue(giga::make_unique<QueueElement>(std::make_pair(std::move(node), path)));
     {
         std::lock_guard<std::mutex> l{_mut};
-        _progress.fileCount  += node->type() == Node::Type::file ? 1ul : node->nbFiles();
-        _progress.bytesTotal += node->size();
+        _progress.fileCount  += count;
+        _progress.bytesTotal += size;
     }
 }
 
@@ -267,8 +282,15 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
     if (node.type() == Node::Type::file)
     {
         auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, *_app, _cts, FileDownloader::Policy::overrideNewerSize);
-        fdownloader->start();
-        fdownloader->limitRate(_rate);
+        {
+            std::lock_guard<std::mutex> l{_mut};
+            fdownloader->limitRate(_rate);
+            fdownloader->start();
+            if (_isPaused)
+            {
+                fdownloader->pause();
+            }
+        }
         try {
             auto task = fdownloader->task();
             {
@@ -285,9 +307,13 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
         }
         catch (...)
         {
-            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
-            fdownloader->setError(boost::current_exception_diagnostic_information());
-            _progressCallback(*_downloading, _progress);
+            auto error = boost::current_exception_diagnostic_information();
+            GIGA_DEBUG_LOG(error);
+            {
+                std::lock_guard<std::mutex> l{_mut};
+                fdownloader->setError(error);
+                _onErrorFct(node.id(), std::move(error));
+            }
         }
     }
     else if (!npathExists)
