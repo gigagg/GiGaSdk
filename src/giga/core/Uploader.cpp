@@ -458,7 +458,7 @@ Uploader::scanFiles(FolderNode& dest, const boost::filesystem::path& ppath)
     auto name        = ppath.filename().native();
     if (!exists (ppath) || (!isDirectory && !is_regular_file(ppath)))
     {
-        return;
+        BOOST_THROW_EXCEPTION(ErrorException{U("dest should be a regular file")});
     }
     if (name == U("") || name[0] == U('.'))
     {
