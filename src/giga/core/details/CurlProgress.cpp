@@ -140,7 +140,7 @@ CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultot
                 _rateTime = now;
 
                 // add bytes in the bucket
-                _bucket += std::max(static_cast<uint64_t>((elapsedMs * _limitRate) / 1000), 1ul);
+                _bucket += std::max(static_cast<uint64_t>((elapsedMs * _limitRate) / 1000), 1ull);
 
                 // take bytes in the bucket
                 auto take = std::min(_bucket, transfered - _rateBytes);

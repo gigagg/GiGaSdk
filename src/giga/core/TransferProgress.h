@@ -23,10 +23,10 @@ struct TransferProgress
     uint64_t bytesTransfered = 0ul;
 
     TransferProgress
-    getProgressAddByte(uint64_t bytesTransfered) const
+    getProgressAddByte(uint64_t addBytesTransfered) const
     {
         TransferProgress p{*this};
-        p.bytesTransfered += bytesTransfered;
+        p.bytesTransfered += addBytesTransfered;
         return p;
     }
 

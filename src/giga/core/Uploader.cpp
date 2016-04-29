@@ -416,7 +416,7 @@ Uploader::addScannedFile (const std::string parentId, const boost::filesystem::p
         _sha1Progress.fileCount  += 1;
         _sha1Progress.bytesTotal += size;
     }
-    enqueue<ScannedFile>(_scanned, make_unique<ScannedFile>(parentId, path, size));
+    enqueue<ScannedFile>(_scanned, giga::make_unique<ScannedFile>(parentId, path, size));
 }
 
 void
@@ -424,7 +424,7 @@ Uploader::addPreparedFile (const std::string parentId, const boost::filesystem::
 {
     auto decodedNodeKey = Crypto::base64decode(_app->currentUser().personalData().nodeKeyClear());
     auto fkey = Crypto::calculateFkey(sha1);
-    auto prepared = make_unique<PreparedFile>(
+    auto prepared = giga::make_unique<PreparedFile>(
         parentId,
         path,
         sha1,
@@ -447,7 +447,7 @@ Uploader::scanFiles(FolderNode& dest, const boost::filesystem::path& ppath)
 {
     if (dest.type() == Node::Type::file)
     {
-        BOOST_THROW_EXCEPTION(ErrorException{"dest should be FolderNode"});
+        BOOST_THROW_EXCEPTION(ErrorException{U("dest should be FolderNode")});
     }
     if (_clearRequestQueue > 0)
     {
