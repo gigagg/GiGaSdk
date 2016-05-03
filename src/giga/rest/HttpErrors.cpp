@@ -71,31 +71,5 @@ HttpErrorGeneric::getJson () const
     return this->json;
 }
 
-HttpErrorGeneric
-HttpErrorGeneric::create(unsigned short status, const string_t& errorStr, const string_t& scope)
-{
-    switch (status)
-    {
-        case 401:
-            return ErrorUnauthorized{errorStr, scope};
-        case 403:
-            return ErrorForbidden{errorStr, scope};
-        case 400:
-            return ErrorBadRequest{errorStr, scope};
-        case 422:
-            return ErrorUnprocessableEntity{errorStr, scope};
-        case 423:
-            return ErrorLocked{errorStr, scope};
-        case 404:
-            return ErrorNotFound{errorStr, scope};
-        case 500:
-            return ErrorInternalServerError{errorStr, scope};
-        case 501:
-            return ErrorNotImplemented{errorStr, scope};
-        default:
-            return HttpErrorGeneric{status, errorStr, scope};
-    }
-}
-
 }
 

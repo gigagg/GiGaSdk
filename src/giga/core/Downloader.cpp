@@ -50,9 +50,11 @@ Downloader::Downloader (const Application& app) :
         _progress{},
         _progressCallback{[](giga::core::FileTransferer&, TransferProgress){}},
         _onDownloadedFct{[](const Node&, const boost::filesystem::path&){}},
+        _onFileDownloadedFct{[](const Node&, const boost::filesystem::path&, FileDownloader::Action){}},
         _onErrorFct{[](const std::string& /*id*/, std::string&&){}},
         _rate{0},
         _isPaused{false},
+        _clearing{0},
         _app{&app},
         _cts{}
 {
@@ -88,6 +90,13 @@ Downloader::setOnDownloadedFct(OnDownloadedFct fct)
 }
 
 void
+Downloader::setOnFileDownloadedFct(OnFileDownloadedFct fct)
+{
+    std::lock_guard<std::mutex> l{_mut};
+    _onFileDownloadedFct = fct;
+}
+
+void
 Downloader::setOnErrorFct(OnErrorFct fct)
 {
     std::lock_guard<std::mutex> l{_mut};
@@ -104,13 +113,24 @@ Downloader::downloadingFile ()
 void
 Downloader::start ()
 {
+    _isStarted = true;
     auto dlTask = pplx::create_task([this]() {
         std::unique_ptr<QueueElement> element = nullptr;
         for(_queue.wait_dequeue(element); element != nullptr; _queue.wait_dequeue(element))
         {
             try
             {
-                downloadFile(*element->first, element->second);
+                if (_clearing > 0)
+                {
+                    if (element == nullptr)
+                    {
+                        _clearing -= 1;
+                    }
+                    continue;
+                }
+
+
+                downloadNode(*element->first, element->second);
                 std::lock_guard<std::mutex> l{_mut};
                 _onDownloadedFct(*element->first, element->second);
             }
@@ -134,14 +154,21 @@ Downloader::start ()
             std::lock_guard<std::mutex> l(_mut);
             if (_downloading != nullptr)
             {
-                _progressCallback(*_downloading, _progress.getProgressAddByte(_downloading->progress().transfered));
+                try
+                {
+                    _progressCallback(*_downloading, _progress.getProgressAddByte(_downloading->progress().transfered));
+                }
+                catch (...)
+                {
+                    auto error = boost::current_exception_diagnostic_information();
+                    GIGA_DEBUG_LOG(error);
+                }
             }
         }
     }, _cts.get_token());
 
     auto tasks = {dlTask, progressTask};
     _mainTask =  pplx::when_all(tasks.begin(), tasks.end());
-    _isStarted = true;
 }
 
 void
@@ -205,8 +232,25 @@ Downloader::clear ()
 {
     if (_isStarted)
     {
-        std::unique_ptr<QueueElement> element = nullptr;
-        while(_queue.try_dequeue(element)){}
+        _clearing += 1;
+
+        {
+            std::lock_guard<std::mutex> l(_mut);
+            _queue.enqueue(nullptr);
+
+            auto dstate = _downloading != nullptr ? _downloading->state() : FileTransferer::State::canceled;
+            auto isUploading = dstate == FileTransferer::State::started || dstate == FileTransferer::State::paused;
+
+            _progress.bytesTransfered = isUploading ? _downloading->progress().transfered : 0ul;
+            _progress.bytesTotal      = isUploading ? _downloading->progress().size : 0ul;
+            _progress.fileDone        = 0ul;
+            _progress.fileCount       = isUploading ? 1ul: 0ul;
+
+            if (_downloading != nullptr)
+            {
+                _progressCallback(*_downloading, _progress);
+            }
+        }
     }
 }
 
@@ -249,7 +293,7 @@ Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::
 }
 
 void
-Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
+Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
 {
     if (!is_directory(path))
     {
@@ -281,7 +325,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
 
     if (node.type() == Node::Type::file)
     {
-        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, *_app, _cts, FileDownloader::Policy::overrideNewerSize);
+        auto fdownloader = std::make_shared<FileDownloader>(path.native(), node, *_app, pplx::cancellation_token_source{}, FileDownloader::Policy::overrideNewerSize);
         {
             std::lock_guard<std::mutex> l{_mut};
             fdownloader->limitRate(_rate);
@@ -298,20 +342,29 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
                 _downloading = std::move(fdownloader);
                 _progressCallback(*_downloading, _progress);
             }
-            task.wait();
+            auto result = task.get();
             {
                 std::lock_guard<std::mutex> l{_mut};
                 _progress.fileDone += 1;
                 _progress.bytesTransfered += node.size();
+                _onFileDownloadedFct(node, result.path, result.action);
             }
         }
         catch (...)
         {
             auto error = boost::current_exception_diagnostic_information();
+            if (_downloading != nullptr && _downloading->state() == FileTransferer::State::canceled)
+            {
+                error = "canceled";
+            }
             GIGA_DEBUG_LOG(error);
+
             {
                 std::lock_guard<std::mutex> l{_mut};
-                fdownloader->setError(error);
+                if (_downloading != nullptr)
+                {
+                    _downloading->setError(error);
+                }
                 _onErrorFct(node.id(), std::move(error));
             }
         }
@@ -324,7 +377,7 @@ Downloader::downloadFile (Node& node, const boost::filesystem::path& path)
     // recursion
     for(auto& child : node.getChildren())
     {
-        downloadFile(*child, npath);
+        downloadNode(*child, npath);
     }
 }
 

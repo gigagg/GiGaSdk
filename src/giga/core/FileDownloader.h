@@ -33,7 +33,7 @@ namespace core
 class Node;
 
 /**
- * Downlod a file
+ * Download a file
  */
 class FileDownloader : public FileTransferer
 {
@@ -65,6 +65,25 @@ public:
         rename
     };
 
+    enum class Action
+    {
+        fileOverriden, fileIgnored, fileRenamed, fileDownloaded
+    };
+
+    struct Result
+    {
+        explicit Result(boost::filesystem::path path, Action action) :
+                path{path}, action{action} {}
+        explicit Result()                = default;
+        Result(Result&&)                 = default;
+        Result(const Result&)            = default;
+        Result& operator=(Result&&)      = default;
+        Result& operator=(const Result&) = default;
+
+        boost::filesystem::path path   = {};
+        Action                  action = Action::fileDownloaded;
+    };
+
 public:
     /**
      * @brief Construct a FileDownloader
@@ -93,7 +112,7 @@ public:
      * @see https://github.com/Microsoft/cpprestsdk
      * @see http://microsoft.github.io/cpprestsdk/classpplx_1_1task.html
      */
-    const pplx::task<boost::filesystem::path>&
+    const pplx::task<Result>&
     task () const;
 
     /**
@@ -119,10 +138,11 @@ protected:
     doStart () override;
 
 private:
-    pplx::task<boost::filesystem::path> _task;
+    pplx::task<Result>       _task;
 
     boost::filesystem::path  _tempFile;
     boost::filesystem::path  _destFile;
+    Action                   _action;
     web::uri                 _fileUri;
     uint64_t                 _fileSize;
     uint64_t                 _startAt;

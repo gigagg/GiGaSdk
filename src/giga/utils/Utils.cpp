@@ -15,6 +15,7 @@
  */
 
 #include "Utils.h"
+#include "utfcpp/utf8/checked.h"
 #include <cpprest/details/basic_types.h>
 
 using utility::string_t;
@@ -83,6 +84,15 @@ str2wstr(const std::string& str)
 #else
     return std::string{str};
 #endif
+}
+
+std::string
+replaceInvalidUtf8(const std::string& str)
+{
+    std::string tmp{};
+    tmp.reserve(str.size());
+    utf8::replace_invalid(str.begin(), str.end(), std::back_inserter(tmp));
+    return tmp;
 }
 
 } /* namespace utils */

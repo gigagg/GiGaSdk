@@ -243,12 +243,13 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
         throw;
     }
 
-    unsigned short httpCode;
+    uint64_t httpCode;
     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
 
     if (httpCode >= 300)
     {
-        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode, utils::str2wstr(str.str())));
+        auto shttpCode = static_cast<unsigned short>(httpCode);
+        GIGA_THROW_HTTPERROR(shttpCode, utils::str2wstr(str.str()), U(""));
     }
     return utils::str2wstr(str.str());
 }

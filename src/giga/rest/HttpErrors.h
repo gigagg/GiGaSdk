@@ -51,10 +51,6 @@ protected:
 class HttpErrorGeneric : public ErrorException
 {
 public:
-    static HttpErrorGeneric
-    create(unsigned short status, const utility::string_t& errorStr = U(""), const utility::string_t& scope = U(""));
-
-public:
     explicit HttpErrorGeneric (unsigned short status, const utility::string_t& errorStr = U(""), const utility::string_t& scope = U(""));
 
     virtual ~HttpErrorGeneric ()                = default;
@@ -111,6 +107,41 @@ typedef HttpError<423> ErrorLocked;
 typedef HttpError<404> ErrorNotFound;
 typedef HttpError<500> ErrorInternalServerError;
 typedef HttpError<501> ErrorNotImplemented;
+
+//
+// I use a macro to make sure the BOOST_THROW_EXCEPTION has the correct data in
+// LINE/FILE/function
+//
+#define GIGA_THROW_HTTPERROR(status, errorStr, scope)                           \
+switch (status)                                                                 \
+    {                                                                           \
+        case 401:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorUnauthorized{errorStr, scope}));        \
+            break;                                                              \
+        case 403:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorForbidden{errorStr, scope}));           \
+            break;                                                              \
+        case 400:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorBadRequest{errorStr, scope}));          \
+            break;                                                              \
+        case 422:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorUnprocessableEntity{errorStr, scope})); \
+            break;                                                              \
+        case 423:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorLocked{errorStr, scope}));              \
+            break;                                                              \
+        case 404:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorNotFound{errorStr, scope}));            \
+            break;                                                              \
+        case 500:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorInternalServerError{errorStr, scope})); \
+            break;                                                              \
+        case 501:                                                               \
+            BOOST_THROW_EXCEPTION((ErrorNotImplemented{errorStr, scope}));      \
+            break;                                                              \
+        default:                                                                \
+            BOOST_THROW_EXCEPTION((HttpErrorGeneric{status, errorStr, scope})); \
+    }
 
 }  // namespace giga
 

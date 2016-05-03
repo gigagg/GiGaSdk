@@ -71,7 +71,7 @@ namespace core
 {
 
 FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Node& node, const Application& app, pplx::cancellation_token_source cts, Policy policy) :
-        FileTransferer{cts}, _task{}, _tempFile{}, _destFile{}, _fileUri{},
+        FileTransferer{cts}, _task{}, _tempFile{}, _destFile{}, _action{Action::fileDownloaded}, _fileUri{},
         _fileSize{node.size()}, _startAt{0}, _lastUpdateDate{node.lastUpdateDate()}, _policy{policy},
         _app(&app)
 {
@@ -97,6 +97,7 @@ FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Nod
     while (policy == Policy::rename && exists(folder / name))
     {
         name = firstPart + U("-") + to_string(++count) + lastPart;
+        _action = Action::fileRenamed;
     }
 
     auto fid = node.fileData().fid();
@@ -154,10 +155,8 @@ FileDownloader::doStart()
     auto fileSize = _fileSize;
     auto policy   = _policy;
     auto progress = _progress.get();
-
-    uri_builder b{_fileUri};
-    b.append_query(U("access_token"), _app->api().getOAuthConfig()->token().access_token());
-    auto fileUri = b.to_uri();
+    auto fileUri  = _fileUri;
+    auto action   = _action;
 
     auto ignore = false;
     if (_policy == Policy::overrideNewerSize && exists(_destFile))
@@ -169,14 +168,19 @@ FileDownloader::doStart()
     if (ignore || (_policy == Policy::ignore && exists(_destFile)))
     {
         _task = pplx::create_task([destFile]() {
-            return destFile;
+            return Result{destFile, Action::fileIgnored};
         }, _cts.get_token());
     }
     else
     {
         auto cts = _cts;
-        _task = _app->api().refreshToken().then([tempFile, fileUri, progress, fileSize, cts]() {
-            unsigned short httpCode = 0;
+        auto& api = _app->api();
+        _task = api.refreshToken().then([tempFile, fileUri, progress, fileSize, cts, &api, action]() {
+            uri_builder b{fileUri};
+            b.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
+            auto tokenedFileUri = b.to_uri().to_string();
+
+            uint64_t httpCode = 0;
             const auto maxTry = 5;
             for (auto i = 0; i <= maxTry && httpCode != 200; ++i)
             {
@@ -193,9 +197,9 @@ FileDownloader::doStart()
                     progress->setCurl(curl);
                     writer.setCurl(curl);
 
-                    GIGA_DEBUG_LOG(U("downloading: ") << fileUri.to_string());
+                    GIGA_DEBUG_LOG(U("downloading: ") << tokenedFileUri);
 
-                    auto filUriStr = utils::wstr2str(fileUri.to_string());
+                    auto filUriStr = utils::wstr2str(tokenedFileUri);
                     curl.add<CURLOPT_URL>(filUriStr.c_str());
                     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
                     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
@@ -219,15 +223,29 @@ FileDownloader::doStart()
                     }
                     if (httpCode != 200)
                     {
-                        if (httpCode != CURLE_ABORTED_BY_CALLBACK)
+                        if (httpCode != CURLE_ABORTED_BY_CALLBACK && httpCode != 206)
                         {
                             boost::filesystem::remove(tempFile);
                         }
-                        BOOST_THROW_EXCEPTION(HttpErrorGeneric::create(httpCode));
+                        auto shttpCode = static_cast<unsigned short>(httpCode);
+                        GIGA_THROW_HTTPERROR(shttpCode, U(""), U(""));
                     }
 
                     // httpcode == 200 => download is complete.
                     return;
+                }
+                catch (ErrorUnauthorized const& e)
+                {
+                    api.refreshToken().wait();
+
+                    uri_builder b{fileUri};
+                    b.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
+                    tokenedFileUri = b.to_uri().to_string();
+
+                    if (i == maxTry)
+                    {
+                        throw;
+                    }
                 }
                 catch (...)
                 {
@@ -239,20 +257,31 @@ FileDownloader::doStart()
                     std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
                 }
             }
-        }, _cts.get_token()).then([destFile, tempFile, policy]() {
-            if (policy != Policy::override && policy != Policy::overrideNewerSize && exists(destFile))
+        }, _cts.get_token()).then([destFile, tempFile, policy, action]() {
+            auto destfileExists = exists(destFile);
+            if (policy != Policy::override && policy != Policy::overrideNewerSize && destfileExists)
             {
                 // TODO: remove tempFile ?
                 BOOST_THROW_EXCEPTION(ErrorException{U("Destination file already exists")});
             }
 
             boost::filesystem::rename(tempFile, destFile);
-            return destFile;
+
+            if (action == Action::fileRenamed)
+            {
+                return Result{destFile, Action::fileRenamed};
+            }
+            if (action == Action::fileDownloaded && destfileExists)
+            {
+                return Result{destFile, Action::fileOverriden};
+            }
+            return Result{destFile, Action::fileDownloaded};
+
         }, _cts.get_token());
     }
 }
 
-const pplx::task<boost::filesystem::path>&
+const pplx::task<FileDownloader::Result>&
 FileDownloader::task () const
 {
     return _task;

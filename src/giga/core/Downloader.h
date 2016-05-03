@@ -18,6 +18,7 @@
 #define GIGA_CORE_DOWNLOADER_H_
 
 #include "FileTransferer.h"
+#include "FileDownloader.h"
 #include "TransferProgress.h"
 #include "../utils/readerwriterqueue.h"
 
@@ -32,7 +33,6 @@ class Application;
 namespace core
 {
 
-class FileDownloader;
 class Node;
 
 /**
@@ -43,6 +43,7 @@ class Downloader final
 public:
     typedef std::function<void(FileTransferer&, TransferProgress)>           ProgressFct;
     typedef std::function<void(const Node&, const boost::filesystem::path&)> OnDownloadedFct;
+    typedef std::function<void(const Node&, const boost::filesystem::path&, FileDownloader::Action)> OnFileDownloadedFct;
     typedef std::function<void(const std::string& /*id*/, std::string&&)>    OnErrorFct;
 
 public:
@@ -75,6 +76,9 @@ public:
 
     void
     setOnDownloadedFct(OnDownloadedFct fct);
+
+    void
+    setOnFileDownloadedFct(OnFileDownloadedFct fct);
 
     void
     setOnErrorFct(OnErrorFct fct);
@@ -158,7 +162,7 @@ public:
 
 private:
     void
-    downloadFile (Node& node, const boost::filesystem::path& path);
+    downloadNode (Node& node, const boost::filesystem::path& path);
 
 private:
     typedef std::pair<std::unique_ptr<Node>, const boost::filesystem::path> QueueElement;
@@ -175,10 +179,13 @@ private:
     TransferProgress                _progress;
     ProgressFct                     _progressCallback;
     OnDownloadedFct                 _onDownloadedFct;
+    OnFileDownloadedFct             _onFileDownloadedFct;
     OnErrorFct                      _onErrorFct;
 
     uint64_t                        _rate;
     bool                            _isPaused;
+    std::atomic<int>                _clearing;
+
 
     const Application*              _app;
     pplx::cancellation_token_source _cts;
