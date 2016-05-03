@@ -127,7 +127,7 @@ FolderNode::uploadFile(const fs::path& path, pplx::cancellation_token_source cts
     }
 
     auto parentId = this->id();
-    auto nodeName = utils::replaceInvalidUtf8(path.filename().native());
+    auto nodeName = utils::str2wstr(utils::replaceInvalidUtf8(path.filename().string()));
     auto nodeKeyClear = _app->currentUser().personalData().nodeKeyClear();
 
     auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(path, cts)};

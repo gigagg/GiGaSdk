@@ -37,6 +37,7 @@ find_library(CRYPTO++_UTILS_LIBRARY
     ${CRYPTO++_PKGCONF_LIBRARY_DIRS}
     ${CRYPTO++_DIR}
     $ENV{CRYPTO++_DIR}
+	$ENV{CRYPTO++_DIR}/vendors/cryptopp/crypto++/Win32/Output
     /usr/local
     /usr
   PATH_SUFFIXES

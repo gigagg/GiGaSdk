@@ -234,13 +234,13 @@ FileDownloader::doStart()
                     // httpcode == 200 => download is complete.
                     return;
                 }
-                catch (ErrorUnauthorized const& e)
+                catch (ErrorUnauthorized const&)
                 {
                     api.refreshToken().wait();
 
-                    uri_builder b{fileUri};
-                    b.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
-                    tokenedFileUri = b.to_uri().to_string();
+                    uri_builder bu{fileUri};
+                    bu.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
+                    tokenedFileUri = bu.to_uri().to_string();
 
                     if (i == maxTry)
                     {
