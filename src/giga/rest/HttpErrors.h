@@ -23,10 +23,19 @@
 #include <string>
 #include "prepoc_manage.h"
 
+#ifndef __FILENAME__
+#define __FILENAME__ __FILE__
+#endif
+
 #ifdef DEBUG_LOG
-#define GIGA_DEBUG_LOG(data) std::cerr << data << std::endl
+#   define GIGA_DEBUG_LOG(lvl, data) std::cerr << U(#lvl) << ": " << data << std::endl
 #else
-#define GIGA_DEBUG_LOG(data) do {} while(0)
+#   ifdef USE_BOOST_LOG
+#       include <boost/log/trivial.hpp>
+#       define GIGA_DEBUG_LOG(lvl, data) BOOST_LOG_TRIVIAL(lvl) << __FILENAME__ << "(" << __LINE__ << "): " << data
+#   else
+#       define GIGA_DEBUG_LOG(lvl, data) do {} while(0)
+#   endif
 #endif
 
 namespace giga {

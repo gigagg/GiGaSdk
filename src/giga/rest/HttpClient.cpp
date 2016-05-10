@@ -195,7 +195,7 @@ HttpClient::refreshToken()
 
     if (shouldRefresh)
     {
-        GIGA_DEBUG_LOG("-- Refreshing access token");
+        GIGA_DEBUG_LOG(trace, "Refreshing access token");
         try {
             auto rstate = _rstate;
             return _http.client_config().oauth2()->token_from_refresh().then([rstate](){

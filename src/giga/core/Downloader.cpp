@@ -24,7 +24,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <string>
 #include <memory>
 #include <mutex>
@@ -70,7 +69,7 @@ Downloader::~Downloader ()
         }
         catch (...)
         {
-            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+            GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
         }
     }
 }
@@ -136,8 +135,8 @@ Downloader::start ()
             }
             catch (...)
             {
-                auto error = boost::current_exception_diagnostic_information();
-                GIGA_DEBUG_LOG(error);
+                auto error = utils::exceptionInfos();
+                GIGA_DEBUG_LOG(debug, error);
                 {
                     std::lock_guard<std::mutex> l{_mut};
                     _onErrorFct(element->first->id(), std::move(error));
@@ -160,8 +159,8 @@ Downloader::start ()
                 }
                 catch (...)
                 {
-                    auto error = boost::current_exception_diagnostic_information();
-                    GIGA_DEBUG_LOG(error);
+                    auto error = utils::exceptionInfos();
+                    GIGA_DEBUG_LOG(debug, error);
                 }
             }
         }
@@ -303,6 +302,10 @@ Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
     {
         return;
     }
+    if (_clearing > 0)
+    {
+        return;
+    }
 
     auto name = utils::cleanUpFilename(node.name());
     auto npath = path / name;
@@ -352,12 +355,12 @@ Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
         }
         catch (...)
         {
-            auto error = boost::current_exception_diagnostic_information();
+            auto error = utils::exceptionInfos();
             if (_downloading != nullptr && _downloading->state() == FileTransferer::State::canceled)
             {
                 error = "canceled";
             }
-            GIGA_DEBUG_LOG(error);
+            GIGA_DEBUG_LOG(debug, error);
 
             {
                 std::lock_guard<std::mutex> l{_mut};

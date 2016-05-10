@@ -16,7 +16,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <curl/curl.h>
 #include <openssl/sha.h>
 #include <chrono>
@@ -65,7 +64,7 @@ Sha1Calculator::~Sha1Calculator()
     }
     catch (...)
     {
-        GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+        GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
     }
 
 }

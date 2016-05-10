@@ -21,7 +21,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range_core.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
@@ -88,7 +87,7 @@ Uploader::~Uploader()
         }
         catch (...)
         {
-            GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+            GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
         }
     }
 }
@@ -181,8 +180,8 @@ Uploader::start()
                 }
                 catch (...)
                 {
-                    auto info = boost::current_exception_diagnostic_information();
-                    GIGA_DEBUG_LOG(info);
+                    auto info = utils::exceptionInfos();
+                    GIGA_DEBUG_LOG(debug, info);
 
                     std::lock_guard<std::mutex> l(_mut);
                     _onErrorFct(path, std::move(info), Step::scanning);
@@ -576,8 +575,8 @@ Uploader::prepare (const ScannedFile& scanned)
     }
     catch (...)
     {
-        auto info =  boost::current_exception_diagnostic_information();
-        GIGA_DEBUG_LOG(info);
+        auto info =  utils::exceptionInfos();
+        GIGA_DEBUG_LOG(debug, info);
 
         std::lock_guard<std::mutex> l{_mut};
         _onErrorFct(path, std::move(info), Step::preparing);
@@ -635,12 +634,12 @@ Uploader::uploadFile (const PreparedFile& prepared)
     }
     catch (...)
     {
-        auto info = boost::current_exception_diagnostic_information();
+        auto info = utils::exceptionInfos();
         if (_uploadingFile != nullptr && _uploadingFile->state() == FileTransferer::State::canceled)
         {
             info = "canceled";
         }
-        GIGA_DEBUG_LOG(info);
+        GIGA_DEBUG_LOG(debug, info);
 
         std::lock_guard<std::mutex> l(_mut);
         _onErrorFct(prepared.path, std::move(info), Step::uploading);
