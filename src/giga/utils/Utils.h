@@ -54,6 +54,9 @@ str2wstr(const std::string& str);
 std::string
 replaceInvalidUtf8(const std::string& str);
 
+std::string
+exceptionInfos();
+
 } /* namespace utils */
 } /* namespace giga */
 

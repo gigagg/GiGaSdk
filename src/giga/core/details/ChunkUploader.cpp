@@ -194,7 +194,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 
     {
         auto upUri = utils::wstr2str(_uploadUrl.to_uri().to_string());
-        GIGA_DEBUG_LOG(_uploadUrl.to_uri().to_string());
+        GIGA_DEBUG_LOG(trace, _uploadUrl.to_uri().to_string());
         curl.add<CURLOPT_URL>(upUri.c_str());
     }
 #ifdef USE_DEV_GG

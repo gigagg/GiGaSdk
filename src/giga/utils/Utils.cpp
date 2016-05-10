@@ -16,6 +16,8 @@
 
 #include "Utils.h"
 #include "utfcpp/utf8/checked.h"
+
+#include <boost/exception/diagnostic_information.hpp>
 #include <cpprest/details/basic_types.h>
 
 using utility::string_t;
@@ -93,6 +95,14 @@ replaceInvalidUtf8(const std::string& str)
     tmp.reserve(str.size());
     utf8::replace_invalid(str.begin(), str.end(), std::back_inserter(tmp));
     return tmp;
+}
+
+std::string
+exceptionInfos()
+{
+    auto info = boost::current_exception_diagnostic_information(true);
+    std::replace(info.begin(), info.end(), '\n', '\t');
+    return info;
 }
 
 } /* namespace utils */

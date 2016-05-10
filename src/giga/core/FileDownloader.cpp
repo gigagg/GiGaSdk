@@ -25,7 +25,6 @@
 #include "../utils/Utils.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
@@ -197,7 +196,7 @@ FileDownloader::doStart()
                     progress->setCurl(curl);
                     writer.setCurl(curl);
 
-                    GIGA_DEBUG_LOG(U("downloading: ") << tokenedFileUri);
+                    GIGA_DEBUG_LOG(trace, U("downloading: ") << tokenedFileUri);
 
                     auto filUriStr = utils::wstr2str(tokenedFileUri);
                     curl.add<CURLOPT_URL>(filUriStr.c_str());
@@ -219,7 +218,7 @@ FileDownloader::doStart()
                     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
                     if (httpCode >= 300)
                     {
-                        GIGA_DEBUG_LOG(U("downloading error (retrying): ") << writer.getErrorData());
+                        GIGA_DEBUG_LOG(trace, U("downloading error (retrying): ") << writer.getErrorData());
                     }
                     if (httpCode != 200)
                     {
@@ -253,7 +252,7 @@ FileDownloader::doStart()
                     {
                         throw;
                     }
-                    GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+                    GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
                     std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
                 }
             }

@@ -29,7 +29,6 @@
 #include <cpprest/http_client.h>
 #include <pplx/pplxtasks.h>
 #include <boost/filesystem.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <utility>
 #include <curl_easy.h>
 #include <chrono>
@@ -101,7 +100,7 @@ FileUploader::~FileUploader()
     }
     catch (...)
     {
-        GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+        GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
     }
 }
 
@@ -150,7 +149,7 @@ FileUploader::doStart ()
                         {
                             throw;
                         }
-                        GIGA_DEBUG_LOG(boost::current_exception_diagnostic_information());
+                        GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
                         std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
                     }
                 }

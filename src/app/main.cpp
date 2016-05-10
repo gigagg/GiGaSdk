@@ -33,8 +33,8 @@
 #include <iomanip>
 #include <thread>
 
-#include <boost/program_options.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/program_options.hpp>
 #include <cpprest/json.h>
 #include <algorithm>
 

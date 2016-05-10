@@ -87,7 +87,7 @@ public:
     pplx::task<std::shared_ptr<T>>
     request (const web::http::method &mtd, web::uri_builder uri)
     {
-        GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string());
+        GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string());
         auto uriString = uri.to_string();
 
         return refreshToken().then([=]() {
@@ -104,7 +104,7 @@ public:
         auto json      = web::json::value::object();
         auto data      = JSonSerializer{json}.toString(std::move(bodyData));
         auto uriString = uri.to_string();
-        GIGA_DEBUG_LOG(mtd << U("  ") << uri.to_string() << U(" ") << data);
+        GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << data);
 
         return refreshToken().then([=]() {
             return _http.request(mtd, uriString, data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
@@ -139,7 +139,7 @@ public:
                 }
                 catch (const std::exception& e)
                 {
-                    GIGA_DEBUG_LOG(U("Error unserializing: ") << json.serialize());
+                    GIGA_DEBUG_LOG(error, U("Error unserializing: ") << json.serialize());
                     throw e;
                 }
             }
@@ -148,7 +148,7 @@ public:
                 throwHttpError(response.status_code(), std::move(json));
             }
         }
-        BOOST_THROW_EXCEPTION((HttpErrorGeneric{response.status_code(), response.extract_string().get()}));
+        GIGA_THROW_HTTPERROR(response.status_code(), response.extract_string().get(), U(""));
     }
 
     void

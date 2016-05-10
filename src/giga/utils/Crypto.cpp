@@ -333,27 +333,27 @@ static constexpr uint32_t BUF_SIZE = 8192;
 std::string
 Crypto::sha1File (const string_t& sfilename)
 {
-	std::ifstream is (sfilename.c_str(), std::ifstream::binary);
-	if (!is) {
-		BOOST_THROW_EXCEPTION(ErrorException{U("Cannot open file")});
-	}
-	auto buffer = std::unique_ptr<char[]>(new char[BUF_SIZE]);
+    std::ifstream is (sfilename.c_str(), std::ifstream::binary);
+    if (!is) {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Cannot open file")});
+    }
+    auto buffer = std::unique_ptr<char[]>(new char[BUF_SIZE]);
 
-	SHA_CTX ctx;
-	SHA1_Init(&ctx);
-	do {
-		is.read (buffer.get(), BUF_SIZE);
-		auto read = is.gcount();
-		if (read > 0)
-		{
-			SHA1_Update(&ctx, buffer.get(), static_cast<std::size_t>(read));
-		}
+    SHA_CTX ctx;
+    SHA1_Init(&ctx);
+    do {
+        is.read (buffer.get(), BUF_SIZE);
+        auto read = is.gcount();
+        if (read > 0)
+        {
+            SHA1_Update(&ctx, buffer.get(), static_cast<std::size_t>(read));
+        }
 
-	} while ((is.rdstate() & std::ifstream::eofbit) == 0);
-	is.close();
+    } while ((is.rdstate() & std::ifstream::eofbit) == 0);
+    is.close();
 
-	unsigned char hashBuf[SHA_DIGEST_LENGTH];
-	SHA1_Final(hashBuf, &ctx);
+    unsigned char hashBuf[SHA_DIGEST_LENGTH];
+    SHA1_Final(hashBuf, &ctx);
 
     std::string hash;
     StringSource ss(hashBuf, SHA_DIGEST_LENGTH, true,
@@ -362,10 +362,10 @@ Crypto::sha1File (const string_t& sfilename)
         ) // HexEncoder
     ); // StringSource
 
-	std::locale l{"C"};
-	std::transform(hash.begin(), hash.end(), hash.begin(), [&l](char c) {
-		return std::tolower(c, l);
-	});
+    std::locale l{"C"};
+    std::transform(hash.begin(), hash.end(), hash.begin(), [&l](char c) {
+        return std::tolower(c, l);
+    });
 
     return hash;
 }

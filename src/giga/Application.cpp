@@ -65,6 +65,10 @@ Application::isAuthenticated() const
 const core::User&
 Application::currentUser() const
 {
+    if (_currentUser == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("User is null")});
+    }
     return *_currentUser;
 }
 
