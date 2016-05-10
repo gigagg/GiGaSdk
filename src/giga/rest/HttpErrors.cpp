@@ -19,7 +19,6 @@
 #include <cpprest/details/basic_types.h>
 
 using utility::string_t;
-using giga::utils::to_string;
 
 namespace giga
 {
@@ -30,14 +29,14 @@ ErrorException::ErrorException () :
 }
 
 ErrorException::ErrorException (const string_t& what) :
-        std::exception(), whatStr(what)
+        std::exception(), whatStr(utils::wstr2str(what))
 {
 }
 
 const char*
 ErrorException::what () const noexcept
 {
-    return utils::wstr2str(whatStr).c_str();
+    return whatStr.c_str();
 }
 
 HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const string_t& errorStr, const string_t& scope) :
@@ -48,8 +47,8 @@ HttpErrorGeneric::HttpErrorGeneric (unsigned short status, const string_t& error
 const char*
 HttpErrorGeneric::what () const noexcept
 {
-    whatData = U("status: ") + to_string(status) + U(" err: ") + whatStr;
-    return utils::wstr2str(whatData).c_str();
+    whatData = "status: " + std::to_string(status) + " err: " + whatStr;
+    return whatData.c_str();
 }
 
 HttpErrorGeneric&

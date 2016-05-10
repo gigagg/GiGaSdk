@@ -54,7 +54,7 @@ public:
     what () const noexcept;
 
 protected:
-    utility::string_t whatStr  = U("");
+	mutable std::string whatStr = "";
 };
 
 class HttpErrorGeneric : public ErrorException
@@ -82,7 +82,7 @@ public:
     void
     visit(const Manager& us)
     {
-        us.manageOpt(whatStr, U("errorStr"), utility::string_t{});
+        us.manageOpt(whatStr, U("errorStr"), std::string{});
         GIGA_MANAGE_OPT(us, scope, utility::string_t{});
     }
 
@@ -92,7 +92,7 @@ public:
 
 private:
     web::json::value json = {};
-    mutable utility::string_t whatData;
+    mutable std::string whatData;
 };
 
 template <unsigned short TStatus>
