@@ -43,8 +43,7 @@ find_library(CRYPTO++_UTILS_LIBRARY
   PATH_SUFFIXES
     build
     lib
-	Debug
-	Release
+	${CMAKE_BUILD_TYPE}
 )
 
 set(CRYPTO++_PROCESS_LIBS CRYPTO++_LIBRARY CRYPTO++_UTILS_LIBRARY)

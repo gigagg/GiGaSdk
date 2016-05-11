@@ -1,3 +1,11 @@
+mkdir %1deps\Debug\lib
+mkdir %1deps\Debug\bin
+mkdir %1deps\Debug\include
+mkdir %1deps\Release\lib
+mkdir %1deps\Release\bin
+mkdir %1deps\Release\include
+mkdir %1deps\include
+
 REM boost
 for /f %%f in ('dir /b %1\packages\boost_*') do xcopy %1packages\%%f\lib\native\address-model-32\lib %1deps\Debug\lib /y /s
 for /f %%f in ('dir /b %1\packages\boost_*') do xcopy %1packages\%%f\lib\native\address-model-32\lib %1deps\Release\lib /y /s
