@@ -19,6 +19,7 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cpprest/details/basic_types.h>
+#include <cpprest/asyncrt_utils.h>
 
 using utility::string_t;
 
@@ -67,25 +68,27 @@ cleanUpFilename(string_t name)
 std::string
 wstr2str(const utility::string_t& wstr)
 {
-#ifdef _UTF16_STRINGS
-    typedef std::codecvt_utf8_utf16<wchar_t> convert_typeX;
-    std::wstring_convert<convert_typeX, wchar_t> converterX;
-    return converterX.to_bytes(wstr);
-#else
-    return std::string{wstr};
-#endif
+	return utility::conversions::to_utf8string(wstr);
 }
 
 utility::string_t
 str2wstr(const std::string& str)
 {
-#ifdef _UTF16_STRINGS
-    typedef std::codecvt_utf8_utf16<wchar_t> convert_typeX;
-    std::wstring_convert<convert_typeX, wchar_t> converterX;
-    return converterX.from_bytes(str);
-#else
-    return std::string{str};
-#endif
+	try
+	{
+		return utility::conversions::to_utf16string(str);
+	}
+	catch (...)
+	{
+		try
+		{
+			return utility::conversions::latin1_to_utf16(str);
+		}
+		catch (...)
+		{
+			return utility::conversions::to_utf16string(replaceInvalidUtf8(str));
+		}
+	}
 }
 
 std::string

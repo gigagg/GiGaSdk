@@ -197,9 +197,9 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
         GIGA_DEBUG_LOG(trace, _uploadUrl.to_uri().to_string());
         curl.add<CURLOPT_URL>(upUri.c_str());
     }
-#ifdef USE_DEV_GG
+//#ifdef USE_DEV_GG
     curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
-#endif
+//#endif
     curl.add<CURLOPT_FOLLOWLOCATION>(1L);
     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
     curl.add<CURLOPT_PROGRESSDATA>(_progress);

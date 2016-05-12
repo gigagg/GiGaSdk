@@ -211,9 +211,9 @@ FileDownloader::doStart()
                         curl.add<CURLOPT_RANGE>(posStr.c_str());
                     }
 
-#ifdef USE_DEV_GG
+//#ifdef USE_DEV_GG
                     curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
-#endif
+//#endif
                     curl.perform();
                     curl_easy_getinfo (curl.get_curl(), CURLINFO_RESPONSE_CODE, &httpCode);
                     if (httpCode >= 300)

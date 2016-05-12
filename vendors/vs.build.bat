@@ -1,11 +1,4 @@
 
-REM install chocolatey
-REM @powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin
-REM choco install nuget.commandline -y
-REM choco install cmake -y
-REM choco install visualstudio2015community -y
-REM choco install devbox-sed -y
-
 REM Get dependancies
 pushd VS2015
 nuget restore get_dependencies.sln
@@ -43,6 +36,10 @@ sed -i "s/>MultiThreadedDebug</>MultiThreadedDebugDLL</g" dlltest.vcxproj
 devenv cryptest.sln /Rebuild Debug
 devenv cryptest.sln /Rebuild Release
 popd
+xcopy "cryptopp\crypto++\Win32\Output\Release\cryptlib.lib" "VS2015\deps\Release\lib" /y /s
+xcopy "cryptopp\crypto++\Win32\Output\Debug\cryptlib.lib" "VS2015\deps\Debug\lib" /y /s
+mkdir VS2015\deps\include\crypto++
+for /f %%f in ('dir /b cryptopp\crypto++\*.h') do xcopy "cryptopp\crypto++\%%f" VS2015\deps\include\crypto++ /y /s
 
 REM Build GiGaSdk
 cd ..
