@@ -18,6 +18,7 @@
 #include "utfcpp/utf8/checked.h"
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/filesystem.hpp>
 #include <cpprest/details/basic_types.h>
 #include <cpprest/asyncrt_utils.h>
 
@@ -68,27 +69,31 @@ cleanUpFilename(string_t name)
 std::string
 wstr2str(const utility::string_t& wstr)
 {
-	return utility::conversions::to_utf8string(wstr);
+    return utility::conversions::to_utf8string(wstr);
 }
 
 utility::string_t
 str2wstr(const std::string& str)
 {
-	try
-	{
-		return utility::conversions::to_utf16string(str);
-	}
-	catch (...)
-	{
-		try
-		{
-			return utility::conversions::latin1_to_utf16(str);
-		}
-		catch (...)
-		{
-			return utility::conversions::to_utf16string(replaceInvalidUtf8(str));
-		}
-	}
+#ifdef _UTF16_STRINGS
+    try
+    {
+        return utility::conversions::to_utf16string(str);
+    }
+    catch (...)
+    {
+        try
+        {
+            return utility::conversions::latin1_to_utf16(str);
+        }
+        catch (...)
+        {
+            return utility::conversions::to_utf16string(replaceInvalidUtf8(str));
+        }
+    }
+#else
+    return std::string{str};
+#endif
 }
 
 std::string
@@ -101,11 +106,79 @@ replaceInvalidUtf8(const std::string& str)
 }
 
 std::string
-exceptionInfos()
+exceptionInfos() noexcept
 {
     auto info = boost::current_exception_diagnostic_information(true);
     std::replace(info.begin(), info.end(), '\n', '\t');
     return info;
+}
+
+utility::string_t
+exceptionPrettyInfos() noexcept
+{
+    std::string error = "";
+    try
+    {
+        throw;
+    }
+    catch (const boost::filesystem::filesystem_error& e)
+    {
+        switch (e.code().value()) {
+        case boost::system::errc::device_or_resource_busy:
+            error = "device or resource_busy";
+            break;
+        case boost::system::errc::file_exists:
+            error = "file exists";
+            break;
+        case boost::system::errc::file_too_large:
+            error = "file too large";
+            break;
+        case boost::system::errc::filename_too_long:
+            error = "filename too long";
+            break;
+        case boost::system::errc::no_space_on_device:
+            error = "no space on device";
+            break;
+        case boost::system::errc::no_such_device_or_address:
+            error = "no such device or address";
+            break;
+        case boost::system::errc::no_such_file_or_directory:
+            error = "no such file or directory";
+            break;
+        case boost::system::errc::not_enough_memory:
+            error = "not enough memory";
+            break;
+        case boost::system::errc::permission_denied:
+            error = "permission denied";
+            break;
+        case boost::system::errc::read_only_file_system:
+            error = "read only file system";
+            break;
+        case boost::system::errc::io_error:
+            error = "inpout/output error";
+            break;
+        default:
+            error = "unknown filesystem error";
+            break;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        error = e.what();
+    }
+    catch (...)
+    {
+        error = giga::utils::exceptionInfos();
+    }
+
+    try
+    {
+        return giga::utils::str2wstr(error);
+    }
+    catch (...)
+    {
+        return U("Unknown error");
+    }
 }
 
 } /* namespace utils */

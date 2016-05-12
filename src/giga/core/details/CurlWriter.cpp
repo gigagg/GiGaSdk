@@ -31,7 +31,7 @@ namespace details
 CurlWriter::CurlWriter (const boost::filesystem::path& path) :
         _file{}, _stream{}, _curl{nullptr}, _httpCode{0}
 {
-    _file.open(path.string(), std::ios::binary | std::ios::app);
+    _file.open(path.native(), std::ios::binary | std::ios::app);
 }
 
 CurlWriter::~CurlWriter ()

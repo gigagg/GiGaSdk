@@ -5,7 +5,7 @@ ENV LC_ALL C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
-    apt-get install -y g++ git make libboost1.54-all-dev libssl-dev cmake
+    apt-get install -y g++ git make libboost1.54-all-dev libssl-dev cmake # uncache02
 
 RUN cd /root                                             && \
     git clone https://github.com/gigagg/GiGaSdk.git      && \

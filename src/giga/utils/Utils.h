@@ -55,7 +55,11 @@ std::string
 replaceInvalidUtf8(const std::string& str);
 
 std::string
-exceptionInfos();
+exceptionInfos() noexcept;
+
+utility::string_t
+exceptionPrettyInfos() noexcept;
+
 
 } /* namespace utils */
 } /* namespace giga */
