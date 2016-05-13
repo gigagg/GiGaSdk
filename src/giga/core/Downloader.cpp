@@ -115,7 +115,7 @@ Downloader::start ()
     _isStarted = true;
     auto dlTask = pplx::create_task([this]() {
         std::unique_ptr<QueueElement> element = nullptr;
-        for(_queue.wait_dequeue(element); element != nullptr; _queue.wait_dequeue(element))
+        for(_queue.wait_dequeue(element); element != nullptr || _clearing > 0; _queue.wait_dequeue(element))
         {
             try
             {
