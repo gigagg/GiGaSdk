@@ -149,7 +149,7 @@ FileUploader::doStart ()
                         {
                             throw;
                         }
-                        GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
+                        GIGA_DEBUG_LOG(trace, utils::exceptionInfos());
                         std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
                     }
                 }

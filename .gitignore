@@ -28,6 +28,7 @@ vendors/VS2015/**
 !vendors/VS2015/get_dependencies.vcxproj
 !vendors/VS2015/get_dependencies.vcxproj.filters
 !vendors/VS2015/packages.config
+vendors/deps/**
 
 src/giga/version.h
 src/tests/path.h

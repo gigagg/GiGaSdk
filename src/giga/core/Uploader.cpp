@@ -455,7 +455,7 @@ Uploader::scanFiles(FolderNode& dest, const boost::filesystem::path& ppath)
     }
 
     auto isDirectory = is_directory(ppath);
-    auto name        = utils::str2wstr(utils::replaceInvalidUtf8(ppath.filename().string()));
+    auto name        = utils::replaceInvalidUtf8(ppath.filename().native());
     if (!exists (ppath) || (!isDirectory && !is_regular_file(ppath)))
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("dest should be a regular file")});
@@ -603,7 +603,7 @@ Uploader::uploadFile (const PreparedFile& prepared)
     {
         // WARNING: uploader gets moved into _uploadingFile
         auto uploader = giga::make_unique<FileUploader>(prepared.path,
-                                                        utils::str2wstr(utils::replaceInvalidUtf8(prepared.path.filename().string())),
+                                                        utils::replaceInvalidUtf8(prepared.path.filename().native()),
                                                         prepared.parentId,
                                                         prepared.sha1,
                                                         prepared.fid,
