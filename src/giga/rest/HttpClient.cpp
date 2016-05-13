@@ -203,6 +203,7 @@ HttpClient::refreshToken()
             std::lock_guard<std::mutex> l{ rstate->mut };
             rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
             const_cast<http_client_config*>(&http.client_config())->set_oauth2(*oaut2copy);
+            rstate->isRefreshing = false;
         });
 
     }
