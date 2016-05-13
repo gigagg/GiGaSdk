@@ -196,18 +196,16 @@ HttpClient::refreshToken()
     if (shouldRefresh)
     {
         GIGA_DEBUG_LOG(trace, "Refreshing access token");
-        try {
-            auto rstate = _rstate;
-            return _http.client_config().oauth2()->token_from_refresh().then([rstate](){
-                rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{3600};
-                rstate->mut.unlock();
-            });
-        }
-        catch (...)
-        {
-            _rstate->mut.unlock();
-            throw;
-        }
+        auto rstate = _rstate;
+        auto& http = _http;
+        auto oaut2copy = std::make_shared<oauth2::experimental::oauth2_config>(*_http.client_config().oauth2());
+        oaut2copy->token_from_refresh().then([rstate, oaut2copy, &http]() {
+            std::lock_guard<std::mutex> l{ rstate->mut };
+            rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
+            const_cast<http_client_config*>(&http.client_config())->set_oauth2(*oaut2copy);
+            rstate->isRefreshing = false;
+        });
+
     }
     return pplx::create_task([](){});
 }

@@ -54,7 +54,7 @@ ELSE(MSVC)
     SET (CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -Wconversion -fmessage-length=0" )
     SET (CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -pg" )
     SET (CMAKE_CXX_FLAGS_RELEASE "-O2" )
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
 ENDIF(MSVC)
 
 

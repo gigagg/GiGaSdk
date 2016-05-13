@@ -54,6 +54,9 @@ str2wstr(const std::string& str);
 std::string
 replaceInvalidUtf8(const std::string& str);
 
+std::wstring
+replaceInvalidUtf8(const std::wstring& str);
+
 std::string
 exceptionInfos() noexcept;
 

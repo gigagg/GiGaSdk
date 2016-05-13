@@ -105,6 +105,12 @@ replaceInvalidUtf8(const std::string& str)
     return tmp;
 }
 
+std::wstring
+replaceInvalidUtf8(const std::wstring& str)
+{
+    return str;
+}
+
 std::string
 exceptionInfos() noexcept
 {
