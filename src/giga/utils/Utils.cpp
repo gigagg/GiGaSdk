@@ -131,7 +131,7 @@ exceptionPrettyInfos() noexcept
     {
         switch (e.code().value()) {
         case boost::system::errc::device_or_resource_busy:
-            error = "device or resource_busy";
+            error = "device or resource busy";
             break;
         case boost::system::errc::file_exists:
             error = "file exists";
@@ -161,10 +161,10 @@ exceptionPrettyInfos() noexcept
             error = "read only file system";
             break;
         case boost::system::errc::io_error:
-            error = "inpout/output error";
+            error = "input/output error";
             break;
         default:
-            error = "unknown filesystem error";
+            error = "unknown file system error";
             break;
         }
     }
