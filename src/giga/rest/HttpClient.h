@@ -59,97 +59,23 @@ public:
     web::uri_builder
     uri (const utility::string_t& resource);
 
-    template<typename T>
-    web::uri_builder
-    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = U("")) const
-    {
-        utility::ostringstream_t ss;
-        ss.imbue(std::locale::classic());
-        ss << API << resource << U("/") << id;
-        if (subResource.size() > 0)
-        {
-            ss << U("/") << subResource;
-        }
-        return web::uri_builder{ss.str()};
-    }
+    template<typename T> web::uri_builder
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource = U("")) const;
 
-    template<typename T, typename U>
-    web::uri_builder
-    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource, const U& subId) const
-    {
-        utility::ostringstream_t ss;
-        ss.imbue(std::locale::classic());
-        ss << API << resource << U("/") << id << U("/") << subResource << U("/") << subId;
-        return web::uri_builder{ss.str()};
-    }
+    template<typename T, typename U> web::uri_builder
+    uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource, const U& subId) const;
 
-    template<typename T>
-    pplx::task<std::shared_ptr<T>>
-    request (const web::http::method &mtd, web::uri_builder uri)
-    {
-        GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string());
-        auto uriString = uri.to_string();
+    template<typename T> pplx::task<std::shared_ptr<T>>
+    request (const web::http::method &mtd, web::uri_builder uri);
 
-        return refreshToken().then([=]() {
-            return _http.request(mtd, uriString).then([=](web::http::http_response response) {
-                return onRequestPtr<T>(response);
-            });
-        });
-    }
+    template<typename T, class U> pplx::task<std::shared_ptr<T>>
+    request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData);
 
-    template<typename T, class U>
-    pplx::task<std::shared_ptr<T>>
-    request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
-    {
-        auto json      = web::json::value::object();
-        auto data      = JSonSerializer{json}.toString(std::move(bodyData));
-        auto uriString = uri.to_string();
-        GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << data);
+    template<typename T> std::shared_ptr<T>
+    onRequestPtr (web::http::http_response response) const;
 
-        return refreshToken().then([=]() {
-            return _http.request(mtd, uriString, data, JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
-                return onRequestPtr<T>(response);
-            });
-        });
-    }
-
-    template<typename T>
-    std::shared_ptr<T>
-    onRequestPtr (web::http::http_response response) const
-    {
-        return onRequest<std::shared_ptr<T>>(response);
-    }
-
-    template<typename T>
-    T
-    onRequest (web::http::http_response response) const
-    {
-        auto headers = response.headers();
-        auto ctype = headers.find(U("Content-Type"));
-        auto jsonType = utility::string_t(U("application/json"));
-        if (ctype != headers.end() && ctype->second.compare(0, jsonType.size(), jsonType) == 0)
-        {
-            auto json = response.extract_json(true).get();
-            auto s = JSonUnserializer{json};
-            if (response.status_code() == 200)
-            {
-                try
-                {
-                    return s.unserialize<T>();
-                }
-                catch (const std::exception& e)
-                {
-                    GIGA_DEBUG_LOG(error, U("Error unserializing: ") << json.serialize());
-                    throw e;
-                }
-            }
-            else
-            {
-                throwHttpError(response.status_code(), std::move(json));
-            }
-        }
-        GIGA_THROW_HTTPERROR(response.status_code(), response.extract_string().get(), U(""));
-    }
+    template<typename T> T
+    onRequest (web::http::http_response response) const;
 
     void
     throwHttpError(unsigned short status, web::json::value&& json) const;
@@ -160,10 +86,115 @@ public:
     pplx::task<void>
     refreshToken();
 
+    void
+    setUserAgent(utility::string_t userAgent);
+
 private:
     web::http::client::http_client   _http;
     std::shared_ptr<RefreshingState> _rstate;
+    utility::string_t                _userAgent;
 };
+
+template<typename T>
+web::uri_builder
+HttpClient::uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource /* = U("")*/) const
+{
+   utility::ostringstream_t ss;
+   ss.imbue(std::locale::classic());
+   ss << API << resource << U("/") << id;
+   if (subResource.size() > 0)
+   {
+       ss << U("/") << subResource;
+   }
+   return web::uri_builder{ss.str()};
+}
+
+template<typename T, typename U>
+web::uri_builder
+HttpClient::uri (const utility::string_t& resource, const T& id, const utility::string_t& subResource, const U& subId) const
+{
+   utility::ostringstream_t ss;
+   ss.imbue(std::locale::classic());
+   ss << API << resource << U("/") << id << U("/") << subResource << U("/") << subId;
+   return web::uri_builder{ss.str()};
+}
+
+template<typename T>
+pplx::task<std::shared_ptr<T>>
+HttpClient::request (const web::http::method &mtd, web::uri_builder uri)
+{
+   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string());
+   auto uriString = uri.to_string();
+
+   web::http::http_request msg(mtd);
+   msg.set_request_uri(uri.to_string());
+   msg.headers().add(web::http::header_names::user_agent, _userAgent);
+
+   return refreshToken().then([=]() {
+       return _http.request(msg).then([=](web::http::http_response response) {
+           return onRequestPtr<T>(response);
+       });
+   });
+}
+
+template<typename T, class U>
+pplx::task<std::shared_ptr<T>>
+HttpClient::request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
+{
+   auto json      = web::json::value::object();
+   auto data      = JSonSerializer{json}.toString(std::move(bodyData));
+   auto uriString = uri.to_string();
+   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << data);
+
+   web::http::http_request msg(mtd);
+   msg.set_request_uri(uri.to_string());
+   msg.set_body(JSonSerializer{json}.toString(std::move(bodyData)), JSON_CONTENT_TYPE);
+   msg.headers().add(web::http::header_names::user_agent, _userAgent);
+
+   return refreshToken().then([=]() {
+       return _http.request(msg).then([=](web::http::http_response response) {
+           return onRequestPtr<T>(response);
+       });
+   });
+}
+
+template<typename T>
+std::shared_ptr<T>
+HttpClient::onRequestPtr (web::http::http_response response) const
+{
+   return onRequest<std::shared_ptr<T>>(response);
+}
+
+template<typename T>
+T
+HttpClient::onRequest (web::http::http_response response) const
+{
+   auto headers = response.headers();
+   auto ctype = headers.find(U("Content-Type"));
+   auto jsonType = utility::string_t(U("application/json"));
+   if (ctype != headers.end() && ctype->second.compare(0, jsonType.size(), jsonType) == 0)
+   {
+       auto json = response.extract_json(true).get();
+       auto s = JSonUnserializer{json};
+       if (response.status_code() == 200)
+       {
+           try
+           {
+               return s.unserialize<T>();
+           }
+           catch (const std::exception& e)
+           {
+               GIGA_DEBUG_LOG(error, U("Error unserializing: ") << json.serialize());
+               throw e;
+           }
+       }
+       else
+       {
+           throwHttpError(response.status_code(), std::move(json));
+       }
+   }
+   GIGA_THROW_HTTPERROR(response.status_code(), response.extract_string().get(), U(""));
+}
 
 }  // namespace giga
 

@@ -172,9 +172,10 @@ FileDownloader::doStart()
     }
     else
     {
-        auto cts = _cts;
+        auto cts  = _cts;
         auto& api = _app->api();
-        _task = api.refreshToken().then([tempFile, fileUri, progress, fileSize, cts, &api, action]() {
+        auto ua   = _app->userAgent().c_str();
+        _task = api.refreshToken().then([tempFile, fileUri, progress, fileSize, cts, &api, action, ua]() {
             uri_builder b{fileUri};
             b.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
             auto tokenedFileUri = b.to_uri().to_string();
@@ -204,6 +205,7 @@ FileDownloader::doStart()
                     curl.add<CURLOPT_XFERINFOFUNCTION>(curlProgressCallback);
                     curl.add<CURLOPT_XFERINFODATA>(progress);
                     curl.add<CURLOPT_NOPROGRESS>(0L);
+                    curl.add<CURLOPT_USERAGENT>(ua);
 
                     if (pos > 0)
                     {

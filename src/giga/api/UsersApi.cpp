@@ -32,35 +32,35 @@ using namespace data;
 pplx::task<std::shared_ptr<User>>
 GigaApi::UsersApi::getCurrentUser () const
 {
-    auto uri = api.client.uri (U("me"));
-    return api.client.request<User> (methods::GET, uri);
+    auto uri = api._client.uri (U("me"));
+    return api._client.request<User> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<std::vector<string_t>>>
 GigaApi::UsersApi::searchTag (const string_t& name) const
 {
-    auto uri = api.client.uri (U("tags"));
+    auto uri = api._client.uri (U("tags"));
     uri.append_query (U("name"), name);
-    return api.client.request<std::vector<string_t>> (methods::GET, uri);
+    return api._client.request<std::vector<string_t>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<UserExists>>
 GigaApi::UsersApi::userExists (const string_t& login, const string_t& email /* = U("")*/) const
 {
-    auto uri = api.client.uri (U("userexists"));
+    auto uri = api._client.uri (U("userexists"));
     if (!login.empty()) {
         uri.append_query (U("login"), login);
     }
     if (!email.empty()) {
         uri.append_query (U("email"), email);
     }
-    return api.client.request<UserExists> (methods::GET, uri);
+    return api._client.request<UserExists> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<std::vector<std::shared_ptr<data::User>>>>
 GigaApi::UsersApi::searchUsers (const string_t& search, const string_t& activity, const string_t& isSeeder) const
 {
-    auto uri = api.client.uri (U("users"));
+    auto uri = api._client.uri (U("users"));
     uri.append_query (U("search"), search);
     if (activity != U(""))
     {
@@ -70,22 +70,22 @@ GigaApi::UsersApi::searchUsers (const string_t& search, const string_t& activity
     {
         uri.append_query (U("isSeeder"), isSeeder);
     }
-    return api.client.request<std::vector<std::shared_ptr<data::User>>> (methods::GET, uri);
+    return api._client.request<std::vector<std::shared_ptr<data::User>>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>
 GigaApi::UsersApi::getUserById (uint64_t userId) const
 {
-    auto uri = api.client.uri (U("users"), userId);
-    return api.client.request<User> (methods::GET, uri);
+    auto uri = api._client.uri (U("users"), userId);
+    return api._client.request<User> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>
 GigaApi::UsersApi::getUserByLogin (const string_t& login) const
 {
-    auto uri = api.client.uri (U("users"));
+    auto uri = api._client.uri (U("users"));
     uri.append_query(U("login"), login);
-    return api.client.request<User> (methods::GET, uri);
+    return api._client.request<User> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<User>>
@@ -94,7 +94,7 @@ GigaApi::UsersApi::updateUser (uint64_t userId, const string_t& email, bool isVa
                       const string_t& currentPassword, const string_t& password, const string_t& clue,
                       const string_t& privateKey, const string_t& iv, const string_t& salt) const
 {
-    auto uri = api.client.uri (U("users"), userId);
+    auto uri = api._client.uri (U("users"), userId);
     auto body = JsonObj{};
     body.add (U("email"), email);
     body.add (U("isValidation"), isValidation);
@@ -109,25 +109,25 @@ GigaApi::UsersApi::updateUser (uint64_t userId, const string_t& email, bool isVa
     body.add (U("privateKey"), privateKey);
     body.add (U("iv"), iv);
     body.add (U("salt"), salt);
-    return api.client.request<User> (methods::POST, uri, std::move(body));
+    return api._client.request<User> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<User>>
 GigaApi::UsersApi::updateUserAddTag (uint64_t userId, const string_t& name) const
 {
-    auto uri = api.client.uri (U("users"), userId, U("tags"), userId);
+    auto uri = api._client.uri (U("users"), userId, U("tags"), userId);
     auto body = JsonObj{};
     body.add (U("name"), name);
-    return api.client.request<User> (methods::POST, uri, std::move(body));
+    return api._client.request<User> (methods::POST, uri, std::move(body));
 }
 
 pplx::task<std::shared_ptr<User>>
 GigaApi::UsersApi::updateUserRemoveTag (uint64_t userId, const string_t& name) const
 {
-    auto uri = api.client.uri (U("users"), userId, U("tags"), userId);
+    auto uri = api._client.uri (U("users"), userId, U("tags"), userId);
     auto body = JsonObj{};
     body.add (U("name"), name);
-    return api.client.request<User> (methods::DEL, uri, std::move(body));
+    return api._client.request<User> (methods::DEL, uri, std::move(body));
 }
 
 } // namespace giga

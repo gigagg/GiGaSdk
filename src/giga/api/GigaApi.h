@@ -67,6 +67,9 @@ public:
     pplx::task<void>
     refreshToken() const;
 
+    void
+    setUserAgent(utility::string_t userAgent);
+
 public:
     class GroupsApi final
     {
@@ -220,8 +223,8 @@ public:
 
 private:
     // todo protecte mutable with a mutex ...
-    mutable HttpClient          client;
-    std::shared_ptr<data::User> currentUser;
+    mutable HttpClient          _client;
+    std::shared_ptr<data::User> _currentUser;
 };
 
 } // namespace giga

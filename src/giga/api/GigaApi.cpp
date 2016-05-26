@@ -31,7 +31,7 @@ namespace giga
 
 GigaApi::GigaApi():
         groups{*this}, network{*this}, nodes{*this}, users{*this},
-        client{}, currentUser{nullptr}
+        _client{}, _currentUser{nullptr}
 {}
 
 task<std::shared_ptr<User>>
@@ -43,9 +43,9 @@ GigaApi::authenticate (const string_t& login, const string_t& password)
         if (exists->login.is_initialized())
         {
             auto realLogin = exists->login.get();
-            client.authenticate(realLogin, utils::str2wstr(Crypto::calculateLoginPassword(realLogin, password)));
-            currentUser = users.getCurrentUser().get();
-            return currentUser;
+            _client.authenticate(realLogin, utils::str2wstr(Crypto::calculateLoginPassword(realLogin, password)));
+            _currentUser = users.getCurrentUser().get();
+            return _currentUser;
         }
         else
         {
@@ -57,8 +57,8 @@ GigaApi::authenticate (const string_t& login, const string_t& password)
 data::User&
 GigaApi::getCurrentUser()
 {
-    if (currentUser) {
-        return *currentUser;
+    if (_currentUser) {
+        return *_currentUser;
     }
     BOOST_THROW_EXCEPTION(ErrorException(U("You must authenticate before using getCurrentUser")));
 }
@@ -66,13 +66,19 @@ GigaApi::getCurrentUser()
 const std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
 GigaApi::getOAuthConfig() const
 {
-    return client.http().client_config().oauth2();
+    return _client.http().client_config().oauth2();
 }
 
 pplx::task<void>
 GigaApi::refreshToken() const
 {
-    return client.refreshToken();
+    return _client.refreshToken();
+}
+
+void
+GigaApi::setUserAgent(utility::string_t userAgent)
+{
+    _client.setUserAgent(std::move(userAgent));
 }
 
 } // namespace giga

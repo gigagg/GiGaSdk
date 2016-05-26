@@ -22,6 +22,7 @@
 #include "JsonObj.h"
 #include "../Config.h"
 #include "../Application.h"
+#include "../version.h"
 #include "../utils/Utils.h"
 
 using namespace web::http;
@@ -54,7 +55,7 @@ public:
 };
 
 HttpClient::HttpClient () :
-        _http (Config::get().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()}
+        _http (Config::get().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()}, _userAgent{U(GIGA_UA)}
 {
 }
 
@@ -96,7 +97,13 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     body.add(U("login"), login);
     body.add(U("password"), password);
     auto url = U("/rest/login");
-    auto request = _http.request(methods::POST, url, JSonSerializer::toString(body), JSON_CONTENT_TYPE).then([=](web::http::http_response response) {
+
+    http_request msg(methods::POST);
+    msg.set_request_uri(url);
+    msg.set_body(JSonSerializer::toString(body), JSON_CONTENT_TYPE);
+    msg.headers().add(header_names::user_agent, _userAgent);
+
+    auto request = _http.request(msg).then([=](web::http::http_response response) {
         onRequest<Empty>(response);
         auto headers = response.headers();
 
@@ -209,5 +216,12 @@ HttpClient::refreshToken()
     }
     return pplx::create_task([](){});
 }
+
+void
+HttpClient::setUserAgent(utility::string_t userAgent)
+{
+    _userAgent = userAgent;
+}
+
 }
 

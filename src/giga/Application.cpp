@@ -15,6 +15,7 @@
  */
 
 #include "Application.h"
+#include "version.h"
 #include "core/User.h"
 #include "api/data/User.h"
 #include "api/data/UsersRelation.h"
@@ -43,7 +44,7 @@ namespace giga
 {
 
 Application::Application() :
-        _api{}, _currentUser{nullptr}, _contacts{}
+        _api{}, _currentUser{nullptr}, _userAgent{GIGA_UA}, _contacts{}
 {
 }
 
@@ -201,6 +202,23 @@ Application::searchNode (const string_t& search, core::Node::MediaType type) con
     });
 
     return nodes;
+}
+
+//
+// Misc
+//
+
+const std::string&
+Application::userAgent() const
+{
+    return _userAgent;
+}
+
+void
+Application::setUserAgent(std::string&& userAgent)
+{
+    _userAgent = userAgent;
+    _api.setUserAgent(utils::str2wstr(userAgent));
 }
 
 const GigaApi&

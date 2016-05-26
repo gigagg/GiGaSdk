@@ -219,6 +219,16 @@ public:
     searchNode (const utility::string_t& search, core::Node::MediaType type) const;
 
 
+    //
+    // Misc
+    //
+
+    const std::string&
+    userAgent() const;
+
+    void
+    setUserAgent(std::string&& userAgent);
+
 public:
     const GigaApi&
     api() const;
@@ -239,6 +249,7 @@ private:
 private:
     GigaApi                      _api;
     std::unique_ptr<core::User>  _currentUser;
+    std::string                  _userAgent;
 
     // this is a cache variable
     // TODO protect by mutex.

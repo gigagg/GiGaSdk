@@ -4,4 +4,6 @@
 #define GIGA_VERSION "@PROJECT_VERSION@"
 #define GIGA_BUILD   "@GIT_SHA1@"
 
+#define GIGA_UA "gigasdk/@PROJECT_VERSION@-@GIT_SHA1@"
+
 #endif

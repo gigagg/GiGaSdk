@@ -210,6 +210,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
     curl.add<CURLOPT_POSTFIELDS>(nullptr);
     curl.add<CURLOPT_READFUNCTION>(&readCallback);
     curl.add<CURLOPT_READDATA>(&data);
+    curl.add<CURLOPT_USERAGENT>(_app->userAgent().c_str());
 
     auto userId = _app->currentUser().id();
     curl_slist* list = nullptr;
