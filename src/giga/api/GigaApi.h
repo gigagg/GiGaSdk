@@ -215,11 +215,25 @@ public:
         GigaApi& api;
     };
 
+    class MiscApi final
+    {
+    private:
+        friend class GigaApi;
+        explicit MiscApi(GigaApi& api):api(api){}
+    public:
+        void
+        ping() const;
+
+    private:
+        GigaApi& api;
+    };
+
 public:
     GroupsApi   groups;
     NetworkApi  network;
     NodesApi    nodes;
     UsersApi    users;
+    MiscApi     misc;
 
 private:
     // todo protecte mutable with a mutex ...

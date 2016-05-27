@@ -196,7 +196,7 @@ HttpClient::refreshToken()
         std::lock_guard<std::mutex> l{_rstate->mut};
         shouldRefresh = !_rstate->isRefreshing
                             && _http.client_config().oauth2() != nullptr
-                            && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{600}); // gets 600s to do the refresh
+                            && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{3000}); // gets 600s to do the refresh
         _rstate->isRefreshing = shouldRefresh || _rstate->isRefreshing;
     }
 
@@ -206,7 +206,7 @@ HttpClient::refreshToken()
         auto rstate = _rstate;
         auto& http = _http;
         auto oaut2copy = std::make_shared<oauth2::experimental::oauth2_config>(*_http.client_config().oauth2());
-        oaut2copy->token_from_refresh().then([rstate, oaut2copy, &http]() {
+        return oaut2copy->token_from_refresh().then([rstate, oaut2copy, &http]() {
             std::lock_guard<std::mutex> l{ rstate->mut };
             rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
             const_cast<http_client_config*>(&http.client_config())->set_oauth2(*oaut2copy);

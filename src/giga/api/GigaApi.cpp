@@ -30,7 +30,7 @@ namespace giga
 {
 
 GigaApi::GigaApi():
-        groups{*this}, network{*this}, nodes{*this}, users{*this},
+        groups{*this}, network{*this}, nodes{*this}, users{*this}, misc{*this},
         _client{}, _currentUser{nullptr}
 {}
 
