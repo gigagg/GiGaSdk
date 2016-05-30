@@ -30,6 +30,7 @@
 #include <iosfwd>
 #include <mutex>
 #include <string>
+#include <thread>
 
 using boost::filesystem::file_size;
 using boost::filesystem::path;
@@ -183,6 +184,30 @@ ChunkUploader::upload ()
 string_t
 ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& curl, std::ostringstream& str)
 {
+    uint16_t count = 0;
+    while (true)
+    {
+        try
+        {
+            count++;
+            return doSendChunk(position, data, curl, str);
+        }
+        catch (...)
+        {
+            if (count > 5)
+            {
+                throw;
+            }
+            auto info = utils::exceptionInfos();
+            GIGA_DEBUG_LOG(debug, info << " retry in " << count << " seconds");
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 * count));
+        }
+    }
+}
+
+string_t
+ChunkUploader::doSendChunk (uint64_t position, ReadCallbackData& data, curl_easy& curl, std::ostringstream& str)
+{
     if (position >= _fileSize)
     {
         BOOST_THROW_EXCEPTION(ErrorException{U("Invalid position/fileSize")});
@@ -227,10 +252,6 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
             list = curl_slist_append(list, "Expect: ");
             curl.add<CURLOPT_HTTPHEADER>(list);
         }
-
-    #ifdef DEBUG
-        curl.add<CURLOPT_SSL_VERIFYPEER>(0L);
-    #endif
 
         curl.perform();
         curl_slist_free_all(list);

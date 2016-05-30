@@ -70,6 +70,9 @@ private:
     utility::string_t
     sendChunk (uint64_t position, ReadCallbackData& data, curl::curl_easy& curl, std::ostringstream& str);
 
+    utility::string_t
+    doSendChunk (uint64_t position, ReadCallbackData& data, curl::curl_easy& curl, std::ostringstream& str);
+
 private:
     web::uri_builder        _uploadUrl;
     const utility::string_t _nodeName;
