@@ -21,6 +21,7 @@
 #include <boost/filesystem.hpp>
 #include <cpprest/details/basic_types.h>
 #include <cpprest/asyncrt_utils.h>
+#include <curl_exception.h>
 
 using utility::string_t;
 
@@ -116,6 +117,21 @@ exceptionInfos() noexcept
 {
     auto info = boost::current_exception_diagnostic_information(true);
     std::replace(info.begin(), info.end(), '\n', '\t');
+    try
+    {
+        throw;
+    }
+    catch (const curl::curl_easy_exception& e)
+    {
+        info +=  "(";
+        auto t = e.get_traceback();
+        std::for_each(t.begin(),t.end(),[&info](const curl::curlcpp_traceback_object &value) {
+            info +=  "E:" + value.first + " FUNC:" + value.second + "\t";
+        });
+        info +=  ")";
+
+    }
+    catch (...){}
     return info;
 }
 
