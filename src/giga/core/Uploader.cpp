@@ -576,6 +576,10 @@ Uploader::prepare (const ScannedFile& scanned)
     catch (...)
     {
         auto info =  utils::exceptionInfos();
+        if (_uploadingFile != nullptr && _uploadingFile->state() == FileTransferer::State::canceled)
+        {
+            info = "canceled";
+        }
         GIGA_DEBUG_LOG(debug, info);
 
         std::lock_guard<std::mutex> l{_mut};
