@@ -33,7 +33,7 @@ void
 GigaApi::MiscApi::ping () const
 {
     auto uri = api._client.uri (U("ping"));
-    api._client.request<Empty> (methods::GET, uri);
+    api._client.request<Empty> (methods::GET, uri).get();
 }
 
 
