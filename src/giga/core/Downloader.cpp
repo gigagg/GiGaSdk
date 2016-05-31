@@ -135,6 +135,7 @@ Downloader::start ()
             }
             catch (...)
             {
+
                 auto error = utils::exceptionInfos();
                 GIGA_DEBUG_LOG(debug, error);
                 try
@@ -308,11 +309,19 @@ Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
 
     try
     {
-
         doDownloadNode(node, path);
     }
-    catch (...)
+    catch (const std::exception&)
     {
+        if (_downloading != nullptr && _downloading->state() == FileTransferer::State::canceled)
+        {
+            // Ignore cancel errors
+            // TODO: this should be reported.
+            std::lock_guard<std::mutex> l{_mut};
+            _downloading = nullptr;
+            return;
+        }
+
         auto error = utils::exceptionInfos();
         GIGA_DEBUG_LOG(debug, error);
         try
@@ -379,38 +388,18 @@ Downloader::doDownloadNode (Node& node, const boost::filesystem::path& path)
                 fdownloader->pause();
             }
         }
-        try {
-            auto task = fdownloader->task();
-            {
-                std::lock_guard<std::mutex> l{_mut};
-                _downloading = std::move(fdownloader);
-                _progressCallback(*_downloading, _progress);
-            }
-            auto result = task.get();
-            {
-                std::lock_guard<std::mutex> l{_mut};
-                _progress.fileDone += 1;
-                _progress.bytesTransfered += node.size();
-                _onFileDownloadedFct(node, result.path, result.action);
-            }
-        }
-        catch (...)
+        auto task = fdownloader->task();
         {
-            auto error = utils::exceptionInfos();
-            if (_downloading != nullptr && _downloading->state() == FileTransferer::State::canceled)
-            {
-                error = "canceled";
-            }
-            GIGA_DEBUG_LOG(debug, error);
-
-            {
-                std::lock_guard<std::mutex> l{_mut};
-                if (_downloading != nullptr)
-                {
-                    _downloading->setError(error);
-                }
-                _onErrorFct(node.id(), node.name(), std::move(error));
-            }
+            std::lock_guard<std::mutex> l{_mut};
+            _downloading = std::move(fdownloader);
+            _progressCallback(*_downloading, _progress);
+        }
+        auto result = task.get();
+        {
+            std::lock_guard<std::mutex> l{_mut};
+            _progress.fileDone += 1;
+            _progress.bytesTransfered += node.size();
+            _onFileDownloadedFct(node, result.path, result.action);
         }
     }
     else if (!npathExists)
