@@ -44,7 +44,7 @@ public:
     typedef std::function<void(FileTransferer&, TransferProgress)>           ProgressFct;
     typedef std::function<void(const Node&, const boost::filesystem::path&)> OnDownloadedFct;
     typedef std::function<void(const Node&, const boost::filesystem::path&, FileDownloader::Action)> OnFileDownloadedFct;
-    typedef std::function<void(const std::string& /*id*/, std::string&&)>    OnErrorFct;
+    typedef std::function<void(const std::string& /*id*/, const utility::string_t& /*name*/, std::string&&)> OnErrorFct;
 
 public:
     /**
@@ -163,6 +163,9 @@ public:
 private:
     void
     downloadNode (Node& node, const boost::filesystem::path& path);
+
+    void
+    doDownloadNode (Node& node, const boost::filesystem::path& path);
 
 private:
     typedef std::pair<std::unique_ptr<Node>, const boost::filesystem::path> QueueElement;

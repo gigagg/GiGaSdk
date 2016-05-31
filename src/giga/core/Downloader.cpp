@@ -50,7 +50,7 @@ Downloader::Downloader (const Application& app) :
         _progressCallback{[](giga::core::FileTransferer&, TransferProgress){}},
         _onDownloadedFct{[](const Node&, const boost::filesystem::path&){}},
         _onFileDownloadedFct{[](const Node&, const boost::filesystem::path&, FileDownloader::Action){}},
-        _onErrorFct{[](const std::string& /*id*/, std::string&&){}},
+        _onErrorFct{[](const std::string& /*id*/, const utility::string_t& /*name*/, std::string&&){}},
         _rate{0},
         _isPaused{false},
         _clearing{0},
@@ -137,9 +137,14 @@ Downloader::start ()
             {
                 auto error = utils::exceptionInfos();
                 GIGA_DEBUG_LOG(debug, error);
+                try
                 {
                     std::lock_guard<std::mutex> l{_mut};
-                    _onErrorFct(element->first->id(), std::move(error));
+                    _onErrorFct(element->first->id(), element->first->name(), std::move(error));
+                }
+                catch (...)
+                {
+                    GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
                 }
             }
         }
@@ -291,8 +296,44 @@ Downloader::addDownload (std::unique_ptr<Node>&& node, const boost::filesystem::
     }
 }
 
+
 void
 Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
+{
+    TransferProgress saved{};
+    {
+        std::lock_guard<std::mutex> l{_mut};
+        saved = _progress;
+    }
+
+    try
+    {
+
+        doDownloadNode(node, path);
+    }
+    catch (...)
+    {
+        auto error = utils::exceptionInfos();
+        GIGA_DEBUG_LOG(debug, error);
+        try
+        {
+            saved.fileDone += node.type() == Node::Type::file ? 1 : node.nbFiles();
+            saved.bytesTransfered += node.size();
+
+            std::lock_guard<std::mutex> l{_mut};
+            _progress = saved;
+            _onErrorFct(node.id(), node.name(), std::move(error));
+            _downloading = nullptr;
+        }
+        catch (...)
+        {
+            GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
+        }
+    }
+}
+
+void
+Downloader::doDownloadNode (Node& node, const boost::filesystem::path& path)
 {
     if (!is_directory(path))
     {
@@ -368,7 +409,7 @@ Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
                 {
                     _downloading->setError(error);
                 }
-                _onErrorFct(node.id(), std::move(error));
+                _onErrorFct(node.id(), node.name(), std::move(error));
             }
         }
     }
