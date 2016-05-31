@@ -127,7 +127,7 @@ namespace details
 
 ChunkUploader::ChunkUploader (web::uri_builder& uploadUrl, const string_t& nodeName, const std::string& sha1, const path& filename,
                               const string_t& mime, details::CurlProgress* progress, const Application& app) :
-               _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), app.api().getOAuthConfig()->token().access_token()).to_uri()},
+               _uploadUrl{uri_builder{uploadUrl}.append_query(U("access_token"), app.api().accessToken()).to_uri()},
                _nodeName{nodeName},
                _sha1{sha1},
                _filename{filename},
@@ -184,6 +184,11 @@ ChunkUploader::upload ()
 string_t
 ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& curl, std::ostringstream& str)
 {
+    if (position >= _fileSize)
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("Invalid position/fileSize")});
+    }
+
     uint16_t count = 0;
     while (true)
     {
@@ -208,10 +213,6 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
 string_t
 ChunkUploader::doSendChunk (uint64_t position, ReadCallbackData& data, curl_easy& curl, std::ostringstream& str)
 {
-    if (position >= _fileSize)
-    {
-        BOOST_THROW_EXCEPTION(ErrorException{U("Invalid position/fileSize")});
-    }
     _progress->setUploadPosition(position);
 
     auto chunkSize = std::min(position == 0 ? 1024 : CHUNK_SIZE, _fileSize - position);

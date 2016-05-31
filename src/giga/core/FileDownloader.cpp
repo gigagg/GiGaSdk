@@ -176,14 +176,15 @@ FileDownloader::doStart()
         auto& api = _app->api();
         auto ua   = _app->userAgent().c_str();
         _task = api.refreshToken().then([tempFile, fileUri, progress, fileSize, cts, &api, action, ua]() {
-            uri_builder b{fileUri};
-            b.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
-            auto tokenedFileUri = b.to_uri().to_string();
 
             uint64_t httpCode = 0;
             const auto maxTry = 5;
             for (auto i = 0; i <= maxTry && httpCode != 200; ++i)
             {
+                uri_builder b{fileUri};
+                b.append_query(U("access_token"), api.accessToken());
+                auto tokenedFileUri = b.to_uri().to_string();
+
                 try {
                     details::CurlWriter writer{tempFile};
                     auto pos = writer.file().tellp();
@@ -240,7 +241,7 @@ FileDownloader::doStart()
                     api.refreshToken().wait();
 
                     uri_builder bu{fileUri};
-                    bu.append_query(U("access_token"), api.getOAuthConfig()->token().access_token());
+                    bu.append_query(U("access_token"), api.accessToken());
                     tokenedFileUri = bu.to_uri().to_string();
 
                     if (i == maxTry)

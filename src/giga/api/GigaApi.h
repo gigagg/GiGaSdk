@@ -67,6 +67,9 @@ public:
     pplx::task<void>
     refreshToken() const;
 
+    utility::string_t
+    accessToken() const;
+
     void
     setUserAgent(utility::string_t userAgent);
 

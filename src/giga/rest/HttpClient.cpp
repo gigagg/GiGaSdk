@@ -51,11 +51,13 @@ class RefreshingState
 public:
     bool                              isRefreshing  = false;
     high_resolution_clock::time_point tokenExpireAt = {};
-    std::mutex                        mut           = {};
+    mutable std::mutex                mut           = {};
 };
 
 HttpClient::HttpClient () :
-        _http (Config::get().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()}, _userAgent{U(GIGA_UA)}
+        _http (Config::get().apiHost(), getConfig()), _rstate{std::make_shared<RefreshingState>()},
+        _userAgent{U(GIGA_UA)},
+        _accessToken{}
 {
 }
 
@@ -136,11 +138,13 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     auto uri = uri_builder{request.get()}.to_uri();
     m_oauth2_config.token_from_redirected_uri(uri).wait();
 
+
     // regenerate client, with the oauth2 config.
     auto config = getConfig();
     config.set_oauth2(m_oauth2_config);
     _http = {Config::get().apiHost(), config};
     _rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{3600};
+    _accessToken = config.oauth2()->token().access_token();
 }
 
 void
@@ -196,25 +200,58 @@ HttpClient::refreshToken()
         std::lock_guard<std::mutex> l{_rstate->mut};
         shouldRefresh = !_rstate->isRefreshing
                             && _http.client_config().oauth2() != nullptr
-                            && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{600}); // gets 600s to do the refresh
+                            && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{300}); // gets 300s to do the refresh
         _rstate->isRefreshing = shouldRefresh || _rstate->isRefreshing;
     }
 
     if (shouldRefresh)
     {
-        GIGA_DEBUG_LOG(trace, "Refreshing access token");
-        auto rstate = _rstate;
-        auto& http = _http;
+        auto rstate       = _rstate;
+        auto& http        = _http;
+        auto& accessToken = _accessToken;
+
+        //
+        // All this is an ugly hack to make sure the refresh works
+        // cf: const_cast etc ...
+        //
+
         auto oaut2copy = std::make_shared<oauth2::experimental::oauth2_config>(*_http.client_config().oauth2());
-        return oaut2copy->token_from_refresh().then([rstate, oaut2copy, &http]() {
-            std::lock_guard<std::mutex> l{ rstate->mut };
-            rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
-            const_cast<http_client_config*>(&http.client_config())->set_oauth2(*oaut2copy);
-            rstate->isRefreshing = false;
+        return pplx::create_task([rstate, &http, &accessToken, oaut2copy]() {
+            try
+            {
+                GIGA_DEBUG_LOG(trace, "Refreshing access token");
+                oaut2copy->token_from_refresh().get();
+
+                std::lock_guard<std::mutex> l{ rstate->mut };
+                if (oaut2copy->token().refresh_token().empty() &&
+                    !http.client_config().oauth2()->token().refresh_token().empty())
+                {
+                    const_cast<oauth2_token&>(oaut2copy->token()).set_refresh_token(http.client_config().oauth2()->token().refresh_token());
+                }
+                rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
+                const_cast<http_client_config*>(&http.client_config())->set_oauth2(*oaut2copy);
+                accessToken = http.client_config().oauth2()->token().access_token();
+                rstate->isRefreshing = false;
+            }
+            catch (std::exception e)
+            {
+                // Ignore errors here (no throw)
+                // because the token may be still valid
+                GIGA_DEBUG_LOG(error, utils::exceptionInfos());
+                std::lock_guard<std::mutex> l{ rstate->mut };
+                rstate->isRefreshing = false;
+            }
         });
 
     }
     return pplx::create_task([](){});
+}
+
+utility::string_t
+HttpClient::accessToken() const
+{
+    std::lock_guard<std::mutex> l{ _rstate->mut };
+    return _accessToken;
 }
 
 void

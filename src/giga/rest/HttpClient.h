@@ -86,6 +86,9 @@ public:
     pplx::task<void>
     refreshToken();
 
+    utility::string_t
+    accessToken() const;
+
     void
     setUserAgent(utility::string_t userAgent);
 
@@ -93,6 +96,7 @@ private:
     web::http::client::http_client   _http;
     std::shared_ptr<RefreshingState> _rstate;
     utility::string_t                _userAgent;
+    utility::string_t                _accessToken;
 };
 
 template<typename T>

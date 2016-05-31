@@ -75,6 +75,12 @@ GigaApi::refreshToken() const
     return _client.refreshToken();
 }
 
+utility::string_t
+GigaApi::accessToken() const
+{
+    return _client.accessToken();
+}
+
 void
 GigaApi::setUserAgent(utility::string_t userAgent)
 {
