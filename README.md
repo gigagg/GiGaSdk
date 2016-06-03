@@ -109,7 +109,7 @@ Build On linux (tested on ubuntu 14.04)
 sudo apt-get install g++ git make libboost1.54-all-dev libssl-dev cmake
 
 # getting the sources
-git clone http://gitlab.giga.gg/t.guyard/GiGaSdk.git
+git clone https://github.com/gigagg/GiGaSdk.git
 cd GiGaSdk
 git submodule update --init
 
