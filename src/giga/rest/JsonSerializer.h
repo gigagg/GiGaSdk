@@ -27,67 +27,23 @@ namespace giga {
 class JSonSerializer;
 
 namespace details {
-    inline web::json::value serialize(int& value) {
-        return web::json::value::number(value);
-    }
-    inline web::json::value serialize(int64_t& value) {
-        return web::json::value::number(value);
-    }
-    inline web::json::value serialize(uint64_t& value) {
-        return web::json::value::number(value);
-    }
-    inline web::json::value serialize(bool& value) {
-        return web::json::value::boolean(value);
-    }
-    inline web::json::value serialize(double& value) {
-        return web::json::value::number(value);
-    }
-    inline web::json::value serialize(std::string& value) {
-        return  web::json::value::string(utils::str2wstr(value));
-    }
+    inline web::json::value serialize(int& value);
+    inline web::json::value serialize(int64_t& value);
+    inline web::json::value serialize(uint64_t& value);
+    inline web::json::value serialize(bool& value);
+    inline web::json::value serialize(double& value);
+    inline web::json::value serialize(std::string& value);
+    
 #ifdef _UTF16_STRINGS
-    inline web::json::value serialize(std::wstring& value) {
-        return  web::json::value::string(value);
-    }
-    inline web::json::value serialize(const wchar_t*& value) {
-        return web::json::value::string(value);
-    }
+    inline web::json::value serialize(std::wstring& value);
+    inline web::json::value serialize(const wchar_t*& value);
 #endif
 
-    template <typename T> web::json::value serialize(T& value) {
-        auto subJson = web::json::value::object();
-        value.visit(JSonSerializer{subJson});
-        return subJson;
-    }
-    template <typename T> web::json::value serialize(std::unique_ptr<T>& value) {
-        if (value) {
-            return serialize(*value);
-        } else {
-            return web::json::value::null();
-        }
-    }
-    template <typename T> web::json::value serialize(std::shared_ptr<T>& value) {
-        if (value) {
-            return serialize(*value);
-        } else {
-            return web::json::value::null();
-        }
-    }
-    template <typename T> web::json::value serialize(std::vector<T>& values) {
-        auto subJson = web::json::value::array(values.size());
-        int i = 0;
-        for(auto& value : values) {
-            subJson[i++] = serialize(value);
-        }
-        return subJson;
-    }
-    template <typename T> web::json::value serialize(boost::optional<T>& value) {
-        if (value) {
-            return serialize(value.get());
-        } else {
-            return web::json::value::null();
-        }
-    }
+    template <typename T> web::json::value serialize(T& value);
+    template <typename T> web::json::value serialize(std::unique_ptr<T>& value);
+    template <typename T> web::json::value serialize(std::shared_ptr<T>& value);
+    template <typename T> web::json::value serialize(std::vector<T>& values);
+    template <typename T> web::json::value serialize(boost::optional<T>& value);
 } // namespace details
 
 class JSonSerializer final
@@ -139,6 +95,70 @@ private:
     web::json::value& val;
 };
 
+namespace details {
+    inline web::json::value serialize(int& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(int64_t& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(uint64_t& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(bool& value) {
+        return web::json::value::boolean(value);
+    }
+    inline web::json::value serialize(double& value) {
+        return web::json::value::number(value);
+    }
+    inline web::json::value serialize(std::string& value) {
+        return  web::json::value::string(giga::utils::str2wstr(value));
+    }
+#ifdef _UTF16_STRINGS
+    inline web::json::value serialize(std::wstring& value) {
+        return  web::json::value::string(value);
+    }
+    inline web::json::value serialize(const wchar_t*& value) {
+        return web::json::value::string(value);
+    }
+#endif
+    
+    template <typename T> web::json::value serialize(T& value) {
+        auto subJson = web::json::value::object();
+        value.visit(JSonSerializer{subJson});
+        return subJson;
+    }
+    template <typename T> web::json::value serialize(std::unique_ptr<T>& value) {
+        if (value) {
+            return serialize(*value);
+        } else {
+            return web::json::value::null();
+        }
+    }
+    template <typename T> web::json::value serialize(std::shared_ptr<T>& value) {
+        if (value) {
+            return serialize(*value);
+        } else {
+            return web::json::value::null();
+        }
+    }
+    template <typename T> web::json::value serialize(std::vector<T>& values) {
+        auto subJson = web::json::value::array(values.size());
+        int i = 0;
+        for(auto& value : values) {
+            subJson[i++] = serialize(value);
+        }
+        return subJson;
+    }
+    template <typename T> web::json::value serialize(boost::optional<T>& value) {
+        if (value) {
+            return serialize(value.get());
+        } else {
+            return web::json::value::null();
+        }
+    }
+    
+} // namespace details
 } // namespace giga
 
 #endif /* JSONSERIALIZER_H_ */

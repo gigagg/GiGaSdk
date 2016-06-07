@@ -20,6 +20,7 @@
 #include <chrono>
 #include <memory>
 #include <vector>
+#include <string>
 
 namespace giga
 {

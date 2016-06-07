@@ -37,7 +37,8 @@ static const utils::EnumConvertor<core::UserRelation::Initiator, 3> initiatorCvr
 
 static const std::vector<uint64_t> emptyVector = {};
 
-UserRelation::UserRelation (std::shared_ptr<data::UsersRelation> r) : _data(r)
+UserRelation::UserRelation (std::shared_ptr<data::UsersRelation> r) :
+    _data(r), _nodeKeyClear()
 {
 }
 

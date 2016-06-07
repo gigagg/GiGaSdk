@@ -26,84 +26,30 @@ namespace giga {
 class JSonUnserializer;
 
 namespace details {
-    inline void getValue(const web::json::value& value, int& ret) {
-        ret = value.as_integer();
-    }
-    inline void getValue(const web::json::value& value, int64_t& ret) {
-        ret = value.as_number().to_int64();
-    }
-    inline void getValue(const web::json::value& value, uint64_t& ret) {
-        ret = value.as_number().to_uint64();
-    }
-    inline void getValue(const web::json::value& value, bool& ret) {
-        ret = value.as_bool();
-    }
-    inline void getValue(const web::json::value& value, double& ret) {
-        ret = value.as_double();
-    }
-    inline void getValue(const web::json::value& value, std::string& ret) {
-        ret = utils::wstr2str(value.as_string());
-    }
+    inline void getValue(const web::json::value& value, int& ret);
+    inline void getValue(const web::json::value& value, int64_t& ret);
+    inline void getValue(const web::json::value& value, uint64_t& ret);
+    inline void getValue(const web::json::value& value, bool& ret);
+    inline void getValue(const web::json::value& value, double& ret);
+    inline void getValue(const web::json::value& value, std::string& ret);
 #ifdef _UTF16_STRINGS
-    inline void getValue(const web::json::value& value, std::wstring& ret) {
-        ret = value.as_string();
-    }
+    inline void getValue(const web::json::value& value, std::wstring& ret);
 #endif
 
     template <typename T>
-    void getValue(const web::json::value& value, T& ret) {
-        ret.visit(JSonUnserializer{value});
-    }
+    void getValue(const web::json::value& value, T& ret);
 
     template <typename T>
-    void getValue(const web::json::value& value, std::unique_ptr<T>& ret) {
-        if (value.is_null()) {
-            ret = nullptr;
-        } else if (ret == nullptr) {
-            ret = std::unique_ptr<T>(new T{});
-            getValue(value, *ret);
-        } else {
-            getValue(value, *ret);
-        }
-    }
+    void getValue(const web::json::value& value, std::unique_ptr<T>& ret);
 
     template <typename T>
-    void getValue(const web::json::value& value, std::shared_ptr<T>& ret) {
-        if (value.is_null()) {
-            ret = nullptr;
-        } else if (ret == nullptr) {
-            ret = std::make_shared<T>();
-            getValue(value, *ret);
-        } else {
-            getValue(value, *ret);
-        }
-    }
+    void getValue(const web::json::value& value, std::shared_ptr<T>& ret);
 
     template <typename T>
-    void getValue(const web::json::value& value, std::vector<T>& ret) {
-        ret.clear();
-        if (!value.is_null()) {
-            auto values = value.as_array();
-            ret.reserve(values.size());
-            for(auto v : values) {
-                auto t = T{};
-                getValue(v, t);
-                ret.push_back(std::move(t));
-            }
-        }
-    }
+    void getValue(const web::json::value& value, std::vector<T>& ret);
 
     template <typename T>
-    void getValue(const web::json::value& value, boost::optional<T>& ret) {
-        if (value.is_null()) {
-            ret = boost::none;
-        } else if (!ret.is_initialized()) {
-            ret = boost::make_optional(T{});
-            getValue(value, ret.get());
-        } else {
-            getValue(value, ret.get());
-        }
-    }
+    void getValue(const web::json::value& value, boost::optional<T>& ret);
 } // namespace details
 
 class JSonUnserializer final
@@ -236,6 +182,87 @@ private:
     const web::json::value& val;
 
 };
+    
+    namespace details {
+        inline void getValue(const web::json::value& value, int& ret) {
+            ret = value.as_integer();
+        }
+        inline void getValue(const web::json::value& value, int64_t& ret) {
+            ret = value.as_number().to_int64();
+        }
+        inline void getValue(const web::json::value& value, uint64_t& ret) {
+            ret = value.as_number().to_uint64();
+        }
+        inline void getValue(const web::json::value& value, bool& ret) {
+            ret = value.as_bool();
+        }
+        inline void getValue(const web::json::value& value, double& ret) {
+            ret = value.as_double();
+        }
+        inline void getValue(const web::json::value& value, std::string& ret) {
+            ret = utils::wstr2str(value.as_string());
+        }
+#ifdef _UTF16_STRINGS
+        inline void getValue(const web::json::value& value, std::wstring& ret) {
+            ret = value.as_string();
+        }
+#endif
+        
+        template <typename T>
+        void getValue(const web::json::value& value, T& ret) {
+            ret.visit(JSonUnserializer{value});
+        }
+        
+        template <typename T>
+        void getValue(const web::json::value& value, std::unique_ptr<T>& ret) {
+            if (value.is_null()) {
+                ret = nullptr;
+            } else if (ret == nullptr) {
+                ret = std::unique_ptr<T>(new T{});
+                getValue(value, *ret);
+            } else {
+                getValue(value, *ret);
+            }
+        }
+        
+        template <typename T>
+        void getValue(const web::json::value& value, std::shared_ptr<T>& ret) {
+            if (value.is_null()) {
+                ret = nullptr;
+            } else if (ret == nullptr) {
+                ret = std::make_shared<T>();
+                getValue(value, *ret);
+            } else {
+                getValue(value, *ret);
+            }
+        }
+        
+        template <typename T>
+        void getValue(const web::json::value& value, std::vector<T>& ret) {
+            ret.clear();
+            if (!value.is_null()) {
+                auto values = value.as_array();
+                ret.reserve(values.size());
+                for(auto v : values) {
+                    auto t = T{};
+                    getValue(v, t);
+                    ret.push_back(std::move(t));
+                }
+            }
+        }
+        
+        template <typename T>
+        void getValue(const web::json::value& value, boost::optional<T>& ret) {
+            if (value.is_null()) {
+                ret = boost::none;
+            } else if (!ret.is_initialized()) {
+                ret = boost::make_optional(T{});
+                getValue(value, ret.get());
+            } else {
+                getValue(value, ret.get());
+            }
+        }
+    } // namespace details
 
 } // namespace giga
 #endif /* JSONUNSERIALIZER_H_ */

@@ -1,4 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+cmake_policy(SET CMP0042 NEW)
 
 ### Project configuration
 PROJECT(GiGaSdk)
@@ -81,7 +82,7 @@ ENDIF(USE_BOOST_LOG)
 ### Project dependancies
 SET(Boost_USE_STATIC_LIBS ON)
 FIND_PACKAGE(OpenSSL REQUIRED)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS regex system filesystem program_options ${BOOST_LOG_CMP} REQUIRED)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS regex system filesystem program_options chrono thread ${BOOST_LOG_CMP} REQUIRED)
 FIND_PACKAGE(Casablanca REQUIRED)
 FIND_PACKAGE(Crypto++ REQUIRED)
 FIND_PACKAGE(CURL REQUIRED)
