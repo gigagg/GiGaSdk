@@ -19,6 +19,8 @@
 
 #include <pplx/pplxtasks.h>
 #include <cpprest/details/basic_types.h>
+#include "utfcpp/utf8/core.h"
+
 #ifdef _UTF16_STRINGS
 #include <codecvt>
 #endif
@@ -56,6 +58,9 @@ replaceInvalidUtf8(const std::string& str);
 
 std::wstring
 replaceInvalidUtf8(const std::wstring& str);
+
+bool
+containUtf8Char(const std::string& str, uint32_t replacementMarker = utf8::internal::mask16(0xfffd));
 
 std::string
 exceptionInfos() noexcept;

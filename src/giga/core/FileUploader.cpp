@@ -138,8 +138,10 @@ FileUploader::doStart ()
                 auto uploadUrl = e.getJson().at(U("uploadUrl")).as_string();
                 auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(utils::str2wstr(nodeKeyCl))});
                 const auto maxTry = 3;
-                for (auto i = 1; i <= maxTry; ++i) {
-                    try {
+                for (auto i = 1; i <= maxTry; ++i)
+                {
+                    try
+                    {
                         ChunkUploader ch{uriBuilder, nodeName, sha1, filename, U("application/octet-stream"), progress, *app};
                         return ch.upload();
                     }

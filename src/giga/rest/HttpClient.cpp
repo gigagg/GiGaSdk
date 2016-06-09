@@ -105,7 +105,7 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     msg.set_body(JSonSerializer::toString(body), JSON_CONTENT_TYPE);
     msg.headers().add(header_names::user_agent, _userAgent);
 
-    auto request = _http.request(msg).then([=](web::http::http_response response) {
+    auto request = http().request(msg).then([=](web::http::http_response response) {
         onRequest<Empty>(response);
         auto headers = response.headers();
 
@@ -126,7 +126,7 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
         if (it != headers.end()) {
             r.headers().add(U("Cookie"), it->second);
         }
-        auto request = _http.request(r).then([=](web::http::http_response response) -> string_t {
+        auto request = http().request(r).then([=](web::http::http_response response) -> string_t {
             auto redirect = onRequest<Redirect>(response);
             return redirect.redirect;
         });
@@ -142,6 +142,8 @@ HttpClient::authenticate (const string_t& login, const string_t& password)
     // regenerate client, with the oauth2 config.
     auto config = getConfig();
     config.set_oauth2(m_oauth2_config);
+
+    std::lock_guard<std::mutex> l(_rstate->mut);
     _http = {Config::get().apiHost(), config};
     _rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{3600};
     _accessToken = config.oauth2()->token().access_token();
@@ -186,9 +188,10 @@ HttpClient::throwHttpError(unsigned short status, web::json::value&& json) const
     }
 }
 
-const web::http::client::http_client&
-HttpClient::http () const
+web::http::client::http_client&
+HttpClient::http ()
 {
+    std::lock_guard<std::mutex> l{_rstate->mut};
     return _http;
 }
 
@@ -206,31 +209,33 @@ HttpClient::refreshToken()
 
     if (shouldRefresh)
     {
-        auto rstate       = _rstate;
-        auto& http        = _http;
-        auto& accessToken = _accessToken;
+        auto rstate        = _rstate;
+        auto& http         = _http;
+        auto& accessToken  = _accessToken;
+        auto& config       = _http.client_config();
+        auto& refreshToken = _http.client_config().oauth2()->token().refresh_token();
 
         //
         // All this is an ugly hack to make sure the refresh works
         // cf: const_cast etc ...
         //
 
-        auto oaut2copy = std::make_shared<oauth2::experimental::oauth2_config>(*_http.client_config().oauth2());
-        return pplx::create_task([rstate, &http, &accessToken, oaut2copy]() {
+        // config and refreshToken are copied here:
+        return pplx::create_task([rstate, &http, &accessToken, config, refreshToken]() {
             try
             {
                 GIGA_DEBUG_LOG(trace, "Refreshing access token");
-                oaut2copy->token_from_refresh().get();
+                config.oauth2()->token_from_refresh().get();
 
                 std::lock_guard<std::mutex> l{ rstate->mut };
-                if (oaut2copy->token().refresh_token().empty() &&
-                    !http.client_config().oauth2()->token().refresh_token().empty())
+                if (config.oauth2()->token().refresh_token().empty() && !refreshToken.empty())
                 {
-                    const_cast<oauth2_token&>(oaut2copy->token()).set_refresh_token(http.client_config().oauth2()->token().refresh_token());
+                    const_cast<oauth2_token&>(config.oauth2()->token()).set_refresh_token(refreshToken);
                 }
                 rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
-                const_cast<http_client_config*>(&http.client_config())->set_oauth2(*oaut2copy);
-                accessToken = http.client_config().oauth2()->token().access_token();
+                accessToken = config.oauth2()->token().access_token();
+                http = {Config::get().apiHost(), config};
+
                 rstate->isRefreshing = false;
             }
             catch (std::exception e)

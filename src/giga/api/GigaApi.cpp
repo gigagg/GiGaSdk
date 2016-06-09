@@ -63,12 +63,6 @@ GigaApi::getCurrentUser()
     BOOST_THROW_EXCEPTION(ErrorException(U("You must authenticate before using getCurrentUser")));
 }
 
-const std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
-GigaApi::getOAuthConfig() const
-{
-    return _client.http().client_config().oauth2();
-}
-
 pplx::task<void>
 GigaApi::refreshToken() const
 {

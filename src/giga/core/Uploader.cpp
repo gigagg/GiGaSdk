@@ -283,6 +283,13 @@ Uploader::kill()
 {
     if (_isStarted)
     {
+        // Clear everything
+        _clearPreparedQueue += 1;
+        _clearScannedQueue  += 1;
+        _clearRequestQueue  += 1;
+        _requests.enqueue(nullptr);
+
+        // do the cancel
         _cts.cancel();
         if (_preparingFile != nullptr)
         {
@@ -292,6 +299,8 @@ Uploader::kill()
         {
             _uploadingFile->cancel();
         }
+
+        // wait for it
         join();
     }
 }
@@ -596,7 +605,7 @@ bool
 Uploader::isPaused () const
 {
     std::lock_guard<std::mutex> l(_mut);
-    return _isPaused;
+    return _isPaused && !_cts.get_token().is_canceled();
 }
 
 

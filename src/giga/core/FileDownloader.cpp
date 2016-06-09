@@ -34,6 +34,8 @@
 #include <algorithm>
 #include <thread>
 
+using boost::filesystem::directory_entry;
+using boost::filesystem::directory_iterator;
 using boost::filesystem::exists;
 using boost::filesystem::is_directory;
 using boost::filesystem::path;
@@ -84,6 +86,25 @@ FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Nod
     }
 
     auto name = utils::cleanUpFilename(node.name());
+
+    // try to fix the encoding :
+    // Some name that are not utf8 compatible are modified on upload.
+    // Here we try to modify them back.
+
+    auto path = folder / name;
+    if (!boost::filesystem::exists(path) && giga::utils::containUtf8Char(name))
+    {
+        auto it = std::find_if(directory_iterator(folder), directory_iterator(), [&name](const directory_entry& entry) {
+            auto filename = entry.path().filename().string();
+            return giga::utils::replaceInvalidUtf8(filename) == name;
+        });
+        if (it != directory_iterator())
+        {
+            name = it->path().filename().native();
+        }
+    }
+
+
     auto pos = name.find_last_of(U("."));
     auto firstPart = name;
     auto lastPart = string_t{};
@@ -128,7 +149,7 @@ FileDownloader::FileDownloader (FileDownloader&& other) :
                 _startAt{other._startAt},
                 _lastUpdateDate{other._lastUpdateDate},
                 _policy{other._policy},
-                _app{_app}
+                _app{other._app}
 {
 }
 

@@ -61,9 +61,6 @@ public:
     data::User&
     getCurrentUser();
 
-    const std::shared_ptr<web::http::oauth2::experimental::oauth2_config>
-    getOAuthConfig() const;
-
     pplx::task<void>
     refreshToken() const;
 

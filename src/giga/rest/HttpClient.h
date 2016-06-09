@@ -80,9 +80,6 @@ public:
     void
     throwHttpError(unsigned short status, web::json::value&& json) const;
 
-    const web::http::client::http_client&
-    http () const;
-
     pplx::task<void>
     refreshToken();
 
@@ -91,6 +88,10 @@ public:
 
     void
     setUserAgent(utility::string_t userAgent);
+
+private:
+    web::http::client::http_client&
+    http ();
 
 private:
     web::http::client::http_client   _http;
@@ -135,7 +136,7 @@ HttpClient::request (const web::http::method &mtd, web::uri_builder uri)
    msg.headers().add(web::http::header_names::user_agent, _userAgent);
 
    return refreshToken().then([=]() {
-       return _http.request(msg).then([=](web::http::http_response response) {
+       return http().request(msg).then([=](web::http::http_response response) {
            return onRequestPtr<T>(response);
        });
    });
@@ -156,7 +157,7 @@ HttpClient::request (const web::http::method &mtd, web::uri_builder uri, U&& bod
    msg.headers().add(web::http::header_names::user_agent, _userAgent);
 
    return refreshToken().then([=]() {
-       return _http.request(msg).then([=](web::http::http_response response) {
+       return http().request(msg).then([=](web::http::http_response response) {
            return onRequestPtr<T>(response);
        });
    });

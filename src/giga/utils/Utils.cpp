@@ -112,6 +112,15 @@ replaceInvalidUtf8(const std::wstring& str)
     return str;
 }
 
+bool
+containUtf8Char(const std::string& str, uint32_t replacementMarker)
+{
+    utf8::iterator<std::string::const_iterator> begin(str.begin(), str.begin(), str.end());
+    utf8::iterator<std::string::const_iterator> end{str.end(), str.begin(), str.end()};
+    auto it = std::find(begin, end, replacementMarker);
+    return it != end;
+}
+
 std::string
 exceptionInfos() noexcept
 {

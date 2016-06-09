@@ -192,10 +192,15 @@ Downloader::kill()
 {
     if (_isStarted)
     {
+        // clear
         std::unique_ptr<QueueElement> element = nullptr;
         while(_queue.try_dequeue(element)){}
+
+        // cancel
         _queue.enqueue(nullptr);
         _cts.cancel();
+
+        // wait for it
         join();
     }
 }
