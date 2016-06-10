@@ -90,13 +90,13 @@ FileDownloader::FileDownloader (const boost::filesystem::path& folder, const Nod
     // try to fix the encoding :
     // Some name that are not utf8 compatible are modified on upload.
     // Here we try to modify them back.
-
-    auto path = folder / name;
-    if (!boost::filesystem::exists(path) && giga::utils::containUtf8Char(name))
+    auto tmpName = utils::wstr2str(name);
+    auto path = folder / tmpName;
+    if (!boost::filesystem::exists(path) && giga::utils::containUtf8Char(tmpName))
     {
-        auto it = std::find_if(directory_iterator(folder), directory_iterator(), [&name](const directory_entry& entry) {
+        auto it = std::find_if(directory_iterator(folder), directory_iterator(), [&tmpName](const directory_entry& entry) {
             auto filename = entry.path().filename().string();
-            return giga::utils::replaceInvalidUtf8(filename) == name;
+            return giga::utils::replaceInvalidUtf8(filename) == tmpName;
         });
         if (it != directory_iterator())
         {
