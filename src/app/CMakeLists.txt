@@ -12,11 +12,15 @@ TARGET_LINK_LIBRARIES(${EXE_NAME} ${CURL_LIBRARY})
 TARGET_LINK_LIBRARIES(${EXE_NAME} ${CURLCPP_LIBRARIES})
 
 IF(MSVC)
-    ADD_CUSTOM_COMMAND(
-        TARGET ${EXE_NAME} 
-        POST_BUILD 
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${DEPS_PATH}/bin" $<TARGET_FILE_DIR:${EXE_NAME}>
-    )
+    FILE(GLOB DEP_DLLS "${DEPS_PATH}/bin/*.dll")
+    FOREACH(_dllfile ${DEP_DLLS})
+        ADD_CUSTOM_COMMAND(
+            TARGET ${EXE_NAME}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dllfile}" $<TARGET_FILE_DIR:${EXE_NAME}>
+        )
+    ENDFOREACH()
+    
     INSTALL(DIRECTORY "${DEPS_PATH}/bin" DESTINATION . COMPONENT applications)
 ENDIF(MSVC)
 

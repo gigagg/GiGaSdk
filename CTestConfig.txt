@@ -12,11 +12,14 @@ FOREACH(test ${TESTS})
   TARGET_LINK_LIBRARIES(${EXE_TEST} ${CURLCPP_LIBRARIES})
   
   IF(MSVC)
-    ADD_CUSTOM_COMMAND(
-        TARGET ${EXE_TEST} 
-        POST_BUILD 
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${DEPS_PATH}/bin" $<TARGET_FILE_DIR:${EXE_TEST}>
-    )
+	FILE(GLOB DEP_DLLS "${DEPS_PATH}/bin/*.dll")
+    FOREACH(_dllfile ${DEP_DLLS})
+        ADD_CUSTOM_COMMAND(
+            TARGET ${EXE_TEST}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dllfile}" $<TARGET_FILE_DIR:${EXE_TEST}>
+        )
+    ENDFOREACH()
   ENDIF(MSVC)
   
   ADD_TEST(${EXE_TEST} ${EXE_TEST})
