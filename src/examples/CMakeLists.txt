@@ -17,7 +17,7 @@ FOREACH(example ${EXAMPLES})
         ADD_CUSTOM_COMMAND(
             TARGET ${EXE_TEST}
             POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dllfile}" $<TARGET_FILE_DIR:${EXE_TEST}>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dllfile}" $<TARGET_FILE_DIR:${EXE_EXAMPLES}>
         )
     ENDFOREACH()
   ENDIF(MSVC)
