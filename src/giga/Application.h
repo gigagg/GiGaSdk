@@ -242,6 +242,7 @@ public:
 
 private:
     friend web::uri core::FileNodeData::fileUrl () const;
+    friend std::unique_ptr<core::Node> giga::core::Node::copyOrMoveTo (const FolderNode& node, bool isMove, MergePolicy policy = MergePolicy::renameSource) const;
 
     std::string
     getNodeKeyClear(uint64_t userId) const;

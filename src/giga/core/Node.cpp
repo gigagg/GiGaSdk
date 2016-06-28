@@ -27,6 +27,7 @@
 #include <giga/Application.h>
 #include <chrono>
 #include <string>
+#include <thread>
 
 using std::chrono::system_clock;
 using utility::string_t;
@@ -41,6 +42,9 @@ const utils::EnumConvertor<core::Node::Type, 3> core::Node::typeCvrt =
 
 const utils::EnumConvertor<core::Node::MediaType, 6> core::Node::mediaTypeCvrt =
     {U("audio"), U("document"), U("video"), U("image"), U("unknown"), U("folder")};
+
+const utils::EnumConvertor<core::Node::MergePolicy, 4> core::Node::mergePolicyCvrt =
+    {U("override"), U("ignore"), U("renameSource"), U("renameDest")};
 
 namespace core
 {
@@ -204,6 +208,61 @@ Node::rename(const string_t& name)
     _data->name = node->name;
     return node->name;
 }
+
+std::unique_ptr<core::Node>
+Node::moveTo(const FolderNode& node, MergePolicy policy) const
+{
+    return copyOrMoveTo(node, true, policy);
+}
+
+std::unique_ptr<core::Node>
+Node::copyTo(const FolderNode& node, MergePolicy policy) const
+{
+    return copyOrMoveTo(node, false, policy);
+}
+
+std::unique_ptr<core::Node>
+Node::copyOrMoveTo(const FolderNode& node, bool isMove, MergePolicy policy) const
+{
+    if (isMove && ownerId() != _app->currentUser().id())
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("It is forbidden to move files you do not own")});
+    }
+    if (node.ownerId() != _app->currentUser().id())
+    {
+        BOOST_THROW_EXCEPTION(ErrorException{U("You must own the destination node")});
+    }
+
+    std::string otherNodeKey;
+    std::string myNodeKey;
+    if (ownerId() != _app->currentUser().id())
+    {
+        otherNodeKey = _app->getNodeKeyClear(node.ownerId());
+        myNodeKey =_app->currentUser().personalData().nodeKeyClear();
+    }
+
+    // Do the copy / move
+    auto idc = _app->api().nodes.copyNode(id(), node.id(), isMove, mergePolicyCvrt.toStr(policy), myNodeKey, otherNodeKey).get();
+
+    auto i = 0;
+    do {
+        i++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 * i));
+        try
+        {
+            auto copyLog = _app->api().nodes.getCopyLog(id(), node.id()).get();
+
+            return _app->getNodeById(copyLog->mergedWith.get_value_or(copyLog->newId.get_value_or(copyLog->from)));
+        }
+        catch (const ErrorNotFound& e)
+        {
+            // ErrorNotFound means the copy is not done yet ; there are expected
+            GIGA_DEBUG_LOG(trace, utils::exceptionInfos());
+        }
+    } while (i <= 30);
+    BOOST_THROW_EXCEPTION(ErrorException{U("Timeout while waiting for the node to be copied/moved")});
+}
+
 const std::shared_ptr<data::Node>
 Node::handle() const
 {

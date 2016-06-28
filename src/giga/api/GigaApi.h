@@ -22,6 +22,7 @@
 #include "data/IdContainer.h"
 #include "data/NodeList.h"
 #include "data/Node.h"
+#include "data/CopyLog.h"
 #include "data/Preview.h"
 #include "data/Success.h"
 #include "data/Timeline.h"
@@ -151,9 +152,13 @@ public:
         pplx::task<std::shared_ptr<data::DataNode>>
         addFolderNode (const utility::string_t& name, const std::string& parentId) const;
 
-        pplx::task<std::shared_ptr<data::DataNode>>
-        copyNode (const std::string& fromNodeId, const std::string& toNodeId, const utility::string_t& copy, const utility::string_t& cut,
+        pplx::task<std::shared_ptr<data::IdContainer>>
+        copyNode (const std::string& fromNodeId, const std::string& toNodeId, bool isCut,
+                  const utility::string_t& mergePolicy,
                   const std::string& myNodeKey, const std::string& otherNodeKey) const;
+
+        pplx::task<std::shared_ptr<data::CopyLog>>
+        getCopyLog (const std::string& fromNodeId, const std::string& toNodeId) const;
 
         pplx::task<std::shared_ptr<data::Node>>
         getNodeById (const std::string& nodeId) const;
@@ -166,6 +171,9 @@ public:
 
         pplx::task<std::shared_ptr<std::vector<data::Node>>>
         getChildrenNode (const std::string& nodeId) const;
+
+        pplx::task<std::shared_ptr<data::Node>>
+        getChildrenNodeByName (const std::string& nodeId, const utility::string_t& name) const;
 
         pplx::task<std::shared_ptr<data::Preview>>
         getPreviewsData (const std::string& nodeId) const;

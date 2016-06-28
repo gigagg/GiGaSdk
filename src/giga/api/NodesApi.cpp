@@ -79,17 +79,36 @@ GigaApi::NodesApi::addFolderNode (const string_t& name, const std::string& paren
     return api._client.request<DataNode> (methods::POST, uri, std::move(body));
 }
 
-pplx::task<std::shared_ptr<DataNode>>
-GigaApi::NodesApi::copyNode (const std::string& fromNodeId, const std::string& toNodeId, const string_t& copy, const string_t& cut,
-                    const std::string& myNodeKey, const std::string& otherNodeKey) const
+pplx::task<std::shared_ptr<IdContainer>>
+GigaApi::NodesApi::copyNode (const std::string& fromNodeId, const std::string& toNodeId, bool isCut,
+                            const utility::string_t& mergePolicy,
+                            const std::string& myNodeKey, const std::string& otherNodeKey) const
 {
-    auto uri = api._client.uri (U("nodes"), str2wstr(fromNodeId), U("nodes"), str2wstr(toNodeId));
-    uri.append_query (U("copy"), copy);
-    uri.append_query (U("cut"), cut);
+    auto uri = api._client.uri (U("nodes"), str2wstr(toNodeId), U("nodes"), str2wstr(fromNodeId));
+    uri.append_query (U("mergePolicy"), mergePolicy);
+    if (isCut)
+    {
+        uri.append_query (U("cut"), U("true"));
+    }
+    else
+    {
+        uri.append_query (U("copy"), U("true"));
+    }
     auto body = JsonObj{};
-    body.add (U("myNodeKey"), myNodeKey);
-    body.add (U("otherNodeKey"), otherNodeKey);
-    return api._client.request<DataNode> (methods::POST, uri, std::move(body));
+    if (myNodeKey != "") {
+        body.add (U("myNodeKey"), myNodeKey);
+    }
+    if (otherNodeKey != "") {
+        body.add (U("otherNodeKey"), otherNodeKey);
+    }
+    return api._client.request<IdContainer> (methods::POST, uri, std::move(body));
+}
+
+pplx::task<std::shared_ptr<data::CopyLog>>
+GigaApi::NodesApi::getCopyLog (const std::string& fromNodeId, const std::string& toNodeId) const
+{
+    auto uri = api._client.uri (U("nodes"), str2wstr(toNodeId), U("nodes"), str2wstr(fromNodeId));
+    return api._client.request<CopyLog> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<Node>>
@@ -120,6 +139,14 @@ GigaApi::NodesApi::getChildrenNode (const std::string& nodeId) const
 {
     auto uri = api._client.uri (U("nodes"), str2wstr(nodeId), U("nodes"));
     return api._client.request<std::vector<Node>> (methods::GET, uri);
+}
+
+pplx::task<std::shared_ptr<Node>>
+GigaApi::NodesApi::getChildrenNodeByName (const std::string& nodeId, const utility::string_t& name) const
+{
+    auto uri = api._client.uri (U("nodes"), str2wstr(nodeId), U("nodes"));
+    uri.append_query(U("name"), name);
+    return api._client.request<Node> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<Preview>>
