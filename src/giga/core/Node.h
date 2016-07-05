@@ -93,7 +93,7 @@ public:
         /** Use this to default to User::PersonalData::mergePolicy() */
         useUserValue
     };
-    static const utils::EnumConvertor<MergePolicy, 4> mergePolicyCvrt;
+    static const utils::EnumConvertor<MergePolicy, 5> mergePolicyCvrt;
 
 public:
     Node()                        = default;
