@@ -85,7 +85,10 @@ GigaApi::NodesApi::copyNode (const std::string& fromNodeId, const std::string& t
                             const std::string& myNodeKey, const std::string& otherNodeKey) const
 {
     auto uri = api._client.uri (U("nodes"), str2wstr(toNodeId), U("nodes"), str2wstr(fromNodeId));
-    uri.append_query (U("mergePolicy"), mergePolicy);
+    if (!mergePolicy.empty())
+    {
+        uri.append_query (U("mergePolicy"), mergePolicy);
+    }
     if (isCut)
     {
         uri.append_query (U("cut"), U("true"));

@@ -68,10 +68,10 @@ public:
      *
      * The possible values are :
      *
-     *   - ```override```      : Override the destination file with the file being copied/moved/...
-     *   - ```ignore```        : Ignore the copy/move/... and keep the destination file
-     *   - ```renameSource``` : Rename the file being copied/moved/... before inserting it.
-     *   - ```renameDest```    : Rename the conflicting file in the destination folder before inserting the new file.
+     *   - ```override```    : Override the destination file with the file being copied/moved/...
+     *   - ```ignore```      : Ignore the copy/move/... and keep the destination file
+     *   - ```renameSource```: Rename the file being copied/moved/... before inserting it.
+     *   - ```renameDest```  : Rename the conflicting file in the destination folder before inserting the new file.
      *
      * The way the mergePolicy is applied is different whether it's applied on files or folders:
      *
@@ -88,7 +88,10 @@ public:
      */
     enum class MergePolicy
     {
-        override = 0, ignore, renameSource, renameDest
+        override = 0, ignore, renameSource, renameDest,
+
+        /** Use this to default to User::PersonalData::mergePolicy() */
+        useUserValue
     };
     static const utils::EnumConvertor<MergePolicy, 4> mergePolicyCvrt;
 
@@ -230,13 +233,13 @@ public:
      * @brief Shortcut for ```copyOrMoveTo(const FolderNode&, false, MergePolicy)```
      */
     std::unique_ptr<core::Node>
-    copyTo(const FolderNode& node, MergePolicy policy = MergePolicy::renameSource)  const;
+    copyTo(const FolderNode& node, MergePolicy policy = MergePolicy::useUserValue)  const;
 
     /**
      * @brief Shortcut for ```copyOrMoveTo(const FolderNode&, bool, MergePolicy)```
      */
     std::unique_ptr<core::Node>
-    moveTo(const FolderNode& node, MergePolicy policy = MergePolicy::renameSource)  const;
+    moveTo(const FolderNode& node, MergePolicy policy = MergePolicy::useUserValue)  const;
 
     /**
      * @brief Copy or move a node
@@ -246,17 +249,18 @@ public:
      * - If ```this``` is a folder and ```node``` contains a folder with the same name,
      * the two folders will be merged..
      * - For more information on merge policy see ```giga::core::Node::MergePolicy```
+     * - The default value is configured by the user (see ```User::PersonalData::mergePolicy()```)
      *
      * The copy/move operation is a long lasting operation (more than 1s).
      * The operation will timeout after 465 seconds
      *
      * @param node is the destination folder. You may want to reload ```node``` (uses ```Application::getNodeById()```)
      * @param isMove true for a move, false for a copy
-     * @param policy the merge policy is used when there are name conflicts.
+     * @param policy the merge policy is used when there are name conflicts (default to using the currentUser default value).
      * @return the copied or moved node (```this``` node should not be used after being moved).
      */
     std::unique_ptr<core::Node>
-    copyOrMoveTo(const FolderNode& node, bool isMove, MergePolicy policy = MergePolicy::renameSource) const;
+    copyOrMoveTo(const FolderNode& node, bool isMove, MergePolicy policy = MergePolicy::useUserValue) const;
 
     const std::shared_ptr<data::Node>
     handle() const;

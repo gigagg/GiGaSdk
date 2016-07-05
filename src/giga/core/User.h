@@ -233,6 +233,9 @@ public:
         const std::string&
         nodeKeyClear() const;
 
+        const Node::MergePolicy&
+        mergePolicy() const;
+
         uint64_t
         maxStorage() const;
 

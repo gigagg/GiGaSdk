@@ -43,8 +43,8 @@ const utils::EnumConvertor<core::Node::Type, 3> core::Node::typeCvrt =
 const utils::EnumConvertor<core::Node::MediaType, 6> core::Node::mediaTypeCvrt =
     {U("audio"), U("document"), U("video"), U("image"), U("unknown"), U("folder")};
 
-const utils::EnumConvertor<core::Node::MergePolicy, 4> core::Node::mergePolicyCvrt =
-    {U("override"), U("ignore"), U("renameSource"), U("renameDest")};
+const utils::EnumConvertor<core::Node::MergePolicy, 5> core::Node::mergePolicyCvrt =
+    {U("override"), U("ignore"), U("renameSource"), U("renameDest"), U("")};
 
 namespace core
 {

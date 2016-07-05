@@ -52,6 +52,7 @@ struct User {
     boost::optional<uint64_t> maxContact = boost::none;
     std::vector<utility::string_t> tags = {};
     utility::string_t isSeeder = {};
+    boost::optional<utility::string_t> mergePolicy = boost::none;
     /** True if the user is a GiGa bot */
     boost::optional<bool> isBot = boost::none;
     /** The rsa public key of this user */
@@ -110,6 +111,7 @@ struct User {
         GIGA_MANAGE(m, maxContact);
         GIGA_MANAGE(m, tags);
         GIGA_MANAGE(m, isSeeder);
+        GIGA_MANAGE(m, mergePolicy);
         GIGA_MANAGE(m, isBot);
         GIGA_MANAGE(m, publicKey);
         GIGA_MANAGE(m, country);
