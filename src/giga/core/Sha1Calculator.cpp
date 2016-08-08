@@ -57,7 +57,7 @@ Sha1Calculator::~Sha1Calculator()
         {
             _task.wait();
         }
-        if (_is)
+        if (_is.is_open())
         {
             _is.close();
         }
@@ -131,6 +131,10 @@ Sha1Calculator::doStart ()
 
         } while ((_is.rdstate() & std::ifstream::eofbit) == 0);
 
+        if (_is.is_open())
+        {
+            _is.close();
+        }
 
         unsigned char hashBuf[SHA_DIGEST_LENGTH];
         SHA1_Final(hashBuf, &ctx);
