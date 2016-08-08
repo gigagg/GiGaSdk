@@ -31,9 +31,9 @@ int main(int, char**)
     ucout << U("Hello ") << owner.login() << U(" your id is ") << owner.id() << std::endl;
 
     auto root = owner.contactData().node();
-    auto originCp   = root.createChildFolder("originCp");
-    auto originMv   = root.createChildFolder("originMv");
-    auto dest = root.createChildFolder("dest");
+    auto originCp   = root.createChildFolder(U("originCp"));
+    auto originMv   = root.createChildFolder(U("originMv"));
+    auto dest = root.createChildFolder(U("dest"));
 
     originCp.copyTo(dest);
     originMv.moveTo(dest);
