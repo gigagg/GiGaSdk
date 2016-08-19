@@ -149,7 +149,7 @@ HttpClient::request (const web::http::method &mtd, web::uri_builder uri, U&& bod
    auto json      = web::json::value::object();
    auto data      = JSonSerializer{json}.toString(std::move(bodyData));
    auto uriString = uri.to_string();
-   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << data);
+   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << giga::utils::wstr2str(data));
 
    web::http::http_request msg(mtd);
    msg.set_request_uri(uri.to_string());
