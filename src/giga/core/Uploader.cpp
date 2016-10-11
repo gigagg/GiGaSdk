@@ -659,7 +659,7 @@ Uploader::uploadFile (const PreparedFile& prepared, int retryCount)
             _upProgress.fileDone += 1;
         }
     }
-    catch (const ErrorNotFound& e)
+    catch (const ErrorNotFound&)
     {
         if (_cacheNode != nullptr && retryCount == 0) {
             _cacheNode = nullptr;

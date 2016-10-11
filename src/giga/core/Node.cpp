@@ -254,7 +254,7 @@ Node::copyOrMoveTo(const FolderNode& node, bool isMove, MergePolicy policy) cons
 
             return _app->getNodeById(copyLog->mergedWith.get_value_or(copyLog->newId.get_value_or(copyLog->from)));
         }
-        catch (const ErrorNotFound& e)
+        catch (const ErrorNotFound&)
         {
             // ErrorNotFound means the copy is not done yet ; there are expected
             GIGA_DEBUG_LOG(trace, utils::exceptionInfos());
