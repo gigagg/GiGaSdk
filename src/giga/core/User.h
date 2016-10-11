@@ -233,7 +233,7 @@ public:
         const std::string&
         nodeKeyClear() const;
 
-        const Node::MergePolicy&
+        Node::MergePolicy
         mergePolicy() const;
 
         uint64_t

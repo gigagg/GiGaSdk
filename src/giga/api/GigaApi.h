@@ -147,7 +147,7 @@ public:
 
         pplx::task<std::shared_ptr<data::DataNode>>
         addNode (const utility::string_t& name, const utility::string_t& type, const std::string& parentId, const std::string& fkey,
-                 const std::string& fid) const;
+                 const std::string& fid, uint64_t mdate = 0) const;
 
         pplx::task<std::shared_ptr<data::DataNode>>
         addFolderNode (const utility::string_t& name, const std::string& parentId) const;

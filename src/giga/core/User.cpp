@@ -280,7 +280,7 @@ User::PersonalData::nodeKeyClear () const
     return _nodeKeyClear;
 }
 
-const Node::MergePolicy&
+Node::MergePolicy
 User::PersonalData::mergePolicy() const
 {
     return Node::mergePolicyCvrt.fromStr(_data->mergePolicy.get_value_or(U("renameSource")));

@@ -97,6 +97,7 @@ private:
     std::string             _fkey;
 
     uint64_t           _fileSize;
+    uint64_t           _fileCDate;
     const Application* _app;
 };
 

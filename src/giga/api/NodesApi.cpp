@@ -56,7 +56,7 @@ GigaApi::NodesApi::searchNodeByType (const string_t& search, const string_t& typ
 
 pplx::task<std::shared_ptr<DataNode>>
 GigaApi::NodesApi::addNode (const string_t& name, const string_t& type, const std::string& parentId, const std::string& fkey,
-                   const std::string& fid) const
+                   const std::string& fid, uint64_t mdate) const
 {
     auto uri = api._client.uri (U("nodes"));
     auto body = JsonObj{};
@@ -65,6 +65,7 @@ GigaApi::NodesApi::addNode (const string_t& name, const string_t& type, const st
     body.add (U("parentId"), str2wstr(parentId));
     body.add (U("fkey"), str2wstr(fkey));
     body.add (U("fid"), str2wstr(fid));
+    body.add (U("mdate"), static_cast<int64_t>(mdate));
     return api._client.request<DataNode> (methods::POST, uri, std::move(body));
 }
 
@@ -76,7 +77,17 @@ GigaApi::NodesApi::addFolderNode (const string_t& name, const std::string& paren
     body.add (U("name"), name);
     body.add (U("type"), string_t(U("folder")));
     body.add (U("parentId"), str2wstr(parentId));
-    return api._client.request<DataNode> (methods::POST, uri, std::move(body));
+    try
+    {
+        return api._client.request<DataNode> (methods::POST, uri, std::move(body));
+    }
+    catch (const ErrorLocked& e)
+    {
+        return pplx::create_task([e](){
+            JSonUnserializer j(e.getJson().at(U("data")));
+            return j.unserialize<std::shared_ptr<DataNode>>();
+        });
+    }
 }
 
 pplx::task<std::shared_ptr<IdContainer>>

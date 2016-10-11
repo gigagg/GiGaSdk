@@ -88,6 +88,7 @@ FileUploader::FileUploader (const path& filename, const string_t& nodeName, cons
         _fid{fid},
         _fkey{fkey},
         _fileSize{boost::filesystem::file_size(filename)},
+        _fileCDate{static_cast<uint64_t>(boost::filesystem::last_write_time(filename))},
         _app(&app)
 {
 }
@@ -108,6 +109,7 @@ void
 FileUploader::doStart ()
 {
     auto filename   = _filename;
+    auto fileCDate  = _fileCDate;
     auto nodeName   = _nodeName;
     auto parentId   = _parentId;
     auto sha1       = _sha1;
@@ -126,7 +128,7 @@ FileUploader::doStart ()
             // Test if the file is on giga (and add it if possible)
             //
 
-            auto res = app->api().nodes.addNode(nodeName, U("file"), parentId, fkey, fid).get();
+            auto res = app->api().nodes.addNode(nodeName, U("file"), parentId, fkey, fid, fileCDate).get();
             return std::shared_ptr<data::Node>{std::move(res->data)};
         } catch (const ErrorNotFound& e) {
 
@@ -137,6 +139,7 @@ FileUploader::doStart ()
             if (e.getJson().has_field(U("uploadUrl"))) {
                 auto uploadUrl = e.getJson().at(U("uploadUrl")).as_string();
                 auto uriBuilder = uri_builder(uri{U("https:") + uploadUrl + web::uri::encode_data_string(utils::str2wstr(nodeKeyCl))});
+                uriBuilder.append_query(U("mdate"), fileCDate);
                 const auto maxTry = 3;
                 for (auto i = 1; i <= maxTry; ++i)
                 {

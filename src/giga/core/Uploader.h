@@ -22,6 +22,7 @@
 #include "../utils/readerwriterqueue.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/variant.hpp>
 #include <pplx/pplxtasks.h>
 #include <string>
 #include <memory>
@@ -35,10 +36,12 @@ class Application;
 namespace core
 {
 
+struct UploadRequestedFile;
 struct ScannedFile;
 struct PreparedFile;
+struct UploadedFile;
+
 struct UploadRequest;
-struct FileTree;
 
 /**
  * Upload files and folders.
@@ -61,10 +64,12 @@ public:
 
     typedef std::function<void(FileTransferer&, TransferProgress)> ProgressFct;
 
-    typedef std::function<void(const ScannedFile&)>   OnScannedFct;
-    typedef std::function<void(const PreparedFile&)>  OnPreparedFct;
-    typedef std::function<void(const boost::filesystem::path&, std::shared_ptr<Node>)> OnUploadedFct;
-    typedef std::function<void(const boost::filesystem::path&, std::string&&, Step)>   OnErrorFct;
+    typedef std::function<void(const ScannedFile&)>  OnScannedFct;
+    typedef std::function<void(const PreparedFile&)> OnPreparedFct;
+    typedef std::function<void(UploadedFile&&)> OnUploadedFct;
+
+    typedef boost::variant<UploadRequestedFile, ScannedFile, PreparedFile> UploadErrorData;
+    typedef std::function<void(UploadErrorData&&, std::string&&, Step)>    OnErrorFct;
 
 
 public:
@@ -210,20 +215,20 @@ public:
     callProgressFct() const;
 
     void
-    addScannedFile(const std::string parentId, const boost::filesystem::path& path);
+    addScannedFile(UploadRequestedFile request, boost::filesystem::path nodePath);
 
     void
-    addPreparedFile(const std::string parentId, const boost::filesystem::path& path, const std::string& sha1);
+    addPreparedFile(ScannedFile scanned, const std::string& sha1);
 
 private:
     void
-    scanFiles(FolderNode& dest, const boost::filesystem::path& ppath);
+    scanFiles(const FolderNode& dest,  boost::filesystem::path relativeNodePath, const boost::filesystem::path& realPath);
 
     void
     prepare (const ScannedFile& scanned);
 
     void
-    uploadFile (const PreparedFile& element);
+    uploadFile (const PreparedFile& element, int retryCount = 0);
 
     bool
     isPaused () const;
@@ -268,24 +273,8 @@ private:
 
     uint64_t                        _rate;
     bool                            _isPaused;
-};
 
-
-struct ScannedFile
-{
-    explicit
-    ScannedFile(std::string parentId, boost::filesystem::path path, uint64_t size):
-        parentId{std::move(parentId)}, path{std::move(path)}, size{size}
-    {}
-
-    ScannedFile(ScannedFile&&)                 = default;
-    ScannedFile(const ScannedFile&)            = default;
-    ScannedFile& operator=(const ScannedFile&) = default;
-    ScannedFile& operator=(ScannedFile&&)      = default;
-
-    const std::string             parentId;
-    const boost::filesystem::path path;
-    const uint64_t                size;
+    std::unique_ptr<Node>           _cacheNode;
 };
 
 template <typename T> void
@@ -295,20 +284,73 @@ Uploader::enqueue(moodycamel::BlockingReaderWriterQueue<std::unique_ptr<T>>& que
     queue.enqueue(std::move(element));
 }
 
-struct PreparedFile
+struct UploadRequestedFile
 {
     explicit
-    PreparedFile (std::string parentId, boost::filesystem::path path, std::string sha1, std::string fkey, std::string fid, std::string fkeyEnc) :
-            parentId(parentId), path(path), sha1(sha1), fkey(fkey), fid(fid), fkeyEnc(fkeyEnc)
-    {
-    }
+    UploadRequestedFile(std::string parentId, boost::filesystem::path path) :
+            parentId{std::move(parentId)}, path{std::move(path)}
+    {}
+
+    UploadRequestedFile(UploadRequestedFile&&)                 = default;
+    UploadRequestedFile(const UploadRequestedFile&)            = default;
+    UploadRequestedFile& operator=(const UploadRequestedFile&) = default;
+    UploadRequestedFile& operator=(UploadRequestedFile&&)      = default;
 
     const std::string             parentId;
     const boost::filesystem::path path;
-    const std::string             sha1;
-    const std::string             fkey;
-    const std::string             fid;
-    const std::string             fkeyEnc;
+};
+
+struct ScannedFile
+{
+    explicit
+    ScannedFile(UploadRequestedFile request, boost::filesystem::path nodePath, uint64_t size) :
+        request{std::move(request)}, nodePath{std::move(nodePath)}, size{size}
+    {}
+
+    ScannedFile(ScannedFile&&)                 = default;
+    ScannedFile(const ScannedFile&)            = default;
+    ScannedFile& operator=(const ScannedFile&) = default;
+    ScannedFile& operator=(ScannedFile&&)      = default;
+
+    const UploadRequestedFile     request;
+    const boost::filesystem::path nodePath;
+    const uint64_t                size;
+};
+
+struct PreparedFile
+{
+    explicit
+    PreparedFile (ScannedFile scanned, std::string sha1, std::string fkey, std::string fid, std::string fkeyEnc) :
+        scanned{std::move(scanned)},
+        sha1(std::move(sha1)), fkey(std::move(fkey)), fid(std::move(fid)), fkeyEnc(std::move(fkeyEnc))
+    {}
+
+    PreparedFile(PreparedFile&&)                 = default;
+    PreparedFile(const PreparedFile&)            = default;
+    PreparedFile& operator=(const PreparedFile&) = default;
+    PreparedFile& operator=(PreparedFile&&)      = default;
+
+    const ScannedFile scanned;
+    const std::string sha1;
+    const std::string fkey;
+    const std::string fid;
+    const std::string fkeyEnc;
+};
+
+struct UploadedFile
+{
+    explicit
+    UploadedFile (PreparedFile prepared, std::shared_ptr<Node> node) :
+        prepared{std::move(prepared)}, node(std::move(node))
+    {}
+
+    UploadedFile(UploadedFile&&)                 = default;
+    UploadedFile(const UploadedFile&)            = default;
+    UploadedFile& operator=(const UploadedFile&) = default;
+    UploadedFile& operator=(UploadedFile&&)      = default;
+
+    const PreparedFile prepared;
+    std::shared_ptr<Node> node;
 };
 
 } /* namespace core */

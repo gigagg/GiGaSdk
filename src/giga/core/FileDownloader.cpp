@@ -177,6 +177,7 @@ FileDownloader::doStart()
     auto progress = _progress.get();
     auto fileUri  = _fileUri;
     auto action   = _action;
+    auto lastUpdateDate = _lastUpdateDate;
 
     auto ignore = false;
     if (_policy == Policy::overrideNewerSize && exists(_destFile))
@@ -280,7 +281,7 @@ FileDownloader::doStart()
                     std::this_thread::sleep_for(std::chrono::milliseconds(250 * i));
                 }
             }
-        }, _cts.get_token()).then([destFile, tempFile, policy, action]() {
+        }, _cts.get_token()).then([destFile, tempFile, policy, action, lastUpdateDate]() {
             auto destfileExists = exists(destFile);
             if (policy != Policy::override && policy != Policy::overrideNewerSize && destfileExists)
             {
@@ -289,6 +290,7 @@ FileDownloader::doStart()
             }
 
             boost::filesystem::rename(tempFile, destFile);
+            boost::filesystem::last_write_time(destFile,  std::chrono::system_clock::to_time_t(lastUpdateDate));
 
             if (action == Action::fileRenamed)
             {
