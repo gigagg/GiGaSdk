@@ -71,6 +71,13 @@ public:
     template<typename T, class U> pplx::task<std::shared_ptr<T>>
     request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData);
 
+    template<class U>
+    pplx::task<web::http::http_response>
+    rawRequest(const web::http::method &mtd, web::uri_builder uri, U&& bodyData);
+
+    inline pplx::task<web::http::http_response>
+    rawRequest (const web::http::method &mtd, web::uri_builder uri);
+
     template<typename T> std::shared_ptr<T>
     onRequestPtr (web::http::http_response response) const;
 
@@ -124,9 +131,27 @@ HttpClient::uri (const utility::string_t& resource, const T& id, const utility::
    return web::uri_builder{ss.str()};
 }
 
-template<typename T>
-pplx::task<std::shared_ptr<T>>
-HttpClient::request (const web::http::method &mtd, web::uri_builder uri)
+template<class U>
+pplx::task<web::http::http_response>
+HttpClient::rawRequest(const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
+{
+   auto json      = web::json::value::object();
+   auto data      = JSonSerializer{json}.toString(std::move(bodyData));
+   auto uriString = uri.to_string();
+   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << data);
+
+   web::http::http_request msg(mtd);
+   msg.set_request_uri(uri.to_string());
+   msg.set_body(JSonSerializer{json}.toString(std::move(bodyData)), JSON_CONTENT_TYPE);
+   msg.headers().add(web::http::header_names::user_agent, _userAgent);
+
+   return refreshToken().then([=]() {
+       return http().request(msg);
+   });
+}
+
+inline pplx::task<web::http::http_response>
+HttpClient::rawRequest (const web::http::method &mtd, web::uri_builder uri)
 {
    GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string());
    auto uriString = uri.to_string();
@@ -136,9 +161,16 @@ HttpClient::request (const web::http::method &mtd, web::uri_builder uri)
    msg.headers().add(web::http::header_names::user_agent, _userAgent);
 
    return refreshToken().then([=]() {
-       return http().request(msg).then([=](web::http::http_response response) {
-           return onRequestPtr<T>(response);
-       });
+       return http().request(msg);
+   });
+}
+
+template<typename T>
+pplx::task<std::shared_ptr<T>>
+HttpClient::request (const web::http::method &mtd, web::uri_builder uri)
+{
+   return rawRequest(mtd, uri).then([=](web::http::http_response response) {
+       return onRequestPtr<T>(response);
    });
 }
 
@@ -146,20 +178,8 @@ template<typename T, class U>
 pplx::task<std::shared_ptr<T>>
 HttpClient::request (const web::http::method &mtd, web::uri_builder uri, U&& bodyData)
 {
-   auto json      = web::json::value::object();
-   auto data      = JSonSerializer{json}.toString(std::move(bodyData));
-   auto uriString = uri.to_string();
-   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << giga::utils::wstr2str(data));
-
-   web::http::http_request msg(mtd);
-   msg.set_request_uri(uri.to_string());
-   msg.set_body(JSonSerializer{json}.toString(std::move(bodyData)), JSON_CONTENT_TYPE);
-   msg.headers().add(web::http::header_names::user_agent, _userAgent);
-
-   return refreshToken().then([=]() {
-       return http().request(msg).then([=](web::http::http_response response) {
-           return onRequestPtr<T>(response);
-       });
+   return rawRequest(mtd, uri, std::move(bodyData)).then([=](web::http::http_response response) {
+       return onRequestPtr<T>(response);
    });
 }
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
  */
 #include <boost/asio/ssl.hpp>
 #include <boost/chrono.hpp>
+#include <giga/utils/Utils.h>
 
 #ifdef CRYPTOPP
 #include "cryptopp/integer.h"
@@ -66,16 +67,18 @@ using CryptoPP::CTR_Mode;
 using CryptoPP::FileSink;
 using CryptoPP::Base64Decoder;
 using CryptoPP::Base64Encoder;
+using CryptoPP::ByteOrder;
 using CryptoPP::ByteQueue;
 using CryptoPP::CBC_Mode;
+using CryptoPP::DecodingResult;
 using CryptoPP::Integer;
 using CryptoPP::InvertibleRSAFunction;
 using CryptoPP::PK_DecryptorFilter;
 using CryptoPP::PK_EncryptorFilter;
 using CryptoPP::Redirector;
 using CryptoPP::HexEncoder;
-using CryptoPP::RSAES_OAEP_SHA_Decryptor;
-using CryptoPP::RSAES_OAEP_SHA_Encryptor;
+using CryptoPP::NameValuePairs;
+using CryptoPP::RandomNumberGenerator;
 using CryptoPP::RSAES_PKCS1v15_Decryptor;
 using CryptoPP::RSAES_PKCS1v15_Encryptor;
 using CryptoPP::SecByteBlock;
@@ -111,7 +114,7 @@ namespace giga
 class RsaKeys final
 {
 public:
-    RsaKeys()               = default;
+    RsaKeys()            = default;
     RsaKeys(const RsaKeys&) = default;
 
     CryptoPP::RSA::PublicKey    pub;
@@ -123,49 +126,49 @@ Rsa::Rsa (const std::string& pubStr, const std::string& privStr) :
 {
     try
     {
-        ByteQueue queue;
-        fillQueue(queue, pubStr);
-        _keys->pub.BERDecodePublicKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
+       ByteQueue queue;
+       fillQueue(queue, pubStr);
+       _keys->pub.BERDecodePublicKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
     }
     catch (const std::exception&)
     {
-        ByteQueue queue;
-        fillQueue(queue, pubStr);
-        _keys->pub.BERDecode(queue);
+       ByteQueue queue;
+       fillQueue(queue, pubStr);
+       _keys->pub.BERDecode(queue);
     }
     _hasPrivateKey = false;
     if (privStr != "")
     {
-        try
-        {
-            ByteQueue queue;
-            fillQueue(queue, privStr);
-            _keys->priv.BERDecodePrivateKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
-            _hasPrivateKey = true;
-        }
-        catch (const std::exception&)
-        {
-            ByteQueue queue;
-            fillQueue(queue, privStr);
-            _keys->priv.BERDecode(queue);
-            _hasPrivateKey = true;
-        }
+       try
+       {
+          ByteQueue queue;
+          fillQueue(queue, privStr);
+          _keys->priv.BERDecodePrivateKey(queue, false, static_cast<size_t>(queue.MaxRetrievable()));
+          _hasPrivateKey = true;
+       }
+       catch (const std::exception&)
+       {
+          ByteQueue queue;
+          fillQueue(queue, privStr);
+          _keys->priv.BERDecode(queue);
+          _hasPrivateKey = true;
+       }
 
-        AutoSeededRandomPool rnd;
-        if (!_keys->priv.Validate(rnd, 3))
-        {
-            BOOST_THROW_EXCEPTION(ErrorException(U("Rsa private key validation failed")));
-        }
+       AutoSeededRandomPool rnd;
+       if (!_keys->priv.Validate(rnd, 3))
+       {
+          BOOST_THROW_EXCEPTION(ErrorException(U("Rsa private key validation failed")));
+       }
 
-        if (!_keys->priv.Validate(rnd, 3))
-        {
-            BOOST_THROW_EXCEPTION(ErrorException(U("Dsa private key validation failed")));
-        }
+       if (!_keys->priv.Validate(rnd, 3))
+       {
+          BOOST_THROW_EXCEPTION(ErrorException(U("Dsa private key validation failed")));
+       }
     }
 }
 
 Rsa::Rsa () :
-        _keys{nullptr}, _hasPrivateKey{false}
+       _keys{nullptr}, _hasPrivateKey{false}
 {
 }
 
@@ -185,42 +188,76 @@ Rsa::Rsa(const Rsa& rhs)
     this->_hasPrivateKey = rhs._hasPrivateKey;
 }
 
-Rsa::Rsa(Rsa&&)             = default;
+Rsa::Rsa(Rsa&&)           = default;
 Rsa& Rsa::operator=(Rsa&& ) = default;
 
 std::string
 Rsa::encrypt (const std::string& data) const
 {
     if (_keys == nullptr) {
-        BOOST_THROW_EXCEPTION(ErrorException(U("You cannot use a default constructed Rsa obj")));
+       BOOST_THROW_EXCEPTION(ErrorException(U("You cannot use a default constructed Rsa obj")));
     }
     AutoSeededRandomPool rng;
     RSAES_PKCS1v15_Encryptor encryptor(_keys->pub);
     std::string encrypted;
     StringSource ss(data, true,
-        new PK_EncryptorFilter(rng, encryptor,
-            new StringSink(encrypted)
-        )
+       new PK_EncryptorFilter(rng, encryptor,
+          new StringSink(encrypted)
+       )
     );
     return encrypted;
 }
+
+/**
+ * To follow the js implementation, I need a more flexible decryptor (allowing 127 bit long cypher text)
+ * So The MyDecryptor is mostly a copy of the RSAES_PKCS1v15_Decryptor with only little modifications (less checks).
+ */
+class MyDecryptor : public RSAES_PKCS1v15_Decryptor
+{
+public:
+    explicit MyDecryptor(const CryptoPP::RSA::PrivateKey& k): RSAES_PKCS1v15_Decryptor{k}
+    {}
+
+    size_t MaxPlaintextLength(size_t ciphertextLength) const
+    {
+        if (ciphertextLength < 128)
+        {
+            return 117;
+        }
+        return RSAES_PKCS1v15_Decryptor::MaxPlaintextLength(ciphertextLength);
+    }
+
+    DecodingResult
+    Decrypt (RandomNumberGenerator &rng, const byte *ciphertext, size_t ciphertextLength, byte *plaintext,
+                               const NameValuePairs &parameters) const
+    {
+       SecByteBlock paddedBlock(PaddedBlockByteLength());
+       Integer x = GetTrapdoorFunctionInterface().CalculateInverse(rng, Integer(ciphertext, ciphertextLength));
+       if (x.ByteCount() > paddedBlock.size())
+       {
+          x = Integer::Zero();    // don't return false here to prevent timing attack
+       }
+       x.Encode(paddedBlock, paddedBlock.size());
+       return GetMessageEncodingInterface().Unpad(paddedBlock, PaddedBlockBitLength(), plaintext, parameters);
+    }
+};
 
 std::string
 Rsa::decrypt (const std::string& data) const
 {
     if (_keys == nullptr) {
-        BOOST_THROW_EXCEPTION(ErrorException(U("You cannot use a default constructed Rsa obj")));
+       BOOST_THROW_EXCEPTION(ErrorException(U("You cannot use a default constructed Rsa obj")));
     }
     if (!_hasPrivateKey) {
-        BOOST_THROW_EXCEPTION(ErrorException(U("PrivateKey has not been set")));
+       BOOST_THROW_EXCEPTION(ErrorException(U("PrivateKey has not been set")));
     }
     AutoSeededRandomPool rng;
-    RSAES_PKCS1v15_Decryptor decryptor(_keys->priv);
+    MyDecryptor decryptor{_keys->priv};
     std::string decrypted;
     StringSource ss(data, true,
-        new PK_DecryptorFilter(rng, decryptor,
-            new StringSink(decrypted)
-        )
+       new PK_DecryptorFilter(rng, decryptor,
+          new StringSink(decrypted)
+       )
     );
     return decrypted;
 }
@@ -228,18 +265,19 @@ Rsa::decrypt (const std::string& data) const
 std::string
 Rsa::decryptNodeKey (const std::string& data) const
 {
-    auto tmp = decrypt(Crypto::base64decode(data));
+    auto dt = Crypto::base64decode(data);
+    auto tmp = decrypt(dt);
     if (tmp.size() == 32)
     {
-        return Crypto::base64encode(tmp);
+       return Crypto::base64encode(tmp);
     }
     else if (tmp.size() > 44)
     {
-        return Crypto::base64decode(tmp);
+       return Crypto::base64decode(tmp);
     }
     else
     {
-        return tmp;
+       return tmp;
     }
 }
 
@@ -252,13 +290,13 @@ pbkdf2 (const string_t& spassword, const std::string& salt, std::size_t length, 
     auto key = std::vector<char>(length);
     CryptoPP::PKCS5_PBKDF2_HMAC<T> passToKey;
     passToKey.DeriveKey(toByte(key),
-                        key.size(),
-                        '\0',
-                        toByteCst(password),
-                        password.size(),
-                        toByteCst(salt),
-                        salt.size(),
-                        static_cast<unsigned int>(iteration));
+                    key.size(),
+                    '\0',
+                    toByteCst(password),
+                    password.size(),
+                    toByteCst(salt),
+                    salt.size(),
+                    static_cast<unsigned int>(iteration));
 
     return std::string{key.begin(), key.end()};
 }
@@ -279,15 +317,15 @@ Crypto::base64encode (const std::string& data)
 {
     std::string encoded;
     StringSource ss(toByteCst(data), data.size(), true,
-        new Base64Encoder(
-            new StringSink(encoded)
-        ) // Base64Encoder
+       new Base64Encoder(
+          new StringSink(encoded), false, 999999
+       ) // Base64Encoder
     ); // StringSource
 
     // remove the line feed char at the end (why is it here ?)
     if (encoded[encoded.size() - 1] == 10)
     {
-        encoded.pop_back();
+       encoded.pop_back();
     }
     return encoded;
 }
@@ -297,9 +335,9 @@ Crypto::base64decode (const std::string& data)
 {
     std::string decoded;
     StringSource ss(toByteCst(data), data.size(), true,
-        new Base64Decoder(
-            new StringSink(decoded)
-        ) // Base64Encoder
+       new Base64Decoder(
+          new StringSink(decoded)
+       ) // Base64Encoder
     ); // StringSource
     return decoded;
 }
@@ -335,19 +373,19 @@ Crypto::sha1File (const string_t& sfilename)
 {
     std::ifstream is (sfilename.c_str(), std::ifstream::binary);
     if (!is) {
-        BOOST_THROW_EXCEPTION(ErrorException{U("Cannot open file")});
+       BOOST_THROW_EXCEPTION(ErrorException{U("Cannot open file")});
     }
     auto buffer = std::unique_ptr<char[]>(new char[BUF_SIZE]);
 
     SHA_CTX ctx;
     SHA1_Init(&ctx);
     do {
-        is.read (buffer.get(), BUF_SIZE);
-        auto read = is.gcount();
-        if (read > 0)
-        {
-            SHA1_Update(&ctx, buffer.get(), static_cast<std::size_t>(read));
-        }
+       is.read (buffer.get(), BUF_SIZE);
+       auto read = is.gcount();
+       if (read > 0)
+       {
+          SHA1_Update(&ctx, buffer.get(), static_cast<std::size_t>(read));
+       }
 
     } while ((is.rdstate() & std::ifstream::eofbit) == 0);
     is.close();
@@ -357,14 +395,14 @@ Crypto::sha1File (const string_t& sfilename)
 
     std::string hash;
     StringSource ss(hashBuf, SHA_DIGEST_LENGTH, true,
-        new HexEncoder(
-            new StringSink(hash)
-        ) // HexEncoder
+       new HexEncoder(
+          new StringSink(hash)
+       ) // HexEncoder
     ); // StringSource
 
     std::locale l{"C"};
     std::transform(hash.begin(), hash.end(), hash.begin(), [&l](char c) {
-        return std::tolower(c, l);
+       return std::tolower(c, l);
     });
 
     return hash;
@@ -385,9 +423,9 @@ Crypto::aesEncrypt (const string_t& password, const std::string& data)
     auto encrypted = aesEncrypt(key, ivStr, data);
 
     return std::make_tuple(
-            encrypted,
-            ivStr,
-            saltStr
+          encrypted,
+          ivStr,
+          saltStr
     );
 }
 
@@ -399,9 +437,9 @@ Crypto::aesEncrypt (const std::string& key, const std::string& iv, const std::st
 
     std::string encrypted;
     StringSource ss(toByteCst (data), data.size(), true,
-        new StreamTransformationFilter(e,
-            new StringSink(encrypted)
-        )
+       new StreamTransformationFilter(e,
+          new StringSink(encrypted)
+       )
     );
 
     return encrypted;
@@ -415,9 +453,9 @@ Crypto::aesDecrypt (const std::string& key, const std::string& iv, const std::st
 
     std::string decrypted;
     StringSource ss(toByteCst (data), data.size(), true,
-        new StreamTransformationFilter(e,
-            new StringSink(decrypted)
-        )
+       new StreamTransformationFilter(e,
+          new StringSink(decrypted)
+       )
     );
 
     return decrypted;
@@ -430,15 +468,15 @@ Crypto::aesDecrypt (const string_t& spassword, const std::string& saltStr, const
 
     CBC_Mode<AES>::Decryption e;
     e.SetKeyWithIV(toByteCst(key),
-                   key.size(),
-                   toByteCst(ivStr),
-                   ivStr.size());
+                key.size(),
+                toByteCst(ivStr),
+                ivStr.size());
 
     std::string decrypted;
     StringSource ss(toByteCst (data), data.size(), true,
-        new StreamTransformationFilter(e,
-            new StringSink(decrypted)
-        )
+       new StreamTransformationFilter(e,
+          new StringSink(decrypted)
+       )
     );
 
     return decrypted;

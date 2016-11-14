@@ -26,12 +26,12 @@ namespace giga {
 namespace data {
 
 struct Group {
-    uint64_t ownerId = 0;
-    utility::string_t name = {};
-    std::vector<uint64_t>  users = std::vector<uint64_t>();
-    std::vector<std::unique_ptr<Node>> nodes = {};
-    utility::string_t id = {};
-    uint64_t creationDate = 0;
+    uint64_t              ownerId = 0;
+    utility::string_t     name = {};
+    std::vector<uint64_t> users = std::vector<uint64_t>();
+    std::vector<Node>     nodes = {};
+    utility::string_t     id = {};
+    uint64_t              creationDate = 0;
     boost::optional<bool> isAllMyContacts = boost::none;
     
     template <class Manager>

@@ -256,8 +256,15 @@ private:
             if (value.is_null()) {
                 ret = boost::none;
             } else if (!ret.is_initialized()) {
-                ret = boost::make_optional(T{});
-                getValue(value, ret.get());
+                try
+                {
+                    ret = boost::make_optional(T{});
+                    getValue(value, ret.get());
+                }
+                catch (web::json::json_exception)
+                {
+                    ret = boost::none;
+                }
             } else {
                 getValue(value, ret.get());
             }

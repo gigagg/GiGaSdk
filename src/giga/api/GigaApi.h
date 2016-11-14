@@ -29,6 +29,7 @@
 #include "data/DataNode.h"
 #include "data/UsersRelation.h"
 #include "data/UserExists.h"
+#include "data/SmallNode.h"
 
 #include "../rest/HttpClient.h"
 #include "../rest/JsonObj.h"
@@ -78,7 +79,7 @@ public:
         friend class GigaApi;
         explicit GroupsApi(GigaApi& api):api(api){}
     public:
-        pplx::task<std::shared_ptr<data::Group>>
+        pplx::task<std::shared_ptr<std::vector<data::Group>>>
         getAllGroups () const;
 
         pplx::task<std::shared_ptr<data::Group>>
@@ -180,6 +181,13 @@ public:
 
         pplx::task<std::shared_ptr<data::Timeline>>
         getTimeline (const utility::string_t& head, uint64_t from, uint64_t owner) const;
+
+        pplx::task<std::shared_ptr<std::vector<data::SmallNode>>>
+        getAllFiles (const std::string& nodeId, const utility::string_t& type) const;
+
+        pplx::task<uint64_t>
+        forEachFiles(const std::string& nodeId, const utility::string_t& type, const std::function <void (web::json::value&&)>& fct) const;
+
     private:
         GigaApi& api;
     };

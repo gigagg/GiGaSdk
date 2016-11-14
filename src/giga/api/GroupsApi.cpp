@@ -20,6 +20,7 @@
 
 #include <cpprest/http_client.h>
 #include <string>
+#include <vector>
 
 using web::http::methods;
 using utility::string_t;
@@ -28,11 +29,11 @@ namespace giga
 {
 using namespace data;
 
-pplx::task<std::shared_ptr<Group>>
+pplx::task<std::shared_ptr<std::vector<Group>>>
 GigaApi::GroupsApi::getAllGroups () const
 {
     auto uri = api._client.uri (U("groups"));
-    return api._client.request<Group> (methods::GET, uri);
+    return api._client.request<std::vector<Group>> (methods::GET, uri);
 }
 
 pplx::task<std::shared_ptr<Group>>

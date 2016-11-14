@@ -36,7 +36,7 @@ toUserVect(std::shared_ptr<std::vector<std::shared_ptr<giga::data::UsersRelation
     {
         container.emplace_back(relation->user, app, relation);
     }
-    return std::move(container);
+    return container;
 }
 }
 

@@ -361,8 +361,10 @@ User::initializePersonalData (const string_t& password)
 const User::PersonalData&
 User::personalData () const
 {
-    if(hasPersonalData()) {
-        if (!_private.is_initialized()) {
+    if (hasPersonalData())
+    {
+        if (!_private.is_initialized())
+        {
             BOOST_THROW_EXCEPTION(ErrorException{U("You must initialize private data first")});
         }
         return _private.get();
