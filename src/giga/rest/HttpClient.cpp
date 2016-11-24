@@ -224,7 +224,7 @@ HttpClient::refreshToken()
         return pplx::create_task([rstate, &http, &accessToken, config, refreshToken]() {
             try
             {
-                GIGA_DEBUG_LOG(trace, "Refreshing access token");
+                GIGA_DEBUG_LOG(debug, "Refreshing access token");
                 config.oauth2()->token_from_refresh().get();
 
                 std::lock_guard<std::mutex> l{ rstate->mut };

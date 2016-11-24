@@ -17,6 +17,7 @@
 #ifndef HTTPERRORS_H_
 #define HTTPERRORS_H_
 
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/throw_exception.hpp>
 #include <cpprest/json.h>
 #include <iostream>
@@ -29,14 +30,59 @@
 
 #ifdef DEBUG_LOG
 #   define GIGA_DEBUG_LOG(lvl, data) std::cerr << U(#lvl) << ": " << data << std::endl
+#   define GIGA_DEBUG_LOG_U(lvl, user, data) std::cerr << U(#lvl) << "(" << (user) << "): " << data << std::endl
 #else
 #   ifdef USE_BOOST_LOG
-#       include <boost/log/trivial.hpp>
-#       define GIGA_DEBUG_LOG(lvl, data) BOOST_LOG_TRIVIAL(lvl) << __FILENAME__ << "(" << __LINE__ << "): " << data
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
+#include <boost/log/attributes/attribute.hpp>
+
+#define GIGA_DEBUG_LOG(lvl, data) \
+   BOOST_LOG_STREAM_WITH_PARAMS( \
+      (::boost::log::trivial::logger::get()), \
+         (giga::details::set_get_attrib("File", giga::details::path_to_filename(__FILE__))) \
+         (giga::details::set_get_attrib("Line", __LINE__)) \
+         (::boost::log::keywords::severity = (::boost::log::trivial::lvl)) \
+   ) << data
+#define GIGA_DEBUG_LOG_U(lvl, user, data) \
+   BOOST_LOG_STREAM_WITH_PARAMS( \
+      (::boost::log::trivial::logger::get()), \
+         (giga::details::set_get_attrib("File", giga::details::path_to_filename(__FILE__))) \
+         (giga::details::set_get_attrib("Line", __LINE__)) \
+         (giga::details::set_get_attrib("User", (user))) \
+         (::boost::log::keywords::severity = (::boost::log::trivial::lvl)) \
+   ) << data
+
+namespace giga {
+namespace details {
+// Set attribute and return the new value
+template<typename ValueType>
+ValueType set_get_attrib(const char* name, ValueType value) {
+    auto attributes = boost::log::core::get()->get_thread_attributes();
+    const auto it = attributes.find(name);
+    if (it != attributes.end()) {
+        auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(it->second);
+        attr.set(value);
+        return attr.get();
+    } else {
+        auto attr = boost::log::attributes::mutable_constant<ValueType>{value};
+        boost::log::core::get()->add_thread_attribute(name, attr);
+        return attr.get();
+    }
+}
+
+std::string
+path_to_filename(std::string path);
+
+}
+}
 #   else
 #       define GIGA_DEBUG_LOG(lvl, data) do {} while(0)
+#       define GIGA_DEBUG_LOG_U(lvl, user, data) do {} while(0)
 #   endif
 #endif
+
 
 namespace giga {
 

@@ -69,7 +69,7 @@ Downloader::~Downloader ()
         }
         catch (...)
         {
-            GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
+            GIGA_DEBUG_LOG_U(warning, _app->currentUser().id(), utils::exceptionInfos());
         }
     }
 }
@@ -145,7 +145,7 @@ Downloader::start ()
                 }
                 catch (...)
                 {
-                    GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
+                    GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
                 }
             }
         }
@@ -166,7 +166,7 @@ Downloader::start ()
                 catch (...)
                 {
                     auto error = utils::exceptionInfos();
-                    GIGA_DEBUG_LOG(debug, error);
+                    GIGA_DEBUG_LOG(warning, error);
                 }
             }
         }
@@ -341,7 +341,7 @@ Downloader::downloadNode (Node& node, const boost::filesystem::path& path)
         }
         catch (...)
         {
-            GIGA_DEBUG_LOG(debug, utils::exceptionInfos());
+            GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
         }
     }
 }

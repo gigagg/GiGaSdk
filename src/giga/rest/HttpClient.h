@@ -138,7 +138,7 @@ HttpClient::rawRequest(const web::http::method &mtd, web::uri_builder uri, U&& b
    auto json      = web::json::value::object();
    auto data      = JSonSerializer{json}.toString(std::move(bodyData));
    auto uriString = uri.to_string();
-   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string() << U(" ") << data);
+   GIGA_DEBUG_LOG(trace, mtd + U("  ") + uri.to_string() + U(" ") + data);
 
    web::http::http_request msg(mtd);
    msg.set_request_uri(uri.to_string());
@@ -153,7 +153,7 @@ HttpClient::rawRequest(const web::http::method &mtd, web::uri_builder uri, U&& b
 inline pplx::task<web::http::http_response>
 HttpClient::rawRequest (const web::http::method &mtd, web::uri_builder uri)
 {
-   GIGA_DEBUG_LOG(trace, mtd << U("  ") << uri.to_string());
+   GIGA_DEBUG_LOG(trace, mtd + U("  ") + uri.to_string());
    auto uriString = uri.to_string();
 
    web::http::http_request msg(mtd);
@@ -209,7 +209,7 @@ HttpClient::onRequest (web::http::http_response response) const
            }
            catch (const std::exception& e)
            {
-               GIGA_DEBUG_LOG(error, U("Error unserializing: ") << json.serialize());
+               GIGA_DEBUG_LOG(error, U("Error unserializing: " + json.serialize()));
                throw e;
            }
        }

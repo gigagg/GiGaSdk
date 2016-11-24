@@ -89,7 +89,7 @@ Uploader::~Uploader()
         }
         catch (...)
         {
-            GIGA_DEBUG_LOG(warning, utils::exceptionInfos());
+            GIGA_DEBUG_LOG_U(warning, _app->currentUser().id(), utils::exceptionInfos());
         }
     }
 }

@@ -84,9 +84,42 @@ searchNodes (const po::variables_map& vm, giga::Application& app, const char* na
     }
 }
 
+#ifdef USE_BOOST_LOG
+#include <boost/log/trivial.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
+void initBoostLog()
+{
+    boost::log::core::get()->add_thread_attribute("File", boost::log::attributes::mutable_constant<std::string>(""));
+    boost::log::core::get()->add_thread_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
+    boost::log::core::get()->add_thread_attribute("User", boost::log::attributes::mutable_constant<int>(0));
+
+    boost::log::add_file_log (
+        boost::log::keywords::file_name = "sample.log",
+        boost::log::keywords::format = (
+            boost::log::expressions::stream
+                << boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d_%H:%M:%S.%f")
+                << ": <" << boost::log::trivial::severity << "> "
+                << '['   << boost::log::expressions::attr<std::string>("File")
+                    << ':' << boost::log::expressions::attr<int>("Line") << "] "
+                << boost::log::expressions::smessage
+        ));
+    boost::log::add_common_attributes();
+}
+#endif
 
 int main(int argc, const char* argv[]) {
     try {
+#ifdef USE_BOOST_LOG
+        initBoostLog();
+#endif
 #ifdef _UTF16_STRINGS
 #define VALUE wvalue
 #else

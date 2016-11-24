@@ -204,7 +204,7 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
                 throw;
             }
             auto info = utils::exceptionInfos();
-            GIGA_DEBUG_LOG(debug, info << " retry in " << count << " seconds");
+            GIGA_DEBUG_LOG(debug, info + " retry in (s) " + std::to_string(count));
             std::this_thread::sleep_for(std::chrono::milliseconds(1000 * count));
         }
     }

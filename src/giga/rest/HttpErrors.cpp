@@ -23,6 +23,14 @@ using utility::string_t;
 namespace giga
 {
 
+namespace details {
+std::string
+path_to_filename(std::string path)
+{
+   return path.substr(path.find_last_of("/\\") + 1);
+}
+}
+
 ErrorException::ErrorException () :
         std::exception()
 {
