@@ -127,7 +127,9 @@ FolderNode::uploadFile(const fs::path& path, pplx::cancellation_token_source cts
     }
 
     auto parentId = this->id();
+    std::cerr << "1->" <<  path.filename().native() << std::endl;
     auto nodeName = utils::replaceInvalidUtf8(path.filename().native());
+    std::cerr << "2->" << nodeName << std::endl;
     auto nodeKeyClear = _app->currentUser().personalData().nodeKeyClear();
 
     auto calculator = std::unique_ptr<Sha1Calculator>{new Sha1Calculator(path, cts)};
@@ -139,6 +141,7 @@ FolderNode::uploadFile(const fs::path& path, pplx::cancellation_token_source cts
         auto fid = Crypto::calculateFid(sha1);
         auto decodedNodeKey = Crypto::base64decode(nodeKeyClear);
         auto fkeyEnc = Crypto::aesEncrypt(decodedNodeKey.substr(0, 16), decodedNodeKey.substr(16, 16), fkey);
+    std::cerr << "3->" << nodeName << std::endl;
 
         return std::make_shared<FileUploader>(path, nodeName, parentId, std::move(sha1), fid, Crypto::base64encode(fkeyEnc), *app, cts);
     });

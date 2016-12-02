@@ -237,7 +237,6 @@ Uploader::start()
 
     auto progressTask = pplx::create_task([this]() {
 
-//        FileUploader* upSaved = nullptr;
         FileTransferer::Progress upProgress{0, 0};
 
         Sha1Calculator* sha1Saved = nullptr;
@@ -247,18 +246,24 @@ Uploader::start()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             {
-                std::lock_guard<std::mutex> l(_mut);
-                if (_uploadingFile != nullptr) // && (upSaved != _uploadingFile.get() || upProgress != _uploadingFile->progress() || upSaved->state() != _uploadingFile->state()))
+                try
                 {
-                    upProgress = _uploadingFile->progress();
-//                    upSaved    = _uploadingFile.get();
-                    _upProgressFct(*_uploadingFile, _upProgress.getProgressAddByte(upProgress.transfered));
+                    std::lock_guard<std::mutex> l(_mut);
+                    if (_uploadingFile != nullptr) // && (upSaved != _uploadingFile.get() || upProgress != _uploadingFile->progress() || upSaved->state() != _uploadingFile->state()))
+                    {
+                        upProgress = _uploadingFile->progress();
+                        _upProgressFct(*_uploadingFile, _upProgress.getProgressAddByte(upProgress.transfered));
+                    }
+                    if (_preparingFile != nullptr && (sha1Saved != _preparingFile.get() || sha1Progress != _preparingFile->progress() || sha1Saved->state() != _preparingFile->state()))
+                    {
+                        sha1Progress = _preparingFile->progress();
+                        sha1Saved    = _preparingFile.get();
+                        _sha1ProgressFct(*_preparingFile, _sha1Progress.getProgressAddByte(sha1Progress.transfered));
+                    }
                 }
-                if (_preparingFile != nullptr && (sha1Saved != _preparingFile.get() || sha1Progress != _preparingFile->progress() || sha1Saved->state() != _preparingFile->state()))
+                catch (...)
                 {
-                    sha1Progress = _preparingFile->progress();
-                    sha1Saved    = _preparingFile.get();
-                    _sha1ProgressFct(*_preparingFile, _sha1Progress.getProgressAddByte(sha1Progress.transfered));
+                    GIGA_DEBUG_LOG(error, giga::utils::exceptionInfos);
                 }
             }
         }
@@ -418,7 +423,7 @@ Uploader::callProgressFct () const
     }
 }
 
-void
+const ScannedFile&
 Uploader::addScannedFile (UploadRequestedFile request, boost::filesystem::path nodePath)
 {
     auto size = boost::filesystem::file_size(request.path);
@@ -427,10 +432,13 @@ Uploader::addScannedFile (UploadRequestedFile request, boost::filesystem::path n
         _sha1Progress.fileCount  += 1;
         _sha1Progress.bytesTotal += size;
     }
-    enqueue<ScannedFile>(_scanned, giga::make_unique<ScannedFile>(std::move(request), std::move(nodePath), size));
+    auto scanned = giga::make_unique<ScannedFile>(std::move(request), std::move(nodePath), size);
+    const auto& s = *scanned;
+    enqueue<ScannedFile>(_scanned, std::move(scanned));
+    return s;
 }
 
-void
+const PreparedFile&
 Uploader::addPreparedFile (ScannedFile scanned, const std::string& sha1)
 {
     auto decodedNodeKey = Crypto::base64decode(_app->currentUser().personalData().nodeKeyClear());
@@ -448,7 +456,9 @@ Uploader::addPreparedFile (ScannedFile scanned, const std::string& sha1)
         _upProgress.fileCount    += 1;
         _upProgress.bytesTotal   += scanned.size;
     }
+    const auto& p = *prepared;
     enqueue<PreparedFile>(_prepared, std::move(prepared));
+    return p;
 }
 
 void

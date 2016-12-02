@@ -151,7 +151,7 @@ ChunkUploader::upload ()
         _progress->setCurl(curl);
 
         auto response = sendChunk(position, callbackData, curl, str);
-        auto regex    = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+)$"};
+        auto regex    = boost::regex{"^([0-9]+)-([0-9]+)/([0-9]+).*"};
         auto what     = boost::cmatch{};
         auto resp     = utils::wstr2str(response);
         if(boost::regex_match(resp.c_str(), what, regex))
@@ -169,12 +169,20 @@ ChunkUploader::upload ()
         }
         else
         {
-            auto nodes = JSonUnserializer::fromString<std::vector<std::shared_ptr<Node>>>(response);
-            if (nodes.size() != 1)
+            try
             {
-                BOOST_THROW_EXCEPTION(ErrorException{U("Wrong number of nodes")});
+                auto nodes = JSonUnserializer::fromString<std::vector<std::shared_ptr<Node>>>(response);
+                if (nodes.size() != 1)
+                {
+                    BOOST_THROW_EXCEPTION(ErrorException{U("Wrong number of nodes")});
+                }
+                return nodes[0];
             }
-            return nodes[0];
+            catch (const web::json::json_exception& e)
+            {
+                GIGA_DEBUG_LOG(error, "Error parsing: " << resp);
+                throw;
+            }
         }
     } while (position < _fileSize);
 
@@ -196,6 +204,16 @@ ChunkUploader::sendChunk (uint64_t position, ReadCallbackData& data, curl_easy& 
         {
             count++;
             return doSendChunk(position, data, curl, str);
+        }
+        catch (const curl::curl_easy_exception& ex)
+        {
+            if (_progress != nullptr && _progress->isCanceled())
+            {
+                throw;
+            }
+            auto info = utils::exceptionInfos();
+            GIGA_DEBUG_LOG(debug, info + " retry in (s) " + std::to_string(count));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 * count));
         }
         catch (...)
         {

@@ -77,6 +77,9 @@ public:
     bool
     isPaused () const;
 
+    bool
+    isCanceled() const;
+
 private:
     mutable std::mutex       _mut;
     Item                     _item;

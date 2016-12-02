@@ -214,10 +214,10 @@ public:
     void
     callProgressFct() const;
 
-    void
+    const ScannedFile&
     addScannedFile(UploadRequestedFile request, boost::filesystem::path nodePath);
 
-    void
+    const PreparedFile&
     addPreparedFile(ScannedFile scanned, const std::string& sha1);
 
 private:
@@ -295,9 +295,12 @@ struct UploadRequestedFile
     UploadRequestedFile(const UploadRequestedFile&)            = default;
     UploadRequestedFile& operator=(const UploadRequestedFile&) = default;
     UploadRequestedFile& operator=(UploadRequestedFile&&)      = default;
+    bool operator==(const UploadRequestedFile& rhs) const {
+        return parentId == rhs.parentId && path == rhs.path;
+    }
 
-    const std::string             parentId;
-    const boost::filesystem::path path;
+    std::string             parentId;
+    boost::filesystem::path path;
 };
 
 struct ScannedFile
@@ -311,10 +314,13 @@ struct ScannedFile
     ScannedFile(const ScannedFile&)            = default;
     ScannedFile& operator=(const ScannedFile&) = default;
     ScannedFile& operator=(ScannedFile&&)      = default;
+    bool operator==(const ScannedFile& rhs) const {
+        return request == rhs.request && nodePath == rhs.nodePath && size == rhs.size;
+    }
 
-    const UploadRequestedFile     request;
-    const boost::filesystem::path nodePath;
-    const uint64_t                size;
+    UploadRequestedFile     request;
+    boost::filesystem::path nodePath;
+    uint64_t                size;
 };
 
 struct PreparedFile
@@ -329,12 +335,14 @@ struct PreparedFile
     PreparedFile(const PreparedFile&)            = default;
     PreparedFile& operator=(const PreparedFile&) = default;
     PreparedFile& operator=(PreparedFile&&)      = default;
-
-    const ScannedFile scanned;
-    const std::string sha1;
-    const std::string fkey;
-    const std::string fid;
-    const std::string fkeyEnc;
+    bool operator==(const PreparedFile& rhs) const {
+        return scanned == rhs.scanned && sha1 == rhs.sha1; // fkey, fid and fkeyEnc are a function of sha1
+    }
+    ScannedFile scanned;
+    std::string sha1;
+    std::string fkey;
+    std::string fid;
+    std::string fkeyEnc;
 };
 
 struct UploadedFile
@@ -348,8 +356,11 @@ struct UploadedFile
     UploadedFile(const UploadedFile&)            = default;
     UploadedFile& operator=(const UploadedFile&) = default;
     UploadedFile& operator=(UploadedFile&&)      = default;
+    bool operator==(const UploadedFile& rhs) const {
+        return prepared == rhs.prepared && node == rhs.node;
+    }
 
-    const PreparedFile prepared;
+    PreparedFile prepared;
     std::shared_ptr<Node> node;
 };
 

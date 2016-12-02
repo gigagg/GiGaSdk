@@ -94,6 +94,13 @@ CurlProgress::isPaused () const
     return _pause;
 }
 
+bool
+CurlProgress::isCanceled () const
+{
+    std::lock_guard<std::mutex> l(_mut);
+    return _cancelToken.is_canceled();
+}
+
 int
 CurlProgress::onCallback (curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) noexcept
 {
