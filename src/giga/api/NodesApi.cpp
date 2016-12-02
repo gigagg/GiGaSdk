@@ -183,7 +183,7 @@ GigaApi::NodesApi::getTimeline (const string_t& head, uint64_t from, uint64_t ow
 pplx::task<std::shared_ptr<std::vector<data::SmallNode>>>
 GigaApi::NodesApi::getAllFiles(const std::string& nodeId, const string_t& type) const
 {
-    auto uri = api._client.uri (U("nodes"), nodeId, U("files"), type);
+    auto uri = api._client.uri (U("nodes"), utils::str2wstr(nodeId), U("files"), type);
     auto response = api._client.rawRequest(methods::GET, uri);
     return response.then([=](web::http::http_response response) {
         return response.extract_string();
@@ -199,7 +199,7 @@ GigaApi::NodesApi::getAllFiles(const std::string& nodeId, const string_t& type) 
                 auto snode = JSonUnserializer::fromString<data::SmallNode>(line);
                 snodes->emplace_back(snode);
             }
-            catch (const web::json::json_exception& ex)
+            catch (const web::json::json_exception&)
             {
                 GIGA_DEBUG_LOG(error, "error unserializing: " + utils::wstr2str(line));
             }
@@ -211,7 +211,7 @@ GigaApi::NodesApi::getAllFiles(const std::string& nodeId, const string_t& type) 
 pplx::task<uint64_t>
 GigaApi::NodesApi::forEachFiles(const std::string& nodeId, const string_t& type, const std::function <void (web::json::value&&)>& fct) const
 {
-    auto uri = api._client.uri (U("nodes"), nodeId, U("files"), type);
+    auto uri = api._client.uri (U("nodes"), utils::str2wstr(nodeId), U("files"), type);
     auto response = api._client.rawRequest(methods::GET, uri);
     return response.then([=](web::http::http_response response) {
         return response.extract_string();
@@ -223,9 +223,9 @@ GigaApi::NodesApi::forEachFiles(const std::string& nodeId, const string_t& type,
         {
             try
             {
-                fct(web::json::value::parse(giga::utils::str2wstr(line)));
+                fct(web::json::value::parse(line));
             }
-            catch (const web::json::json_exception& ex)
+            catch (const web::json::json_exception&)
             {
                 GIGA_DEBUG_LOG(error, "error unserializing: " + utils::wstr2str(line));
             }

@@ -59,10 +59,10 @@ int main(int, char**)
         n->size = sn.size;
         n->creationDate = now;
         n->lastUpdateDate = now;
-        n->type = "file";
+        n->type = U("file");
         n->fid = sn.fid;
         n->mimeType = sn.mimeType;
-        n->url = sn.url;
+        n->url = giga::utils::str2wstr(sn.url);
         n->previewState = sn.previewState;
 
         auto node = giga::core::Node::create(n, app);
@@ -71,7 +71,7 @@ int main(int, char**)
            boost::algorithm::ends_with(sn.name, "pdf")  ||
            boost::algorithm::ends_with(sn.name, "mobi"))
         {
-            std::cout << "downloading: " << n->name << " " << node->size() << std::endl;
+            std::cout << "downloading: " << giga::utils::wstr2str(n->name) << " " << node->size() << std::endl;
             giga::core::FileDownloader fd{".", *node, app};
             fd.start();
             try
