@@ -15,7 +15,6 @@
  */
 #include <boost/asio/ssl.hpp>
 #include <boost/chrono.hpp>
-#include <giga/utils/Utils.h>
 
 #ifdef CRYPTOPP
 #include "cryptopp/integer.h"
@@ -47,7 +46,6 @@
 
 #include "Crypto.h"
 #include "../rest/HttpErrors.h"
-#include "../utils/Utils.h"
 #include "../utils/Utils.h"
 
 #include <cpprest/details/basic_types.h>
