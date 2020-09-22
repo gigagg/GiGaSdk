@@ -191,6 +191,24 @@ Application::getNodeById (const std::string& id) const
     return core::Node::create(result, *this);
 }
 
+std::unique_ptr<core::Node>
+Application::getNodeByParentIdName (const std::string& parentId, const std::string& name) const {
+    auto result = _api.nodes.getChildrenNodeByName(parentId, name).get();
+    return core::Node::create(result, *this);
+}
+
+std::vector<std::unique_ptr<core::Node>>
+Application::getChildrenNodes (const std::string& parentId) const {
+    auto results = _api.nodes.getChildrenNode(parentId).get();
+    std::vector<std::unique_ptr<core::Node>> nodes{};
+    nodes.resize(results->size());
+    std::transform (results->begin(), results->end(), nodes.begin(), [this](const data::Node& data) {
+        return core::Node::create(std::make_shared<data::Node>(data), *this);
+    });
+
+    return nodes;
+}
+
 std::vector<std::unique_ptr<core::Node>>
 Application::searchNode (const string_t& search, core::Node::MediaType type) const
 {

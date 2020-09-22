@@ -11,14 +11,14 @@ include(LibFindMacros)
 find_path(CRYPTO++_INCLUDE_DIR
   NAMES
     crypto++/cryptlib.h cryptopp/cryptlib.h
-  PATHS 
+  PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp
     ${CRYPTO++_PKGCONF_INCLUDE_DIRS}
     ${CRYPTO++_DIR}
     $ENV{CRYPTO++_DIR}
     /usr/local/include
     /usr/include
-  PATH_SUFFIXES 
+  PATH_SUFFIXES
     include
     Release/include
 )
@@ -29,18 +29,21 @@ ENDIF()
 
 # Library
 find_library(CRYPTO++_UTILS_LIBRARY
-  NAMES 
-    cryptopp cryptlib
-  PATHS 
+  NAMES
+    crypto++ cryptopp cryptlib
+  PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++
-	${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++/Win32/Output
+	  ${CMAKE_CURRENT_SOURCE_DIR}/vendors/cryptopp/crypto++/Win32/Output
     ${CRYPTO++_PKGCONF_LIBRARY_DIRS}
     ${CRYPTO++_DIR}
     $ENV{CRYPTO++_DIR}
-	$ENV{CRYPTO++_DIR}/vendors/cryptopp/crypto++/Win32/Output
+	  $ENV{CRYPTO++_DIR}/vendors/cryptopp/crypto++/Win32/Output
+    /usr/lib/x86_64-linux-gnu
+    /usr/lib
     /usr/local
     /usr
   PATH_SUFFIXES
+    x86_64-linux-gnu
     build
     lib
 	${CMAKE_BUILD_TYPE}

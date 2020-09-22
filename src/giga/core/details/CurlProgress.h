@@ -19,7 +19,7 @@
 
 #include <chrono>
 #include <mutex>
-#include <curl/curlbuild.h>
+#include <curl/system.h>
 #include <pplx/pplxtasks.h>
 
 namespace curl

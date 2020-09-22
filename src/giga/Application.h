@@ -213,6 +213,18 @@ public:
     getNodeById (const std::string& id) const;
 
     /**
+     * @brief look for a node by its parentId and name
+     */
+    std::unique_ptr<core::Node>
+    getNodeByParentIdName (const std::string& parentId, const std::string& name) const;
+
+    /**
+     * @brief get all the children of a parent node
+     */
+    std::vector<std::unique_ptr<core::Node>>
+    getChildrenNodes (const std::string& parentId) const;
+
+    /**
      * @brief search for a node by its name and type
      */
     std::vector<std::unique_ptr<core::Node>>

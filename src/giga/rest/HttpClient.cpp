@@ -198,13 +198,18 @@ HttpClient::http ()
 pplx::task<void>
 HttpClient::refreshToken()
 {
+  GIGA_DEBUG_LOG(debug, "Refreshing access token (maybe ?)");
     bool shouldRefresh = false;
     {
-        std::lock_guard<std::mutex> l{_rstate->mut};
-        shouldRefresh = !_rstate->isRefreshing
-                            && _http.client_config().oauth2() != nullptr
-                            && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{300}); // gets 300s to do the refresh
+      std::lock_guard<std::mutex> l{_rstate->mut};
+      shouldRefresh = !_rstate->isRefreshing
+             && _http.client_config().oauth2() != nullptr;
+        // shouldRefresh = !_rstate->isRefreshing
+        //                     && _http.client_config().oauth2() != nullptr
+        //                     && _rstate->tokenExpireAt < (std::chrono::high_resolution_clock::now() + std::chrono::seconds{300}); // gets 300s to do the refresh
         _rstate->isRefreshing = shouldRefresh || _rstate->isRefreshing;
+
+
     }
 
     if (shouldRefresh)
@@ -224,12 +229,13 @@ HttpClient::refreshToken()
         return pplx::create_task([rstate, &http, &accessToken, config, refreshToken]() {
             try
             {
-                GIGA_DEBUG_LOG(debug, "Refreshing access token");
+                GIGA_DEBUG_LOG(debug, "Refreshing access token with: " + refreshToken);
                 config.oauth2()->token_from_refresh().get();
 
                 std::lock_guard<std::mutex> l{ rstate->mut };
                 if (config.oauth2()->token().refresh_token().empty() && !refreshToken.empty())
                 {
+                    GIGA_DEBUG_LOG(debug, "Set new refresh token to: " + refreshToken);
                     const_cast<oauth2_token&>(config.oauth2()->token()).set_refresh_token(refreshToken);
                 }
                 rstate->tokenExpireAt = std::chrono::high_resolution_clock::now() + std::chrono::seconds{ 3600 };
@@ -266,4 +272,3 @@ HttpClient::setUserAgent(utility::string_t userAgent)
 }
 
 }
-

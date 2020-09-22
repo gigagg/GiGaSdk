@@ -95,6 +95,101 @@ BOOST_AUTO_TEST_CASE(test_data_user) {
     auto user = JSonUnserializer::fromString<User>(json);
 }
 
+BOOST_AUTO_TEST_CASE(test_data_user_new) {
+    auto json = giga::utils::str2wstr(R"({
+  "achievements": 2047,
+  "activity": "VERY_ACTIVE",
+  "adultStatus": 0,
+  "allowedFeatures": -1,
+  "authorizeEmailLvl": 1,
+  "autoSaveFolderId": "5a578a6735e5df43918b46d0",
+  "avatarState": "FREE",
+  "avatarUrl": "//cloud45.giga.gg/public/45/454oEFifJoddZEGXQ0RJlZoIpub/avatar81.jpg",
+  "bigAvatarUrl": "//cloud45.giga.gg/public/45/454oEFifJoddZEGXQ0RJlZoIpub/avatar215.jpg",
+  "contactCount": 26,
+  "creationDate": 1358770622,
+  "description": "",
+  "displayName": "t.guyard",
+  "email": "t.guyard+t.guyar@gigatribe.com",
+  "externalAccounts": [],
+  "gender": "M",
+  "id": 1559032,
+  "impersonated": false,
+  "isHiddingFirstSteps": true,
+  "isSeeder": "TO_SOME_PEOPLE",
+  "language": "fr",
+  "lastConnectionDate": 1600675200,
+  "login": "t.guyard",
+  "maxContact": 200,
+  "maxFiles": 0,
+  "maxStorage": 10240,
+  "mergePolicy": "renameSource",
+  "modules": [],
+  "name": "thomas12",
+  "nextEmail": "t.guyard+t.guyar@gigatribe.com",
+  "node": {
+    "ancestors": [],
+    "creationDate": 1366205628,
+    "id": "516ea4bc6803faca62000000",
+    "isHidden": false,
+    "lastUpdateDate": 1595254364,
+    "likes": 0,
+    "name": "All my files",
+    "nbChildren": 11,
+    "nbFiles": 91507,
+    "nodes": [],
+    "ownerId": 1559032,
+    "size": 1883938538067,
+    "type": "root",
+    "uploadUrl": "/upload/?s=516ea4bc6803faca62000000"
+  },
+  "nodeKey": "Am0TSBwizinOPkiECkXY6yWZtZae0xsKU1xSTBjpYTq/1UNVD2ICDicw8JgtYPHqmkdP4bcOCbdPQuGUQ/2mi3oyLsHHcgM2zluCoS8CkzDh7Q9C7yrAspUhGhgHgsAzIxEjbTa4iFeHwez41JGkEC+ucwboE089VlJkhsOxasI=",
+  "offer": {
+    "amount": 9999,
+    "billing": "ONE_SHOT",
+    "currency": "USD",
+    "duration": "YEAR",
+    "expire": 1849005446,
+    "files": 0,
+    "id": "OFR_10TIO_YEAR",
+    "isApple": false,
+    "isSubscription": false,
+    "oldId": "OFR_10TIO_YEAR",
+    "planId": 1,
+    "state": "ACTIVE",
+    "storage": 10240,
+    "costEUR" : 0,
+    "costGBP" : 0,
+    "costStar" : 0,
+    "costUSD" : 0,
+    "download" : 0,
+    "resetDownload" : "NEVER"
+  },
+  "orderId": 27400,
+  "orderState": "PAID",
+  "overloaded": "OK",
+  "role": "HIGHEST",
+  "rsaKeys": {
+    "aesIv": "b7dLY5npGr6oEKzHzsqvYg==",
+    "aesSalt": "4kA/hQKN15U=",
+    "privateKey": "mU4bSTWCnIC4Gf2udGSOfg6L9LG5R//OSoIyxNHCHG/LHai5SsgIRmE71VeVgIhT1JG8DMs4RdScoVkHIHqjFMju9RJdG4Gj/uyXt6us58v2HDoYb+MuupxuQbKYZovC+6Uz27punOjukRhmQ1cp3gS4yKSPEQNX38JXcj+b1XSC+xqI27S1d4q39LndkAa+TZAl+zeTmCMyZSn5Jgvkf6YHPI0Y4enAbGlU30xWJt6AOz03h4iXT3QkOCWa+bbXCiDGKSB2wG2+fsu3Dngi5zX1y4WieuhbgEBGB4Nug3fy14F7oJdk9yzELkSo9dBcDcsEZjojFbhg2UlTDRLgKuPvhv1pJdRzVMBKWP60h0G0sihiTpWCLCahOOSbcNdraUAPvInvY4GazgANf0ALWUXHoaOsKvY18+qJ8xGZmFY9aoMAqyU73wQLjiQYgzGgBaiATFyUjiikDRG31OHXRt2M0yL3ntzA5EQxuMYLevq2t4v85KLecXgQCChFPq+208iXkMqaxiwPKfQ/wmkijlNQPu7uKDNvQo9DhOl9tc3+e3avbrBQtbRb+IYxKI5KCkCT73Fa2e0bh5HgOCrsLy1GflX+0wENVcBzpZZT8luq+nu6pzHQkfyhqw52p5tThzJ4h7pXTKV52aDl8ej6rHPdgLtiQCKGWPDCCsG1wMNqdnzyLxNjerbpvBGDYK1XP9qDLVBSn3GCmcRg6qvo2mGwydNKJNkULSd0jbT+woNWah3y11axaNmkSaPmapCzWBwh2QrN0C3idFVRL1waDFwSXOiUg5wO5e/Y3ssaKD6Gtez8uW4090rf1Pk2p9OTuGZUYx8GdYwlxm9VkURb3qnKBxTmM7SrG3ug0Jwv/jEjxf3rLhdQN0PCJjrGM1+N7qpUoxOaUsQLqYf2jFyVY9B6qdpvxfYo6sdVcwYANGGbVcbePRXIr13Y65m25mEtjxYmuhDoS6EFcHyHpQAV0yRInX1EzMr9DtntzvigK7/WcSWwEOTga3NTniR2btroTHKKzQh1DgHdcADQeVtxBvb2+NF7dUPN7PiOT/zMdmppPRaFZWuzhXGxo73V+X/qL3cl6blhk6nuSMNKWp2lyQ==",
+    "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCvupt+SoaJxTnyvzo7d2xtVvhe5N2qxhyW/OVNuh/OeWO2T+BZPJsh6n3+YV4mulsAxmbUvvwpL9EI3xynjw5WpSsXgNAg+s2mAbyGTAOLAlPlymBy1R57XA0DgnIfEh3mQsiWP9uaXp8V8PNkWNC6d+JtRUEImDFy+mFI5XIcQwIDAQAB"
+  },
+  "salt": "FLOhgPcpK+IzLOqqzUw2Dbe3o47IsDitc2DBQNiU0i8=",
+  "standardMaxStorage": 450,
+  "starCount": 400000,
+  "tags": [
+    "cinema"
+  ],
+  "vcard": {
+    "addresses": [],
+    "emails": [],
+    "phones": []
+  }
+})");
+    auto user = JSonUnserializer::fromString<User>(json);
+}
+
 BOOST_AUTO_TEST_CASE(test_data_node)
 {
     auto json = giga::utils::str2wstr(R"({
